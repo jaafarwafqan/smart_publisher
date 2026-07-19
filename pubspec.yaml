@@ -1,0 +1,38 @@
+name: smart_publisher
+description: "Advanced Institutional News & Media Publishing Platform."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # State Management & Code Generation Core
+  flutter_riverpod: ^2.5.0
+  riverpod_annotation: ^2.3.3
+  
+  # Routing & Navigation
+  go_router: ^14.0.0
+
+  # Networking & Advanced API Clients
+  dio: ^5.4.0
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  
+  # Reactive Code Generators & Data Serialization
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.3.9
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
