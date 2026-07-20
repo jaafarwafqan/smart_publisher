@@ -1,21 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
-  @override
-  FutureOr<ThemeMode> build() async {
-    // لاحقاً: قراءة الحالة المحفوظة من StorageManager
-    return ThemeMode.system;
-  }
+part 'theme_provider.g.dart';
 
-  Future<void> changeTheme(ThemeMode mode) async {
-    state = AsyncValue.data(mode);
-    // لاحقاً: حفظ الحالة في StorageManager
-  }
+@Riverpod(keepAlive: true)
+ThemeMode theme(ThemeRef ref) {
+  // لاحقاً: ربطها بتخزين دائم عبر Notifier عند إضافة persistence.
+  return ThemeMode.system;
 }
-
-final themeProvider = AsyncNotifierProvider<ThemeModeNotifier, ThemeMode>(() {
-  return ThemeModeNotifier();
-});

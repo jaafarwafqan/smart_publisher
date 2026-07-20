@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: Smart Publisher API
+  version: 1.0.0
+  description: Laravel backend contract for Smart Publisher mobile app.
+servers:
+  - url: https://api.smartpublisher.local/api/v1
+paths:
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+  /posts:
+    get:
+      summary: List posts
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create post
+      responses:
+        '200':
+          description: Created
+  /posts/{id}:
+    get:
+      summary: Get post details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: Update post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+  /media/upload:
+    post:
+      summary: Upload media
+      responses:
+        '200':
+          description: Uploaded
+  /media/compress:
+    post:
+      summary: Compress media
+      responses:
+        '200':
+          description: Compressed
+  /media/{id}:
+    delete:
+      summary: Delete media
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+  /publish/jobs:
+    get:
+      summary: List publish jobs
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create publish job
+      responses:
+        '200':
+          description: Created
+  /publish/jobs/{id}:
+    get:
+      summary: Get publish job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: Update publish job state
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Cancel or remove publish job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

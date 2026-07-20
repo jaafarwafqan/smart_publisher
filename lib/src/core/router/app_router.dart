@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'app_navigation_observer.dart';
 import 'app_routes.dart';
 import 'route_guards.dart';
 import 'route_names.dart';
+
+part 'app_router.g.dart';
 
 /// مزود نظام التنقل الرئيسي للتطبيق.
 ///
@@ -15,7 +17,8 @@ import 'route_names.dart';
 /// • تطبيق Route Guards.
 /// • مراقبة التنقلات.
 /// • معالجة الصفحات غير الموجودة.
-final routerProvider = Provider<GoRouter>((ref) {
+@Riverpod(keepAlive: true)
+GoRouter router(RouterRef ref) {
   return GoRouter(
     // أول شاشة يتم تشغيلها
     initialLocation: RouteNames.splashPath,
@@ -35,7 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     // صفحة الخطأ
     errorBuilder: (_, state) => const _NotFoundScreen(),
   );
-});
+}
 
 /// صفحة تعرض عند محاولة الوصول إلى مسار غير موجود.
 ///

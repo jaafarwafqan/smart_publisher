@@ -10,13 +10,7 @@ class SmartPublisherApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref
-        .watch(themeProvider)
-        .when(
-          data: (mode) => mode,
-          loading: () => ThemeMode.system,
-          error: (_, _) => ThemeMode.system,
-        );
+    final themeMode = ref.watch(themeProvider);
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(

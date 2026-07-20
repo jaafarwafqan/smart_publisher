@@ -1,0 +1,115 @@
+name: Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_channel:
+        description: Release channel
+        required: true
+        default: stable
+        type: choice
+        options:
+          - stable
+          - canary
+      canary_percent:
+        description: Canary traffic percentage (0-100)
+        required: true
+        default: '10'
+      rollback_to:
+        description: Optional release tag to rollback to
+        required: false
+        default: ''
+
+jobs:
+  pre-release-quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Tests
+        run: flutter test
+
+  build:
+    needs: pre-release-quality-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android AppBundle
+        run: flutter build appbundle --release
+
+      - name: Build Web
+        run: flutter build web --release
+
+      - name: Generate release manifest
+        run: |
+          cat <<EOF > release-manifest.json
+          {
+            "release_channel": "${{ inputs.release_channel }}",
+            "canary_percent": "${{ inputs.canary_percent }}",
+            "rollback_to": "${{ inputs.rollback_to }}",
+            "git_sha": "${{ github.sha }}",
+            "run_id": "${{ github.run_id }}"
+          }
+          EOF
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-publisher-release-${{ inputs.release_channel }}
+          path: |
+            build/app/outputs/bundle/release/*.aab
+            build/web/**
+            release-manifest.json
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: smart-publisher-release-${{ inputs.release_channel }}
+          path: release-artifacts
+
+      - name: Deploy release
+        env:
+          RELEASE_CHANNEL: ${{ inputs.release_channel }}
+          CANARY_PERCENT: ${{ inputs.canary_percent }}
+          ROLLBACK_TO: ${{ inputs.rollback_to }}
+          FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS }}
+          WEB_DEPLOY_TARGET: ${{ secrets.WEB_DEPLOY_TARGET }}
+        run: |
+          chmod +x scripts/release/deploy_release.sh
+          ./scripts/release/deploy_release.sh
+
+      - name: Rollback execute
+        if: ${{ inputs.rollback_to != '' }}
+        env:
+          TARGET_RELEASE_TAG: ${{ inputs.rollback_to }}
+          RELEASE_CHANNEL: ${{ inputs.release_channel }}
+        run: |
+          pwsh -File scripts/rollback.ps1 -TargetReleaseTag "$TARGET_RELEASE_TAG" -Channel "$RELEASE_CHANNEL"

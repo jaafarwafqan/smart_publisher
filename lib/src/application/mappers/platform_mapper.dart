@@ -10,10 +10,7 @@ class PlatformMapper extends Mapper<PlatformDto, PlatformEntity> {
     return PlatformEntity(
       id: input.id,
       name: input.name,
-      type: PlatformType.values.firstWhere(
-        (type) => type.name == input.type,
-        orElse: () => PlatformType.facebook,
-      ),
+      typeKey: input.platform,
       isConnected: input.isConnected,
     );
   }

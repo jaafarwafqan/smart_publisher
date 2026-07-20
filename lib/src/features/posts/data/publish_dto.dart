@@ -1,23 +1,6 @@
-class PublishDto {
-  const PublishDto({
-    required this.postId,
-    required this.platformId,
-    this.status = 'queued',
-    this.retryCount = 0,
-    this.progress = 0,
-  });
+import '../../../backend_contracts/v1/posts_contract_v1.dart';
 
-  final String postId;
-  final String platformId;
-  final String status;
-  final int retryCount;
-  final int progress;
-
-  Map<String, dynamic> toJson() => {
-    'postId': postId,
-    'platformId': platformId,
-    'status': status,
-    'retryCount': retryCount,
-    'progress': progress,
-  };
-}
+@Deprecated(
+  'Use PublishRequestDtoV1 from backend_contracts/v1/posts_contract_v1.dart',
+)
+typedef PublishDto = PublishRequestDtoV1;

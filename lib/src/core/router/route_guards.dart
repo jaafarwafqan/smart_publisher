@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'guard_state_provider.dart';
 import 'route_names.dart';
 
 /// المسؤول عن حماية المسارات (Route Guards)
@@ -16,71 +17,127 @@ final class RouteGuards {
 
   /// نقطة الدخول الرئيسية لجميع عمليات إعادة التوجيه.
   static FutureOr<String?> guard(GoRouterState state, Ref ref) {
-    final authState = _isAuthenticated(ref);
-    final firstLaunch = _isFirstLaunch(ref);
-
     final path = state.uri.path;
 
-    // السماح دائماً بعرض شاشة Splash
     if (_isSplash(path)) {
-      return null;
+      return const SplashGuard().redirect(state, ref);
     }
 
-    // المستخدم مسجل دخول
-    if (authState) {
-      return _redirectAuthenticatedUser(path);
+    if (_isAdminRoute(path)) {
+      return const AdminGuard().redirect(state, ref);
     }
 
-    // المستخدم غير مسجل دخول
-    return _redirectGuestUser(path: path, isFirstLaunch: firstLaunch);
-  }
+    if (_isPublisherRoute(path)) {
+      return const PublisherGuard().redirect(state, ref);
+    }
 
-  // ---------------------------------------------------------------------------
-  // Authentication
-  // ---------------------------------------------------------------------------
-
-  static bool _isAuthenticated(Ref ref) {
-    // Placeholder for future auth integration.
-    return false;
-  }
-
-  static bool _isFirstLaunch(Ref ref) {
-    // Placeholder for future first-launch persistence.
-    return true;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Redirect Rules
-  // ---------------------------------------------------------------------------
-
-  static String? _redirectAuthenticatedUser(String path) {
     if (_isAuthenticationRoute(path)) {
-      return RouteNames.dashboardPath;
+      return const GuestGuard().redirect(state, ref);
     }
 
-    return null;
+    return const LoginGuard().redirect(state, ref);
   }
-
-  static String? _redirectGuestUser({
-    required String path,
-    required bool isFirstLaunch,
-  }) {
-    if (_isAuthenticationRoute(path)) {
-      return null;
-    }
-
-    return isFirstLaunch ? RouteNames.welcomePath : RouteNames.loginPath;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
 
   static bool _isSplash(String path) {
     return path == RouteNames.splashPath;
   }
 
+  static bool _isAdminRoute(String path) {
+    return path.startsWith(RouteNames.adminPath) ||
+        path.startsWith(RouteNames.administrationPath);
+  }
+
+  static bool _isPublisherRoute(String path) {
+    return path.startsWith(RouteNames.publisherPath);
+  }
+
   static bool _isAuthenticationRoute(String path) {
     return path == RouteNames.loginPath || path == RouteNames.welcomePath;
+  }
+}
+
+abstract class _BaseRouteGuard {
+  const _BaseRouteGuard();
+
+  FutureOr<String?> redirect(GoRouterState state, Ref ref);
+}
+
+class LoginGuard extends _BaseRouteGuard {
+  const LoginGuard();
+
+  @override
+  Future<String?> redirect(GoRouterState state, Ref ref) async {
+    final isAuthenticated = await ref.read(authStateProvider.future);
+
+    if (isAuthenticated) {
+      return RouteNames.dashboardPath;
+    }
+
+    return RouteNames.loginPath;
+  }
+}
+
+class SplashGuard extends _BaseRouteGuard {
+  const SplashGuard();
+
+  @override
+  Future<String?> redirect(GoRouterState state, Ref ref) async {
+    final isAuthenticated = await ref.read(authStateProvider.future);
+    if (!isAuthenticated) {
+      return RouteNames.loginPath;
+    }
+    return RouteNames.dashboardPath;
+  }
+}
+
+class GuestGuard extends _BaseRouteGuard {
+  const GuestGuard();
+
+  @override
+  Future<String?> redirect(GoRouterState state, Ref ref) async {
+    final isAuthenticated = await ref.read(authStateProvider.future);
+    if (!isAuthenticated) {
+      return null;
+    }
+
+    return RouteNames.dashboardPath;
+  }
+}
+
+class AdminGuard extends _BaseRouteGuard {
+  const AdminGuard();
+
+  @override
+  Future<String?> redirect(GoRouterState state, Ref ref) async {
+    final isAuthenticated = await ref.read(authStateProvider.future);
+    if (!isAuthenticated) {
+      return RouteNames.loginPath;
+    }
+
+    final role = await ref.read(currentUserRoleProvider.future);
+    if (role == UserRole.admin) {
+      return null;
+    }
+
+    return RouteNames.dashboardPath;
+  }
+}
+
+class PublisherGuard extends _BaseRouteGuard {
+  const PublisherGuard();
+
+  @override
+  Future<String?> redirect(GoRouterState state, Ref ref) async {
+    final isAuthenticated = await ref.read(authStateProvider.future);
+    if (!isAuthenticated) {
+      return RouteNames.loginPath;
+    }
+
+    final role = await ref.read(currentUserRoleProvider.future);
+    if (role == UserRole.publisher || role == UserRole.admin) {
+      return null;
+    }
+
+    return RouteNames.dashboardPath;
   }
 }

@@ -1,20 +1,6 @@
-class PlatformDto {
-  const PlatformDto({
-    required this.id,
-    required this.name,
-    required this.type,
-    this.isConnected = false,
-  });
+import '../../../backend_contracts/v1/accounts_contract_v1.dart';
 
-  final String id;
-  final String name;
-  final String type;
-  final bool isConnected;
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'type': type,
-    'isConnected': isConnected,
-  };
-}
+@Deprecated(
+  'Use AccountResponseDtoV1 from backend_contracts/v1/accounts_contract_v1.dart',
+)
+typedef PlatformDto = AccountResponseDtoV1;

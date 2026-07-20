@@ -1,7 +1,11 @@
 import 'app_result.dart';
 
 class Failure<T> extends AppResult<T> {
-  const Failure(this.message, {this.exception, this.data});
+  const Failure(this.message, {this.exception, this.data, this.failure});
+
+  Failure.fromFailure(this.failure, {this.data})
+    : message = failure?.message,
+      exception = failure?.exception;
 
   @override
   final String? message;
@@ -11,6 +15,9 @@ class Failure<T> extends AppResult<T> {
 
   @override
   final T? data;
+
+  @override
+  final AppFailure? failure;
 
   @override
   bool get isSuccess => false;

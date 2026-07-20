@@ -128,6 +128,18 @@ lib/
 - [docs/errors.md](docs/errors.md)
 - [docs/sequence_diagrams.md](docs/sequence_diagrams.md)
 
+## Production Readiness
+
+- CI workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- Release pipeline: [.github/workflows/release.yml](.github/workflows/release.yml)
+- OpenAPI contract: [docs/api/openapi_v1.yaml](docs/api/openapi_v1.yaml)
+- Operations docs:
+  - [docs/operations/release_pipeline.md](docs/operations/release_pipeline.md)
+  - [docs/operations/rollback_strategy.md](docs/operations/rollback_strategy.md)
+  - [docs/operations/canary_releases.md](docs/operations/canary_releases.md)
+  - [docs/operations/incident_runbook.md](docs/operations/incident_runbook.md)
+  - [docs/operations/backup_strategy.md](docs/operations/backup_strategy.md)
+
 ## المرحلة الحالية
 
 المشروع الآن في مرحلة البناء المعماري الأساسية، قبل الانتقال إلى:
@@ -144,6 +156,45 @@ lib/
 flutter pub get
 flutter run
 ```
+
+## المرحلة 31 - Laravel Backend (Real Integration)
+
+التطبيق مرتبط مع Backend حقيقي عبر السلسلة التالية:
+
+```text
+Flutter
+  -> Repository
+  -> Laravel API
+  -> MySQL
+```
+
+أهم الملفات المرتبطة بالتكامل الحقيقي:
+- `lib/src/core/network/laravel_api.dart`
+- `lib/src/core/di/app_providers.dart`
+- `lib/src/features/posts/data/post_repository_impl.dart`
+- `lib/src/features/media/data/media_repository_impl.dart`
+- `lib/src/features/analytics/data/repository/analytics_repository_impl.dart`
+
+### Laravel Smoke Test (Login/Create/Upload Draft/Schedule/Analytics)
+
+لتجربة الربط الفعلي مع Laravel شغل الاختبار التالي مع متغيرات البيئة:
+
+```bash
+flutter test test/integration/laravel_backend_smoke_integration_test.dart \
+  --dart-define=SP_RUN_LARAVEL_SMOKE=true \
+  --dart-define=SP_API_BASE_URL=https://your-api-host \
+  --dart-define=SP_AUTH_BASE_URL=https://your-auth-host \
+  --dart-define=SP_SMOKE_EMAIL=your-user@email.com \
+  --dart-define=SP_SMOKE_PASSWORD=your-password
+```
+
+يغطي الاختبار:
+- تسجيل الدخول.
+- إنشاء منشور.
+- رفع صورة (multipart file binary).
+- حفظ المسودة.
+- الجدولة.
+- جلب Analytics.
 
 ## الخطوات القادمة
 

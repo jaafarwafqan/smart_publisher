@@ -15,8 +15,16 @@ class EventBus {
   }
 
   Future<void> dispatch<T extends AppEvent>(T event) async {
-    final handlers = _handlers[T];
-    if (handlers == null || handlers.isEmpty) {
+    final typedHandlers = _handlers[T] ?? const <EventHandler<AppEvent>>[];
+    final wildcardHandlers =
+        _handlers[AppEvent] ?? const <EventHandler<AppEvent>>[];
+
+    final handlers = <EventHandler<AppEvent>>[
+      ...typedHandlers,
+      if (T != AppEvent) ...wildcardHandlers,
+    ];
+
+    if (handlers.isEmpty) {
       return;
     }
 

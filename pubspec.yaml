@@ -22,6 +22,8 @@ dependencies:
   # Networking & Advanced API Clients
   dio: ^5.4.0
   json_annotation: ^4.8.1
+  flutter_secure_storage: ^9.2.2
+  file_picker: ^8.1.7
 
 dev_dependencies:
   flutter_test:

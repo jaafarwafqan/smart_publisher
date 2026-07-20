@@ -1,21 +1,21 @@
-import '../../features/posts/data/post_dto.dart';
+import '../../backend_contracts/v1/posts_contract_v1.dart';
 import '../../features/posts/domain/entities/post_entity.dart';
 import '../../shared/mappers/mapper.dart';
 
-class PostMapper extends Mapper<PostDto, PostEntity> {
+class PostMapper extends Mapper<PostResponseDtoV1, PostEntity> {
   const PostMapper();
 
   @override
-  PostEntity map(PostDto input) {
+  PostEntity map(PostResponseDtoV1 input) {
     return PostEntity(
       id: input.id,
       title: input.title,
-      body: input.body,
+      body: input.content,
       status: input.status,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
-      aiImproved: input.aiImproved,
-      hasMedia: input.hasMedia,
+      aiImproved: false,
+      hasMedia: false,
       scheduledAt: input.scheduledAt,
     );
   }

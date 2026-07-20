@@ -1,14 +1,14 @@
 import '../../features/posts/domain/entities/post_entity.dart';
-import '../../platforms/core/platform_type.dart';
+import '../../domain/publish_target.dart';
 
 class PublishContext {
   const PublishContext({
     required this.post,
-    required this.platforms,
+    required this.targets,
     this.metadata = const {},
   });
 
   final PostEntity post;
-  final List<PlatformType> platforms;
+  final List<PublishTarget> targets;
   final Map<String, Object?> metadata;
 }

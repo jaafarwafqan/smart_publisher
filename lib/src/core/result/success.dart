@@ -13,6 +13,9 @@ class Success<T> extends AppResult<T> {
   final Object? exception = null;
 
   @override
+  final AppFailure? failure = null;
+
+  @override
   bool get isSuccess => true;
 
   @override

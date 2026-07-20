@@ -1,5 +1,5 @@
 import '../../features/posts/domain/entities/post_entity.dart';
-import '../../platforms/core/platform_type.dart';
+import '../publish_target.dart';
 import '../../publish_engine/engine/publish_engine.dart';
 
 class PublishService {
@@ -9,8 +9,8 @@ class PublishService {
 
   Future<void> publishPost({
     required PostEntity post,
-    required List<PlatformType> platforms,
+    required List<PublishTarget> targets,
   }) async {
-    await publishEngine.publish(post: post, platforms: platforms);
+    await publishEngine.publish(post: post, targets: targets);
   }
 }

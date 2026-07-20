@@ -1,9 +1,19 @@
+import '../../core/logger/app_logger.dart';
+import '../../core/observability/performance_monitor.dart';
+
 class PublishLogger {
-  const PublishLogger();
+  const PublishLogger({this.performanceMonitor = const PerformanceMonitor()});
+
+  final PerformanceMonitor performanceMonitor;
 
   void log(String message) {
-    // Placeholder for future integration with analytics or crash reporting.
-    // ignore: avoid_print
-    print(message);
+    performanceMonitor.measureSync(
+      'publish.log.duration',
+      () => AppLogger.structured(
+        'INFO',
+        'Publish log',
+        context: <String, Object?>{'message': message},
+      ),
+    );
   }
 }

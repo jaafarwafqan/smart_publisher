@@ -1,26 +1,21 @@
-import 'platform_type.dart';
+import '../../domain/publish_target.dart';
+import 'default_platform_plugins.dart';
+import 'platform_registry.dart';
 import 'social_platform.dart';
-import '../telegram/telegram_platform.dart';
 
 class PlatformFactory {
-  const PlatformFactory();
+  PlatformFactory({
+    Iterable<SocialPlatform> plugins = defaultPlatformPlugins,
+    PlatformRegistry? registry,
+  }) : registry = registry ?? PlatformRegistry(platforms: plugins);
 
-  SocialPlatform create(PlatformType type) {
-    switch (type) {
-      case PlatformType.telegram:
-        return TelegramPlatform();
-      case PlatformType.facebook:
-        throw UnimplementedError('Facebook platform not implemented yet.');
-      case PlatformType.instagram:
-        throw UnimplementedError('Instagram platform not implemented yet.');
-      case PlatformType.whatsapp:
-        throw UnimplementedError('WhatsApp platform not implemented yet.');
-      case PlatformType.threads:
-        throw UnimplementedError('Threads platform not implemented yet.');
-      case PlatformType.twitter:
-        throw UnimplementedError('Twitter platform not implemented yet.');
-      case PlatformType.linkedin:
-        throw UnimplementedError('LinkedIn platform not implemented yet.');
-    }
+  final PlatformRegistry registry;
+
+  List<ResolvedPublisher> createForTarget(PublishTarget target) {
+    return registry.resolve(target);
+  }
+
+  SocialPlatform createById(String platformId) {
+    return registry.get(platformId);
   }
 }

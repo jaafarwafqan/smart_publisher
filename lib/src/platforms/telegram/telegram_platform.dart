@@ -1,35 +1,67 @@
 import '../../features/posts/domain/entities/post_entity.dart';
+import '../../domain/publish_target.dart';
 import '../core/auth_result.dart';
+import '../core/platform_analytics.dart';
 import '../core/platform_capability.dart';
-import '../core/platform_exception.dart';
+import '../core/platform_error_mapping.dart';
+import '../core/platform_sdk.dart';
 import '../core/publish_result.dart';
 import '../core/social_platform.dart';
+import '../sdk/telegram_sdk/telegram_sdk.dart';
 
 class TelegramPlatform implements SocialPlatform {
-  const TelegramPlatform();
+  const TelegramPlatform({this.sdk = const TelegramSdk()});
+
+  final TelegramSdk sdk;
+
+  @override
+  String get platformId => 'telegram';
+
+  @override
+  Set<String> get supportedTargetKeys => const {'telegram'};
 
   @override
   Future<AuthResult> connect() async {
-    return const AuthResult(success: true, message: 'Telegram connected');
+    return sdk.authenticate();
   }
 
   @override
   Future<void> disconnect() async {}
 
   @override
-  Future<PublishResult> publish(PostEntity post) async {
-    if (post.title.isEmpty || post.body.isEmpty) {
-      throw const PlatformException(
-        'Post title and body are required.',
-        code: 'TG001',
-      );
-    }
+  Future<PublishResult> publish(PostEntity post) {
+    return sdk.publish(post);
+  }
 
-    return PublishResult(
-      success: true,
-      message: 'Telegram post published',
-      externalId: 'telegram-${post.id}',
+  Future<String> uploadMedia({
+    required String postId,
+    required String mediaUrl,
+    required String mimeType,
+  }) {
+    return sdk.uploadMedia(
+      UploadMediaRequest(
+        postId: postId,
+        mediaUrl: mediaUrl,
+        mimeType: mimeType,
+      ),
     );
+  }
+
+  Future<void> deletePost(String externalPostId) {
+    return sdk.delete(externalPostId);
+  }
+
+  Future<PlatformAnalytics> fetchAnalytics(String externalPostId) {
+    return sdk.analytics(externalPostId);
+  }
+
+  PlatformErrorMapping mapError(Object error, [StackTrace? stackTrace]) {
+    return sdk.mapError(error, stackTrace);
+  }
+
+  @override
+  bool supportsTarget(PublishTarget target) {
+    return supportedTargetKeys.contains(target.destinationKey);
   }
 
   @override

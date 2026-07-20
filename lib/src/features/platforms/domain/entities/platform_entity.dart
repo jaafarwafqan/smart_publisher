@@ -1,26 +1,16 @@
 import '../../../../core/base/base_entity.dart';
 
-enum PlatformType {
-  facebook,
-  instagram,
-  telegram,
-  whatsapp,
-  threads,
-  linkedin,
-  x,
-}
-
 class PlatformEntity extends BaseEntity {
   const PlatformEntity({
     required this.id,
     required this.name,
-    required this.type,
+    required this.typeKey,
     this.isConnected = false,
   });
 
   @override
   final String id;
   final String name;
-  final PlatformType type;
+  final String typeKey;
   final bool isConnected;
 }
