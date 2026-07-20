@@ -16,6 +16,32 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
   final Map<String, AnalyticsMetricEntity> _cache =
       <String, AnalyticsMetricEntity>{};
 
+  int _asInt(Object? value, {int fallback = 0}) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value) ?? double.tryParse(value)?.toInt() ?? fallback;
+    }
+    return fallback;
+  }
+
+  double _asDouble(Object? value, {double fallback = 0}) {
+    if (value is double) {
+      return value;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value) ?? fallback;
+    }
+    return fallback;
+  }
+
   @override
   Future<AppResult<AnalyticsMetricEntity>> getPostMetrics(String postId) async {
     if (networkClient != null) {
@@ -86,11 +112,10 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
             _cache[metric.postId] = metric;
           }
 
-          final totalReach = (payload['total_reach'] ?? 0) as int;
-          final totalEngagement = (payload['total_engagement'] ?? 0) as int;
-          final totalImpressions = (payload['total_impressions'] ?? 0) as int;
-          final avgRate = ((payload['average_engagement_rate'] ?? 0) as num)
-              .toDouble();
+          final totalReach = _asInt(payload['total_reach']);
+          final totalEngagement = _asInt(payload['total_engagement']);
+          final totalImpressions = _asInt(payload['total_impressions']);
+          final avgRate = _asDouble(payload['average_engagement_rate']);
 
           return AnalyticsDashboardEntity(
             generatedAt: DateTime.now(),

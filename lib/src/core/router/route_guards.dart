@@ -44,11 +44,19 @@ final class RouteGuards {
 
   static bool _isAdminRoute(String path) {
     return path.startsWith(RouteNames.adminPath) ||
-        path.startsWith(RouteNames.administrationPath);
+        path.startsWith(RouteNames.administrationPath) ||
+        path.startsWith(RouteNames.productionReleasePath);
   }
 
   static bool _isPublisherRoute(String path) {
-    return path.startsWith(RouteNames.publisherPath);
+    return path.startsWith(RouteNames.publisherPath) ||
+        path.startsWith(RouteNames.postsCreatePath) ||
+        path.startsWith(RouteNames.postsListPath) ||
+        path.startsWith(RouteNames.mediaLibraryPath) ||
+        path.startsWith(RouteNames.calendarPath) ||
+        path.startsWith(RouteNames.analyticsPath) ||
+        path.startsWith(RouteNames.notificationsPath) ||
+        path.startsWith(RouteNames.settingsPath);
   }
 
   static bool _isAuthenticationRoute(String path) {

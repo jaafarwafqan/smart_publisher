@@ -15,14 +15,35 @@ class PostAnalyticsResponseDtoV1 {
   final int reactions;
   final String status;
 
+  static String _asString(Object? value, {String fallback = ''}) {
+    if (value == null) {
+      return fallback;
+    }
+    final text = value.toString();
+    return text.isEmpty ? fallback : text;
+  }
+
+  static int _asInt(Object? value, {int fallback = 0}) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value) ?? double.tryParse(value)?.toInt() ?? fallback;
+    }
+    return fallback;
+  }
+
   factory PostAnalyticsResponseDtoV1.fromJson(Map<String, dynamic> json) {
     return PostAnalyticsResponseDtoV1(
-      postId: (json['post_id'] ?? '') as String,
-      impressions: (json['impressions'] ?? 0) as int,
-      clicks: (json['clicks'] ?? 0) as int,
-      shares: (json['shares'] ?? 0) as int,
-      reactions: (json['reactions'] ?? 0) as int,
-      status: (json['status'] ?? 'draft') as String,
+      postId: _asString(json['post_id']),
+      impressions: _asInt(json['impressions']),
+      clicks: _asInt(json['clicks']),
+      shares: _asInt(json['shares']),
+      reactions: _asInt(json['reactions']),
+      status: _asString(json['status'], fallback: 'draft'),
     );
   }
 

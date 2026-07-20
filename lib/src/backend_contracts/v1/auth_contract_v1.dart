@@ -9,6 +9,13 @@ class LoginRequestDtoV1 {
   }
 }
 
+String _stringValue(Object? value) {
+  if (value == null) {
+    return '';
+  }
+  return value.toString();
+}
+
 class RefreshTokenRequestDtoV1 {
   const RefreshTokenRequestDtoV1({required this.refreshToken});
 
@@ -34,10 +41,10 @@ class AuthUserDtoV1 {
 
   factory AuthUserDtoV1.fromJson(Map<String, dynamic> json) {
     return AuthUserDtoV1(
-      id: (json['id'] ?? '') as String,
-      name: (json['name'] ?? '') as String,
-      email: (json['email'] ?? '') as String,
-      role: json['role'] as String?,
+      id: _stringValue(json['id']),
+      name: _stringValue(json['name']),
+      email: _stringValue(json['email']),
+      role: json['role']?.toString(),
     );
   }
 }
@@ -45,24 +52,24 @@ class AuthUserDtoV1 {
 class LoginResponseDtoV1 {
   const LoginResponseDtoV1({
     required this.accessToken,
-    required this.refreshToken,
+    this.refreshToken,
     required this.user,
     this.expiresIn = 3600,
     this.scope = '',
   });
 
   final String accessToken;
-  final String refreshToken;
+  final String? refreshToken;
   final AuthUserDtoV1 user;
   final int expiresIn;
   final String scope;
 
   factory LoginResponseDtoV1.fromJson(Map<String, dynamic> json) {
     return LoginResponseDtoV1(
-      accessToken: (json['access_token'] ?? '') as String,
-      refreshToken: (json['refresh_token'] ?? '') as String,
+      accessToken: _stringValue(json['access_token']),
+      refreshToken: json['refresh_token']?.toString(),
       expiresIn: (json['expires_in'] as num?)?.toInt() ?? 3600,
-      scope: (json['scope'] ?? '') as String,
+      scope: _stringValue(json['scope']),
       user: AuthUserDtoV1.fromJson(
         (json['user'] as Map<String, dynamic>? ?? <String, dynamic>{}),
       ),
@@ -85,10 +92,10 @@ class RefreshTokenResponseDtoV1 {
 
   factory RefreshTokenResponseDtoV1.fromJson(Map<String, dynamic> json) {
     return RefreshTokenResponseDtoV1(
-      accessToken: (json['access_token'] ?? '') as String,
-      refreshToken: json['refresh_token'] as String?,
+      accessToken: _stringValue(json['access_token']),
+      refreshToken: json['refresh_token']?.toString(),
       expiresIn: (json['expires_in'] as num?)?.toInt() ?? 3600,
-      scope: (json['scope'] ?? '') as String,
+      scope: _stringValue(json['scope']),
     );
   }
 }

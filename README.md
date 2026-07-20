@@ -175,7 +175,7 @@ Flutter
 - `lib/src/features/media/data/media_repository_impl.dart`
 - `lib/src/features/analytics/data/repository/analytics_repository_impl.dart`
 
-### Laravel Smoke Test (Login/Create/Upload Draft/Schedule/Analytics)
+### Laravel Smoke Test (Login/Refresh/Create/Upload Draft/Schedule/Analytics)
 
 لتجربة الربط الفعلي مع Laravel شغل الاختبار التالي مع متغيرات البيئة:
 
@@ -184,12 +184,14 @@ flutter test test/integration/laravel_backend_smoke_integration_test.dart \
   --dart-define=SP_RUN_LARAVEL_SMOKE=true \
   --dart-define=SP_API_BASE_URL=https://your-api-host \
   --dart-define=SP_AUTH_BASE_URL=https://your-auth-host \
+  --dart-define=SP_OAUTH_BASE_URL=https://your-oauth-host \
   --dart-define=SP_SMOKE_EMAIL=your-user@email.com \
   --dart-define=SP_SMOKE_PASSWORD=your-password
 ```
 
 يغطي الاختبار:
 - تسجيل الدخول.
+- تجديد التوكن (refresh token).
 - إنشاء منشور.
 - رفع صورة (multipart file binary).
 - حفظ المسودة.

@@ -5,7 +5,7 @@ final class LaravelApi {
 
   static const String apiBaseUrl = String.fromEnvironment(
     'SP_API_BASE_URL',
-    defaultValue: 'https://api.smartpublisher.local',
+    defaultValue: 'http://127.0.0.1:8000/api/v1',
   );
 
   static const String authBaseUrl = String.fromEnvironment(
@@ -13,23 +13,41 @@ final class LaravelApi {
     defaultValue: apiBaseUrl,
   );
 
-  static const String openApiUrl = String.fromEnvironment(
-    'SP_OPENAPI_URL',
-    defaultValue: 'https://api.smartpublisher.local/api/v1/openapi.json',
+  static const String oauthBaseUrl = String.fromEnvironment(
+    'SP_OAUTH_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8000',
   );
 
-  static const String _apiPrefix = '/api';
+  static const String openApiUrl = String.fromEnvironment(
+    'SP_OPENAPI_URL',
+    defaultValue: 'http://127.0.0.1:8000/api/v1/openapi.json',
+  );
+
+  static const String _versionPrefix = '';
+
+  static String apiPath(String path) {
+    if (path.isEmpty) {
+      return '/';
+    }
+    if (!path.startsWith('/')) {
+      return '/$path';
+    }
+    return path;
+  }
 
   static String versionPrefix([ApiVersion version = ApiVersion.v1]) {
     switch (version) {
       case ApiVersion.v1:
-        return '$_apiPrefix/v1';
+        return _versionPrefix;
     }
   }
 
   static String versioned(String path, [ApiVersion version = ApiVersion.v1]) {
     if (path.isEmpty) {
       return versionPrefix(version);
+    }
+    if (versionPrefix(version).isEmpty) {
+      return apiPath(path);
     }
     if (!path.startsWith('/')) {
       return '${versionPrefix(version)}/$path';
@@ -72,8 +90,14 @@ final class LaravelEndpoints {
   );
   static String accountById(String id) => LaravelApi.versioned('/accounts/$id');
 
-  static final String authRefresh = LaravelApi.versioned('/auth/refresh');
-  static final String authLogin = LaravelApi.versioned('/auth/login');
+  static final List<String> authLoginCandidates = <String>[
+    LaravelApi.apiPath('/auth/login'),
+  ];
+  static final List<String> authRefreshCandidates = <String>[
+    LaravelApi.apiPath('/auth/refresh'),
+  ];
+  static final String authLogin = authLoginCandidates.first;
+  static final String authRefresh = authRefreshCandidates.first;
 
   static final String analyticsDashboard = LaravelApi.versioned(
     '/analytics/dashboard',

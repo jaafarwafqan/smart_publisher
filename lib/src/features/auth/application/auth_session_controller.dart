@@ -61,9 +61,9 @@ class AuthSessionController {
       }
 
       final dto = LoginResponseDtoV1.fromJson(payload);
-      if (dto.accessToken.trim().isEmpty || dto.refreshToken.trim().isEmpty) {
+      if (dto.accessToken.trim().isEmpty) {
         throw const AuthSessionException(
-          'Authentication tokens are missing from server response.',
+          'Authentication access token is missing from server response.',
         );
       }
 
@@ -76,7 +76,7 @@ class AuthSessionController {
       await tokenLifecycleManager.writeTokens(
         TokenBundle(
           accessToken: dto.accessToken,
-          refreshToken: dto.refreshToken,
+          refreshToken: dto.refreshToken?.trim() ?? '',
           expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
           scopes: scopes,
         ),
@@ -112,6 +112,10 @@ class AuthSessionController {
       );
     } on DioException catch (error) {
       throw AuthSessionException(_messageFromDio(error));
+    } catch (error) {
+      throw AuthSessionException(
+        error.toString().replaceFirst('Exception: ', ''),
+      );
     }
   }
 

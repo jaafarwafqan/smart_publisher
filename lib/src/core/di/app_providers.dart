@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:dio/dio.dart' show BaseOptions, Dio, RequestOptions;
+import 'package:dio/dio.dart'
+    show BaseOptions, Dio, DioException, RequestOptions;
 import 'package:flutter/foundation.dart';
 
 import '../events/event.dart';
@@ -109,6 +110,11 @@ SecretsManager secretsManager(SecretsManagerRef ref) {
     defaultValue: true,
   );
 
+  if (kIsWeb) {
+    // Web storage cannot guarantee hardware-backed secret protection.
+    return InMemorySecretsManager();
+  }
+
   if (kReleaseMode) {
     return PlatformSecureSecretsManager();
   }
@@ -138,9 +144,9 @@ OAuthManager oauthManager(OauthManagerRef ref) {
     OAuthConfiguration(
       clientId: 'smart-publisher-mobile',
       authorizationEndpoint: Uri.parse(
-        'https://auth.smartpublisher.local/oauth/authorize',
+        '${LaravelApi.oauthBaseUrl}/oauth/authorize',
       ),
-      tokenEndpoint: Uri.parse('https://auth.smartpublisher.local/oauth/token'),
+      tokenEndpoint: Uri.parse('${LaravelApi.oauthBaseUrl}/oauth/token'),
       redirectUri: Uri.parse('smartpublisher://oauth/callback'),
       defaultScopes: const <String>{
         'posts.read',
@@ -162,35 +168,39 @@ TokenLifecycleManager tokenLifecycleManager(TokenLifecycleManagerRef ref) {
   return TokenLifecycleManager(
     tokenStorage: ref.read(secureTokenStorageProvider),
     refreshExecutor: (refreshToken) async {
-      final response = await Dio().post<dynamic>(
-        '${LaravelApi.authBaseUrl}${LaravelEndpoints.authRefresh}',
-        data: <String, dynamic>{'refresh_token': refreshToken},
-      );
-      final raw = response.data;
-      if (raw is! Map<String, dynamic>) {
+      try {
+        final response = await Dio().post<dynamic>(
+          '${LaravelApi.authBaseUrl}${LaravelEndpoints.authRefresh}',
+          data: <String, dynamic>{'refresh_token': refreshToken},
+        );
+        final raw = response.data;
+        if (raw is! Map<String, dynamic>) {
+          return null;
+        }
+        final payload = raw.containsKey('success')
+            ? ApiEnvelopeV1.fromJson(raw).data
+            : raw['data'];
+        if (payload is! Map<String, dynamic>) {
+          return null;
+        }
+        final dto = RefreshTokenResponseDtoV1.fromJson(payload);
+        if (dto.accessToken.isEmpty) {
+          return null;
+        }
+        final rotatedRefresh = dto.refreshToken ?? refreshToken;
+        final scopes = (dto.scope
+            .split(' ')
+            .where((scope) => scope.trim().isNotEmpty)
+            .toSet());
+        return TokenBundle(
+          accessToken: dto.accessToken,
+          refreshToken: rotatedRefresh,
+          expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
+          scopes: scopes,
+        );
+      } on DioException {
         return null;
       }
-      final payload = raw.containsKey('success')
-          ? ApiEnvelopeV1.fromJson(raw).data
-          : raw['data'];
-      if (payload is! Map<String, dynamic>) {
-        return null;
-      }
-      final dto = RefreshTokenResponseDtoV1.fromJson(payload);
-      if (dto.accessToken.isEmpty) {
-        return null;
-      }
-      final rotatedRefresh = dto.refreshToken ?? refreshToken;
-      final scopes = (dto.scope
-          .split(' ')
-          .where((scope) => scope.trim().isNotEmpty)
-          .toSet());
-      return TokenBundle(
-        accessToken: dto.accessToken,
-        refreshToken: rotatedRefresh,
-        expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
-        scopes: scopes,
-      );
     },
   );
 }

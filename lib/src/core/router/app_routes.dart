@@ -1009,7 +1009,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() {
         _error = error is AuthSessionException
             ? error.message
-            : 'Login failed. Check credentials or backend availability.';
+            : error.toString().replaceFirst('Exception: ', '');
       });
     } finally {
       if (mounted) {

@@ -5,12 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/core/events/event_bus.dart';
 import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
     as app_events;
+import 'package:smart_publisher/src/backend_contracts/v1/api_envelope_v1.dart';
+import 'package:smart_publisher/src/backend_contracts/v1/auth_contract_v1.dart';
 import 'package:smart_publisher/src/core/network/dio_network_client.dart';
 import 'package:smart_publisher/src/core/network/laravel_api.dart';
 import 'package:smart_publisher/src/core/network/network_client.dart';
 import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
+import 'package:smart_publisher/src/core/security/token_bundle.dart';
 import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
 import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart';
 import 'package:smart_publisher/src/features/analytics/data/repository/analytics_repository_impl.dart';
@@ -49,11 +52,10 @@ void main() {
         secretsManager: InMemorySecretsManager(),
         encryptionService: const DefaultEncryptionService(),
       );
+      final tokenLifecycleManager = _buildTokenLifecycleManager(tokenStorage);
       final authController = AuthSessionController(
         networkClient: networkClient,
-        tokenLifecycleManager: TokenLifecycleManager(
-          tokenStorage: tokenStorage,
-        ),
+        tokenLifecycleManager: tokenLifecycleManager,
         storageService: storage,
         authEventPublisher: AuthEventPublisher(
           app_events.EventDispatcher(EventBus()),
@@ -65,6 +67,17 @@ void main() {
         password: smokePassword,
       );
       expect(session.user.email, isNotEmpty);
+
+      final accessBeforeRefresh =
+          (await tokenStorage.readTokens())?.accessToken ?? '';
+      final refreshedAccessToken = await tokenLifecycleManager
+          .refreshAccessToken();
+      expect(refreshedAccessToken, isNotNull);
+      expect(refreshedAccessToken, isNotEmpty);
+      final accessAfterRefresh =
+          (await tokenStorage.readTokens())?.accessToken ?? '';
+      expect(accessAfterRefresh, isNotEmpty);
+      expect(accessBeforeRefresh, isNotEmpty);
 
       final postRepository = PostRepositoryImpl(networkClient: networkClient);
       final mediaRepository = MediaRepositoryImpl(networkClient: networkClient);
@@ -116,6 +129,49 @@ void main() {
       await imageFile.delete();
     });
   });
+}
+
+TokenLifecycleManager _buildTokenLifecycleManager(
+  SecureTokenStorage tokenStorage,
+) {
+  return TokenLifecycleManager(
+    tokenStorage: tokenStorage,
+    refreshExecutor: (refreshToken) async {
+      try {
+        final response = await Dio().post<dynamic>(
+          '${LaravelApi.authBaseUrl}${LaravelEndpoints.authRefresh}',
+          data: <String, dynamic>{'refresh_token': refreshToken},
+        );
+        final raw = response.data;
+        if (raw is! Map<String, dynamic>) {
+          return null;
+        }
+        final payload = raw.containsKey('success')
+            ? ApiEnvelopeV1.fromJson(raw).data
+            : raw['data'];
+        if (payload is! Map<String, dynamic>) {
+          return null;
+        }
+        final dto = RefreshTokenResponseDtoV1.fromJson(payload);
+        if (dto.accessToken.isEmpty) {
+          return null;
+        }
+        final rotatedRefresh = dto.refreshToken ?? refreshToken;
+        final scopes = dto.scope
+            .split(' ')
+            .where((scope) => scope.trim().isNotEmpty)
+            .toSet();
+        return TokenBundle(
+          accessToken: dto.accessToken,
+          refreshToken: rotatedRefresh,
+          expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
+          scopes: scopes,
+        );
+      } on DioException {
+        return null;
+      }
+    },
+  );
 }
 
 NetworkClient _buildNetworkClient() {

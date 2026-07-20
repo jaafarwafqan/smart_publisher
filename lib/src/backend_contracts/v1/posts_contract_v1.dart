@@ -1,5 +1,13 @@
 import '../../domain/publish_target.dart';
 
+String _asString(Object? value, {String fallback = ''}) {
+  if (value == null) {
+    return fallback;
+  }
+  final text = value.toString();
+  return text.isEmpty ? fallback : text;
+}
+
 class PostRequestDtoV1 {
   const PostRequestDtoV1({
     required this.title,
@@ -62,10 +70,10 @@ class PostResponseDtoV1 {
 
   factory PostResponseDtoV1.fromJson(Map<String, dynamic> json) {
     return PostResponseDtoV1(
-      id: (json['id'] ?? '') as String,
-      title: (json['title'] ?? '') as String,
-      content: (json['content'] ?? '') as String,
-      status: (json['status'] ?? 'draft') as String,
+      id: _asString(json['id']),
+      title: _asString(json['title']),
+      content: _asString(json['content']),
+      status: _asString(json['status'], fallback: 'draft'),
       createdAt: _parseDate(json['created_at']),
       updatedAt: _parseDate(json['updated_at']),
       scheduledAt: _parseDate(json['scheduled_at']),
