@@ -120,11 +120,12 @@ final class LaravelEndpoints {
   static String postMediaAttach(String postId) =>
       LaravelApi.versioned('/posts/$postId/media/attach');
 
-  static final String accounts = LaravelApi.versioned('/accounts');
-  static final String accountsConnect = LaravelApi.versioned(
-    '/accounts/connect',
-  );
-  static String accountById(String id) => LaravelApi.versioned('/accounts/$id');
+  // Sprint 2 (API Hardening, backend): the legacy /accounts/* endpoints
+  // these three constants pointed at were removed server-side — only
+  // index() was ever implemented there; connect/show/update/destroy 500'd
+  // on every call. AccountRepositoryImpl was migrated onto
+  // socialAccountsList/socialAccountsStore/etc. below in an earlier
+  // session, and grep confirmed zero remaining references to these three.
 
   static String socialAccountsList(String userId) =>
       LaravelApi.versioned('/users/$userId/social-accounts');
