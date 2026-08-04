@@ -465,6 +465,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get activityPartiallyPublished => 'نُشر جزئيًا — فشلت بعض الوجهات';
+
+  @override
+  String get activityCancelled => 'أُلغي قبل النشر';
+
+  @override
   String get activityCurrentlyPublishing => 'يُنشر الآن';
 
   @override
@@ -1389,6 +1395,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get postsListStatusFailed => 'فشل';
+
+  @override
+  String get postsListStatusPartialSuccess => 'نجاح جزئي';
+
+  @override
+  String get postsListStatusCancelled => 'أُلغي';
 
   @override
   String get postsListLoadMore => 'تحميل المزيد';

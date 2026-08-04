@@ -329,7 +329,10 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final bool warning = status == 'scheduled' || status == 'publishing';
+    final bool warning =
+        status == 'scheduled' ||
+        status == 'publishing' ||
+        status == 'partial_success';
     final bool success = status == 'published';
     final bool danger = status == 'failed';
 
@@ -372,6 +375,10 @@ class _StatusBadge extends StatelessWidget {
         return l10n.postsListFilterPublished;
       case 'failed':
         return l10n.postsListStatusFailed;
+      case 'partial_success':
+        return l10n.postsListStatusPartialSuccess;
+      case 'cancelled':
+        return l10n.postsListStatusCancelled;
       case 'draft':
       default:
         return l10n.postsListFilterDraft;

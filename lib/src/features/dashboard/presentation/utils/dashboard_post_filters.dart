@@ -29,8 +29,16 @@ List<PostEntity> publishingQueue(List<PostEntity> posts) {
   return items;
 }
 
+/// Includes 'partial_success' — a batch that published to some targets but
+/// failed on others still needs the same attention a total failure does
+/// (which pages/channels are missing the post), so it must not silently
+/// disappear from this section just because it wasn't a 100% failure.
 List<PostEntity> failedPosts(List<PostEntity> posts) {
-  return posts.where((post) => post.status == 'failed').toList(growable: false);
+  return posts
+      .where(
+        (post) => post.status == 'failed' || post.status == 'partial_success',
+      )
+      .toList(growable: false);
 }
 
 /// Most recently published posts, newest first. Falls back to [updatedAt]

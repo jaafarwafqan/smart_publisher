@@ -890,6 +890,18 @@ abstract class AppLocalizations {
   /// **'فشل على {platform}'**
   String activityFailedOn(String platform);
 
+  /// No description provided for @activityPartiallyPublished.
+  ///
+  /// In ar, this message translates to:
+  /// **'نُشر جزئيًا — فشلت بعض الوجهات'**
+  String get activityPartiallyPublished;
+
+  /// No description provided for @activityCancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُلغي قبل النشر'**
+  String get activityCancelled;
+
   /// No description provided for @activityCurrentlyPublishing.
   ///
   /// In ar, this message translates to:
@@ -2539,6 +2551,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فشل'**
   String get postsListStatusFailed;
+
+  /// No description provided for @postsListStatusPartialSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'نجاح جزئي'**
+  String get postsListStatusPartialSuccess;
+
+  /// No description provided for @postsListStatusCancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'أُلغي'**
+  String get postsListStatusCancelled;
 
   /// No description provided for @postsListLoadMore.
   ///

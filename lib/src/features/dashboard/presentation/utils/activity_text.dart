@@ -20,6 +20,10 @@ String activitySubtitle(
       return _scheduledSubtitle(post, today, l10n);
     case 'failed':
       return l10n.activityFailedOn(_firstPlatformLabel(post, l10n));
+    case 'partial_success':
+      return l10n.activityPartiallyPublished;
+    case 'cancelled':
+      return l10n.activityCancelled;
     case 'publishing':
       return l10n.activityCurrentlyPublishing;
     case 'draft':

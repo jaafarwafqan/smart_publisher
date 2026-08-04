@@ -470,6 +470,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get activityPartiallyPublished =>
+      'Partially published — some targets failed';
+
+  @override
+  String get activityCancelled => 'Cancelled before publishing';
+
+  @override
   String get activityCurrentlyPublishing => 'Currently publishing';
 
   @override
@@ -1404,6 +1411,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postsListStatusFailed => 'Failed';
+
+  @override
+  String get postsListStatusPartialSuccess => 'Partially published';
+
+  @override
+  String get postsListStatusCancelled => 'Cancelled';
 
   @override
   String get postsListLoadMore => 'Load more';

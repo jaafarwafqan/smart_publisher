@@ -61,6 +61,10 @@ class RecentActivityList extends StatelessWidget {
         return Icons.schedule;
       case 'failed':
         return Icons.error_outline;
+      case 'partial_success':
+        return Icons.warning_amber_outlined;
+      case 'cancelled':
+        return Icons.block_outlined;
       case 'publishing':
         return Icons.sync;
       case 'draft':
