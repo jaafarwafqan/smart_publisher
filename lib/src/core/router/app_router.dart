@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import 'app_navigation_observer.dart';
 import 'app_routes.dart';
@@ -41,14 +42,40 @@ GoRouter router(RouterRef ref) {
 }
 
 /// صفحة تعرض عند محاولة الوصول إلى مسار غير موجود.
-///
-/// سيتم استبدالها لاحقاً بصفحة احترافية داخل:
-/// core/widgets/errors/not_found_page.dart
 class _NotFoundScreen extends StatelessWidget {
   const _NotFoundScreen();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('404 - Page Not Found')));
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Icon(Icons.search_off, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                l10n.notFoundTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.notFoundSubtitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => context.go(RouteNames.dashboardPath),
+                child: Text(l10n.notFoundGoHomeButton),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

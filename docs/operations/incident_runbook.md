@@ -21,13 +21,13 @@
 - Are canary users only impacted or all users?
 
 ## Alert Thresholds (Operational Defaults)
-- Crash Rate Alert: `ops.crash_rate >= 0.02`
-- Publish Failure Rate Alert: `ops.publish_failure_rate >= 0.05`
-- API Latency Alert: `http.request.duration` average >= `1200ms`
-- Queue Length Alert: `ops.queue.length >= 200`
-- Retry Storm Alert: `ops.retry_storm.count >= 50`
+- Crash Rate Alert: `ops.crash_rate >= 0.02` — **not live.** `MonitoringAlertPolicy` in `lib/src/core/observability/alert_policy.dart` can evaluate this, but nothing ever writes to the `ops.crash_rate` gauge and nothing calls `.evaluate()` — needs a real crash-reporting SDK (Sentry/Crashlytics) wired first, an external-vendor decision, not yet made.
+- Publish Failure Rate Alert: `ops.publish_failure_rate >= 0.05` — **live**, backend-side: `app:ops-snapshot` (scheduled every 5 minutes, `routes/console.php`) computes this for real from `PostPublicationAttempt` rows and logs `ops.alert.publish_failure_rate` via `ContextLogger::error()` when breached. Threshold configurable via `config/ops.php`/`OPS_ALERT_PUBLISH_FAILURE_RATE`.
+- API Latency Alert: `http.request.duration` average >= `1200ms` — the metric itself IS real (recorded by Flutter's network interceptor), but nothing evaluates or delivers an alert on it yet. Deferred alongside crash rate — same missing-sink problem.
+- Queue Length Alert: `ops.queue.length >= 200` — **live**, via `app:ops-snapshot` (counts `pending`/`processing` publication attempts), logs `ops.alert.queue_length`.
+- Retry Storm Alert: `ops.retry_storm.count >= 50` — **live**, via `app:ops-snapshot` (counts `retry_scheduled` attempts), logs `ops.alert.retry_storm`.
 
-Reference implementation: `lib/src/core/observability/alert_policy.dart`
+The "delivery" for the 3 live alerts today is a structured log line (`ContextLogger`) — real and grep-able, but there is still no push notification/paging integration (Slack/PagerDuty/etc.). That's the next step once an on-call tool is chosen; until then, watching the logs for `ops.alert.*` IS the alerting mechanism.
 
 ## Mitigation Playbook
 1. Disable risky feature flags.

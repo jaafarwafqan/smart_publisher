@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_publisher/src/backend_contracts/v1/accounts_contract_v1.dart';
 import 'package:smart_publisher/src/backend_contracts/v1/analytics_contract_v1.dart';
 import 'package:smart_publisher/src/backend_contracts/v1/backend_contract_mapper_v1.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/media_entity.dart';
@@ -37,6 +38,9 @@ void main() {
         clicks: 10,
         shares: 3,
         reactions: 7,
+        comments: 2,
+        reach: 80,
+        available: true,
         status: 'published',
       );
 
@@ -46,5 +50,30 @@ void main() {
       expect(map['impressions'], 100);
       expect(map['status'], 'published');
     });
+
+    test(
+      'maps token expiry, last synced, and last published through to the entity',
+      () {
+        final tokenExpiresAt = DateTime.utc(2026, 8, 1);
+        final lastSyncedAt = DateTime.utc(2026, 7, 26, 10);
+        final lastPublishedAt = DateTime.utc(2026, 7, 25, 9);
+
+        final dto = SocialAccountResponseDtoV1(
+          id: '1',
+          provider: 'facebook',
+          providerAccountId: 'fb-1',
+          status: 'connected',
+          tokenExpiresAt: tokenExpiresAt,
+          lastSyncedAt: lastSyncedAt,
+          lastPublishedAt: lastPublishedAt,
+        );
+
+        final entity = BackendContractMapperV1.toAccountEntity(dto);
+
+        expect(entity.tokenExpiresAt, tokenExpiresAt);
+        expect(entity.lastSyncedAt, lastSyncedAt);
+        expect(entity.lastPublishedAt, lastPublishedAt);
+      },
+    );
   });
 }

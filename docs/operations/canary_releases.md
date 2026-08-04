@@ -1,35 +1,15 @@
 # Canary Releases
 
-## Objective
-Reduce release risk by exposing new build/features to a controlled user subset.
+Canary release controls are not implemented for the current Android
+closed-beta distribution.  The app's release-management UI deliberately keeps
+canary/release actions disabled because it cannot attest to CI, distribution,
+or backend traffic state.
 
-## Runtime Controls
-- `SP_RELEASE_CHANNEL=canary`
-- `SP_CANARY_PERCENT=<0..100>`
-- Feature flag: `canary_publish_pipeline`
+Do not set `SP_RELEASE_CHANNEL=canary`, `SP_CANARY_PERCENT`, or claim that an
+`X-Canary-Percent` request header changes a deployed rollout.  The only
+supported release channel in `.github/workflows/release.yml` is `closed-beta`.
 
-## How It Works
-1. App includes channel metadata headers:
-   - `X-Release-Channel`
-   - `X-Canary-Percent`
-2. Canary-only feature flags use deterministic user bucketing.
-3. If canary metrics degrade, reduce percent or disable canary feature flag immediately.
-
-## Rollout Plan
-1. 5% for 30 minutes
-2. 15% for 60 minutes
-3. 30% for 2 hours
-4. 50% for 4 hours
-5. 100% and promote to stable
-
-## Abort Conditions
-- Error budget burn rate breach
-- Queue failure spikes
-- Auth refresh failures increase > 2x baseline
-
-## Observability Requirements
-Track by release channel:
-- HTTP error rate
-- publish job success/failure ratio
-- queue retry rate
-- app startup and publish latency percentiles
+If a future deployment needs progressive delivery, add a real backend traffic
+controller, provider-specific distribution configuration, measured promotion
+criteria, audited rollback capability, and automated tests.  Until then,
+closed-beta tester groups are the controlled exposure mechanism.

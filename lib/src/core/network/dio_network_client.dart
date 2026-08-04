@@ -39,14 +39,18 @@ class DioNetworkClient implements NetworkClient {
     Options? options,
     int? timeoutInSeconds,
   }) {
-    return requestWithRetry(() {
-      return _dio.post<dynamic>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: _withTimeout(options, timeoutInSeconds),
-      );
-    });
+    // Deliberately NOT run through requestWithRetry: POST creates a
+    // resource (a new post, a login session, ...) and is not idempotent.
+    // Retrying blindly on a timeout/401/422 after the server already
+    // committed the write (response just never made it back) produces a
+    // second, duplicate resource. GET/PUT/DELETE below stay retryable
+    // because they're safe to repeat.
+    return _dio.post<dynamic>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: _withTimeout(options, timeoutInSeconds),
+    );
   }
 
   @override

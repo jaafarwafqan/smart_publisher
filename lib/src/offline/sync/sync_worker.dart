@@ -17,11 +17,35 @@ class SyncWorker {
   final int maxAttempts;
   final Duration retryBackoff;
 
-  Future<int> runOnce(Map<OutboxOperation, OutboxSyncHandler> handlers) async {
+  /// [currentOrganizationId] reads whichever organization is active on the
+  /// device *right now*. An entry queued while org A was active must never
+  /// replay while the device has since switched to org B — that would
+  /// create org A's content inside org B. Entries are simply skipped (not
+  /// retried/dead-lettered — this isn't a failure, just "not yet, wrong
+  /// org") until the device switches back. Entries with no recorded
+  /// organizationId (queued before this check existed) always replay,
+  /// matching the prior behavior for that legacy data.
+  Future<int> runOnce(
+    Map<OutboxOperation, OutboxSyncHandler> handlers, {
+    Future<int?> Function()? currentOrganizationId,
+  }) async {
     final entries = await outboxStore.dueItems();
     var processed = 0;
+    int? activeOrganizationId;
+    var activeOrganizationIdResolved = false;
 
     for (final entry in entries) {
+      if (entry.organizationId != null && currentOrganizationId != null) {
+        if (!activeOrganizationIdResolved) {
+          activeOrganizationId = await currentOrganizationId();
+          activeOrganizationIdResolved = true;
+        }
+        if (activeOrganizationId != null &&
+            activeOrganizationId != entry.organizationId) {
+          continue;
+        }
+      }
+
       final handler = handlers[entry.operation];
       if (handler == null) {
         await outboxStore.markDeadLetter(

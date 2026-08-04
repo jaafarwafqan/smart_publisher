@@ -6,7 +6,7 @@ part of 'app_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$networkClientHash() => r'df88cb0cc2486be640d8eb173f2442bfa6b05351';
+String _$networkClientHash() => r'9e09ebe8423f93c917e53a24b332d18b5014c289';
 
 /// See also [networkClient].
 @ProviderFor(networkClient)
@@ -23,7 +23,7 @@ final networkClientProvider = Provider<NetworkClient>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef NetworkClientRef = ProviderRef<NetworkClient>;
-String _$secretsManagerHash() => r'acc7c7ef3acc1e6734b8127a6cc0ef87cbdf9801';
+String _$secretsManagerHash() => r'adb2386297105017a43d0c346a8fa03e319c960c';
 
 /// See also [secretsManager].
 @ProviderFor(secretsManager)
@@ -75,7 +75,7 @@ final secureTokenStorageProvider = Provider<SecureTokenStorage>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SecureTokenStorageRef = ProviderRef<SecureTokenStorage>;
-String _$oauthManagerHash() => r'5b593b3433ecadc05d7402e8174f32ea8c7c4550';
+String _$oauthManagerHash() => r'551149f5497dbdfa4015a4669e182def36e6eca5';
 
 /// See also [oauthManager].
 @ProviderFor(oauthManager)
@@ -110,7 +110,7 @@ final scopeAuthorizerProvider = Provider<ScopeAuthorizer>.internal(
 // ignore: unused_element
 typedef ScopeAuthorizerRef = ProviderRef<ScopeAuthorizer>;
 String _$tokenLifecycleManagerHash() =>
-    r'd4b5a2bc9fdb8d48ee1ae205af4497518dd0d1f8';
+    r'286cfd13c033548e8d5b38a8caa14c43cda82806';
 
 /// See also [tokenLifecycleManager].
 @ProviderFor(tokenLifecycleManager)
@@ -213,7 +213,7 @@ final draftStorageProvider = Provider<DraftStorage>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DraftStorageRef = ProviderRef<DraftStorage>;
-String _$outboxStoreHash() => r'e97c1b89ffd67c74416ba1e888121a98f066d544';
+String _$outboxStoreHash() => r'1e1d4b706c384a2f15ab145decb23be5b309093b';
 
 /// See also [outboxStore].
 @ProviderFor(outboxStore)
@@ -266,6 +266,24 @@ final syncWorkerProvider = Provider<SyncWorker>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SyncWorkerRef = ProviderRef<SyncWorker>;
+String _$scheduleRepositoryHash() =>
+    r'8d4d062b4aff8492043b51560fd390bb2d6074ac';
+
+/// See also [scheduleRepository].
+@ProviderFor(scheduleRepository)
+final scheduleRepositoryProvider = Provider<ScheduleRepository>.internal(
+  scheduleRepository,
+  name: r'scheduleRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$scheduleRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ScheduleRepositoryRef = ProviderRef<ScheduleRepository>;
 String _$postRepositoryHash() => r'88a07ba19b3a7e4b4015325f51798ed0b95849ed';
 
 /// See also [postRepository].
@@ -336,7 +354,7 @@ final publishPostUseCaseProvider = Provider<PublishPost>.internal(
 // ignore: unused_element
 typedef PublishPostUseCaseRef = ProviderRef<PublishPost>;
 String _$schedulePostUseCaseHash() =>
-    r'793b3fa9b60f73af835e52ba5ac044129a07c8f5';
+    r'aed236f7fb8c0658dd734b66d33e8edc22f88438';
 
 /// See also [schedulePostUseCase].
 @ProviderFor(schedulePostUseCase)

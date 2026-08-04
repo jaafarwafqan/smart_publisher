@@ -11,8 +11,11 @@ class PostEntity extends BaseEntity {
     this.aiImproved = false,
     this.hasMedia = false,
     this.scheduledAt,
+    this.publishedAt,
     this.attachments = const <String>[],
     this.platforms = const <String>[],
+    this.targetPageIds = const <String>[],
+    this.platformContent = const <String, String>{},
   });
 
   @override
@@ -25,8 +28,19 @@ class PostEntity extends BaseEntity {
   final bool aiImproved;
   final bool hasMedia;
   final DateTime? scheduledAt;
+  final DateTime? publishedAt;
   final List<String> attachments;
   final List<String> platforms;
+
+  /// Backend `social_pages.id` values this post targets — the specific
+  /// Pages/Channels/Business Accounts selected in the composer, not just
+  /// platform strings.
+  final List<String> targetPageIds;
+
+  /// Optional per-platform caption override — keyed by provider (e.g.
+  /// `facebook`, `telegram`). Empty/absent means "use the shared [body]" for
+  /// that platform.
+  final Map<String, String> platformContent;
 
   PostEntity copyWith({
     String? id,
@@ -38,8 +52,11 @@ class PostEntity extends BaseEntity {
     bool? aiImproved,
     bool? hasMedia,
     DateTime? scheduledAt,
+    DateTime? publishedAt,
     List<String>? attachments,
     List<String>? platforms,
+    List<String>? targetPageIds,
+    Map<String, String>? platformContent,
   }) {
     return PostEntity(
       id: id ?? this.id,
@@ -51,8 +68,11 @@ class PostEntity extends BaseEntity {
       aiImproved: aiImproved ?? this.aiImproved,
       hasMedia: hasMedia ?? this.hasMedia,
       scheduledAt: scheduledAt ?? this.scheduledAt,
+      publishedAt: publishedAt ?? this.publishedAt,
       attachments: attachments ?? this.attachments,
       platforms: platforms ?? this.platforms,
+      targetPageIds: targetPageIds ?? this.targetPageIds,
+      platformContent: platformContent ?? this.platformContent,
     );
   }
 }

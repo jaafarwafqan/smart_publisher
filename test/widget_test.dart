@@ -7,6 +7,7 @@ import 'package:smart_publisher/src/core/di/app_providers.dart';
 import 'package:smart_publisher/src/core/events/event_bus.dart';
 import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
     as app_events;
+import 'package:smart_publisher/src/core/locale/locale_provider.dart';
 import 'package:smart_publisher/src/core/router/guard_state_provider.dart';
 import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
@@ -14,12 +15,22 @@ import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
 import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart';
 import 'package:smart_publisher/src/core/storage/storage_provider.dart';
+import 'package:smart_publisher/src/features/analytics/data/repository/analytics_repository_impl.dart';
 import 'package:smart_publisher/src/features/auth/application/auth_event_publisher.dart';
 import 'package:smart_publisher/src/features/auth/application/auth_session_controller.dart';
 import 'package:smart_publisher/src/features/auth/data/account_repository_impl.dart';
+import 'package:smart_publisher/src/features/notifications/data/notification_repository_impl.dart';
+import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
+import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
+import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
 import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import 'helpers/fake_network_client.dart';
+
+class _EnglishLocaleNotifier extends LocaleNotifier {
+  @override
+  Locale build() => const Locale('en');
+}
 
 void main() {
   testWidgets('Splash redirects to login then login navigates to dashboard', (
@@ -68,9 +79,38 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: <Override>[
+          // This is a golden-path smoke test asserting on literal English
+          // copy across many screens — pinning the locale here keeps it
+          // stable as screens get translated to Arabic (the app's real
+          // default), rather than needing every assertion below rewritten
+          // in lockstep with each screen's translation.
+          localeProvider.overrideWith(() => _EnglishLocaleNotifier()),
           storageServiceProvider.overrideWithValue(storage),
           authSessionControllerProvider.overrideWithValue(authController),
           accountRepositoryProvider.overrideWithValue(accountRepository),
+          // The Dashboard also loads posts/analytics/notifications now — no
+          // network client means each falls back to its local/empty-data
+          // path instead of hitting a real (absent, in this test) server.
+          postRepositoryProvider.overrideWithValue(PostRepositoryImpl()),
+          analyticsRepositoryProvider.overrideWithValue(
+            AnalyticsRepositoryImpl(),
+          ),
+          notificationRepositoryProvider.overrideWithValue(
+            NotificationRepositoryImpl(),
+          ),
+          currentOrganizationAccessProvider.overrideWith((_) async {
+            const currentOrganization = OrganizationEntity(
+              id: 1,
+              name: 'Jane Doe Organization',
+              slug: 'jane-doe-organization',
+              role: 'owner',
+              isCurrent: true,
+            );
+            return OrganizationAccessState.active(
+              memberships: <OrganizationEntity>[currentOrganization],
+              currentOrganization: currentOrganization,
+            );
+          }),
         ],
         child: const SmartPublisherApp(),
       ),

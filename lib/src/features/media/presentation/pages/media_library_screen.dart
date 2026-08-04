@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
+import '../../../organizations/application/current_organization_access.dart';
+import '../../../posts/domain/entities/media_entity.dart';
 import '../../../posts/domain/entities/post_entity.dart';
 
 class MediaLibraryScreen extends ConsumerStatefulWidget {
@@ -13,9 +18,14 @@ class MediaLibraryScreen extends ConsumerStatefulWidget {
 
 class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<_MediaAssetItem> _assets = const <_MediaAssetItem>[];
+  List<MediaEntity> _items = const <MediaEntity>[];
   bool _loading = true;
+  bool _loadingMore = false;
+  int _currentPage = 1;
+  bool _hasMorePages = false;
+  String? _error;
   String _typeFilter = 'all';
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -25,183 +35,205 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  bool get _canCompressMedia {
+    final access = ref.watch(currentOrganizationAccessProvider).valueOrNull;
+    return access?.hasAnyPermission(<String>[
+          OrganizationPermissions.postsUpdateOwn,
+          OrganizationPermissions.postsUpdateAll,
+        ]) ??
+        false;
+  }
+
+  bool get _canDeleteMedia {
+    final access = ref.watch(currentOrganizationAccessProvider).valueOrNull;
+    return access?.hasAnyPermission(<String>[
+          OrganizationPermissions.postsDeleteOwn,
+          OrganizationPermissions.postsDeleteAll,
+        ]) ??
+        false;
   }
 
   Future<void> _loadMedia() async {
     setState(() {
       _loading = true;
+      _error = null;
     });
 
-    final result = await ref.read(postRepositoryProvider).getPosts();
-    final posts = result.data ?? const <PostEntity>[];
-    final assets = <_MediaAssetItem>[];
-
-    for (final post in posts) {
-      for (final url in post.attachments) {
-        assets.add(
-          _MediaAssetItem(
-            id: 'media-${url.hashCode.abs()}',
-            postId: post.id,
-            title: post.title,
-            url: url,
-            type: _guessType(url),
-            status: post.status,
-            addedAt: post.updatedAt ?? post.createdAt ?? DateTime.now(),
-          ),
+    final result = await ref
+        .read(mediaRepositoryProvider)
+        .getMediaLibraryPage(
+          type: _typeFilter == 'all' ? null : _typeFilter,
+          search: _searchController.text.trim().isEmpty
+              ? null
+              : _searchController.text.trim(),
+          page: 1,
         );
-      }
-    }
 
     if (!mounted) {
       return;
     }
 
-    assets.sort((a, b) => b.addedAt.compareTo(a.addedAt));
-
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
-      _assets = assets;
       _loading = false;
+      if (result.isSuccess) {
+        final page = result.data;
+        _items = page?.items ?? const <MediaEntity>[];
+        _currentPage = page?.page ?? 1;
+        _hasMorePages = page != null && _currentPage < page.totalPages;
+      } else {
+        _error = result.message ?? l10n.mediaFailedToLoad;
+      }
     });
   }
 
-  Future<void> _deleteAsset(_MediaAssetItem item) async {
+  Future<void> _loadMoreMedia() async {
+    setState(() {
+      _loadingMore = true;
+    });
+
+    final result = await ref
+        .read(mediaRepositoryProvider)
+        .getMediaLibraryPage(
+          type: _typeFilter == 'all' ? null : _typeFilter,
+          search: _searchController.text.trim().isEmpty
+              ? null
+              : _searchController.text.trim(),
+          page: _currentPage + 1,
+        );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _loadingMore = false;
+      if (result.isSuccess) {
+        final page = result.data;
+        if (page != null) {
+          _items = <MediaEntity>[..._items, ...page.items];
+          _currentPage = page.page;
+          _hasMorePages = _currentPage < page.totalPages;
+        }
+      }
+      // A failed "load more" leaves the already-loaded items on screen —
+      // only the initial load surfaces a page-replacing error state.
+    });
+  }
+
+  void _onSearchChanged(String _) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), _loadMedia);
+  }
+
+  Future<void> _deleteAsset(MediaEntity item) async {
     final result = await ref.read(mediaRepositoryProvider).deleteMedia(item.id);
     if (!mounted) {
       return;
     }
+    final l10n = AppLocalizations.of(context)!;
 
     if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.message ?? 'Failed to delete media asset.')),
+        SnackBar(content: Text(result.message ?? l10n.mediaFailedDelete)),
       );
       return;
     }
 
     setState(() {
-      _assets = _assets.where((asset) => asset.id != item.id).toList(growable: false);
+      _items = _items
+          .where((asset) => asset.id != item.id)
+          .toList(growable: false);
     });
 
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.mediaDeletedSuccess)));
+  }
+
+  Future<void> _compressAsset(MediaEntity item) async {
+    final result = await ref.read(mediaRepositoryProvider).compressMedia(item);
+    if (!mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Media asset removed from library queue.')),
+      SnackBar(
+        content: Text(
+          result.isSuccess
+              ? l10n.mediaCompressedSuccess
+              : result.message ?? l10n.mediaFailedCompress,
+        ),
+      ),
     );
+    if (result.isSuccess) {
+      await _loadMedia();
+    }
   }
 
-  List<_MediaAssetItem> get _filteredAssets {
-    final query = _searchController.text.trim().toLowerCase();
-    return _assets.where((item) {
-      final queryMatches = query.isEmpty ||
-          item.url.toLowerCase().contains(query) ||
-          item.title.toLowerCase().contains(query) ||
-          item.postId.toLowerCase().contains(query);
-      final typeMatches = _typeFilter == 'all' || item.type == _typeFilter;
-      return queryMatches && typeMatches;
-    }).toList(growable: false);
-  }
+  Future<void> _reuseInPost(MediaEntity item) async {
+    final postsResult = await ref.read(postRepositoryProvider).getPosts();
+    final posts = postsResult.data ?? const <PostEntity>[];
+    if (!mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    if (posts.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.mediaNoPostsToAttach)));
+      return;
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final items = _filteredAssets;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Media Library')),
-      body: RefreshIndicator(
-        onRefresh: _loadMedia,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: <Widget>[
-            Text(
-              'Manage uploaded media assets across your posts.',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Search media',
-                hintText: 'URL, post title, or post ID',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: <Widget>[
-                _TypeChip(
-                  label: 'All',
-                  selected: _typeFilter == 'all',
-                  onTap: () => setState(() => _typeFilter = 'all'),
-                ),
-                _TypeChip(
-                  label: 'Images',
-                  selected: _typeFilter == 'image',
-                  onTap: () => setState(() => _typeFilter = 'image'),
-                ),
-                _TypeChip(
-                  label: 'Videos',
-                  selected: _typeFilter == 'video',
-                  onTap: () => setState(() => _typeFilter = 'video'),
-                ),
-                _TypeChip(
-                  label: 'Documents',
-                  selected: _typeFilter == 'document',
-                  onTap: () => setState(() => _typeFilter = 'document'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (items.isEmpty)
-              const _EmptyMediaLibrary()
-            else
-              ...items.map(
-                (item) => Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    leading: CircleAvatar(child: Icon(_iconForType(item.type))),
-                    title: Text(item.title.isEmpty ? 'Untitled post' : item.title),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        const SizedBox(height: 4),
-                        Text(item.url, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 4),
-                        Text('Post: ${item.postId} • ${item.status.toUpperCase()}'),
-                        Text('Added: ${_formatDate(item.addedAt)}'),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      tooltip: 'Delete media asset',
-                      onPressed: () => _deleteAsset(item),
-                      icon: const Icon(Icons.delete_outline),
-                    ),
-                  ),
+    final selectedPostId = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(l10n.mediaReuseDialogTitle),
+        children: posts
+            .map(
+              (post) => SimpleDialogOption(
+                onPressed: () => Navigator.of(context).pop(post.id),
+                child: Text(
+                  post.title.isEmpty ? l10n.postUntitled : post.title,
                 ),
               ),
-          ],
+            )
+            .toList(growable: false),
+      ),
+    );
+
+    if (selectedPostId == null || !mounted) {
+      return;
+    }
+
+    final result = await ref
+        .read(mediaRepositoryProvider)
+        .attachMediaToPost(mediaId: item.id, postId: selectedPostId);
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isSuccess
+              ? l10n.mediaAttachedSuccess
+              : result.message ?? l10n.mediaFailedReuse,
         ),
       ),
     );
   }
 
-  static String _guessType(String url) {
-    final lower = url.toLowerCase();
-    if (lower.endsWith('.png') ||
-        lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.gif') ||
-        lower.endsWith('.webp')) {
-      return 'image';
-    }
-    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.mkv')) {
+  static String _typeOf(MediaEntity item) {
+    if (item.mimeType.startsWith('video/')) {
       return 'video';
     }
-    if (lower.endsWith('.pdf') || lower.endsWith('.doc') || lower.endsWith('.docx')) {
-      return 'document';
+    if (item.mimeType.startsWith('image/')) {
+      return 'image';
     }
     return 'document';
   }
@@ -218,30 +250,233 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
     }
   }
 
-  static String _formatDate(DateTime date) {
+  static String _formatDate(DateTime? date, AppLocalizations l10n) {
+    if (date == null) {
+      return l10n.mediaUnknownDate;
+    }
     final local = date.toLocal();
     return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
   }
-}
 
-class _MediaAssetItem {
-  const _MediaAssetItem({
-    required this.id,
-    required this.postId,
-    required this.title,
-    required this.url,
-    required this.type,
-    required this.status,
-    required this.addedAt,
-  });
-
-  final String id;
-  final String postId;
-  final String title;
-  final String url;
-  final String type;
-  final String status;
-  final DateTime addedAt;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.mediaAppBarTitle)),
+      body: RefreshIndicator(
+        onRefresh: _loadMedia,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: <Widget>[
+            Text(
+              l10n.mediaSubtitle,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                labelText: l10n.mediaSearchLabel,
+                hintText: l10n.mediaSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: <Widget>[
+                _TypeChip(
+                  label: l10n.mediaFilterAll,
+                  selected: _typeFilter == 'all',
+                  onTap: () {
+                    setState(() => _typeFilter = 'all');
+                    _loadMedia();
+                  },
+                ),
+                _TypeChip(
+                  label: l10n.mediaFilterImages,
+                  selected: _typeFilter == 'image',
+                  onTap: () {
+                    setState(() => _typeFilter = 'image');
+                    _loadMedia();
+                  },
+                ),
+                _TypeChip(
+                  label: l10n.mediaFilterVideos,
+                  selected: _typeFilter == 'video',
+                  onTap: () {
+                    setState(() => _typeFilter = 'video');
+                    _loadMedia();
+                  },
+                ),
+                _TypeChip(
+                  label: l10n.mediaFilterDocuments,
+                  selected: _typeFilter == 'document',
+                  onTap: () {
+                    setState(() => _typeFilter = 'document');
+                    _loadMedia();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (_error != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(_error!),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _loadMedia,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(l10n.commonRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (_items.isEmpty)
+              const _EmptyMediaLibrary()
+            else
+              ..._items.map((item) {
+                final type = _typeOf(item);
+                final isImage = type == 'image';
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            if (isImage && item.thumbnailUrl != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  item.thumbnailUrl!,
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      CircleAvatar(
+                                        child: Icon(_iconForType(type)),
+                                      ),
+                                ),
+                              )
+                            else
+                              CircleAvatar(child: Icon(_iconForType(type))),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    item.url.split('/').last,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${item.collection} • ${_formatDate(item.createdAt, l10n)}',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                  if (item.tags.isNotEmpty) ...<Widget>[
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: item.tags
+                                          .map(
+                                            (tag) => Chip(
+                                              label: Text(tag),
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              materialTapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
+                                            ),
+                                          )
+                                          .toList(growable: false),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.end,
+                          children: <Widget>[
+                            if (_canCompressMedia)
+                              Tooltip(
+                                message: isImage
+                                    ? l10n.mediaCompressTooltipImage
+                                    : l10n.mediaCompressTooltipOther,
+                                child: OutlinedButton.icon(
+                                  onPressed: isImage
+                                      ? () => _compressAsset(item)
+                                      : null,
+                                  icon: const Icon(Icons.compress, size: 18),
+                                  label: Text(l10n.mediaCompressButton),
+                                ),
+                              ),
+                            OutlinedButton.icon(
+                              onPressed: () => _reuseInPost(item),
+                              icon: const Icon(Icons.repeat, size: 18),
+                              label: Text(l10n.mediaReuseInPostButton),
+                            ),
+                            if (_canDeleteMedia)
+                              IconButton(
+                                tooltip: l10n.mediaDeleteTooltip,
+                                onPressed: () => _deleteAsset(item),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            if (!_loading && _error == null && _hasMorePages)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Center(
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMoreMedia,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.expand_more),
+                    label: Text(l10n.mediaLoadMore),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _TypeChip extends StatelessWidget {
@@ -257,7 +492,11 @@ class _TypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(label: Text(label), selected: selected, onSelected: (_) => onTap());
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+    );
   }
 }
 
@@ -266,16 +505,17 @@ class _EmptyMediaLibrary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: <Widget>[
-            Icon(Icons.perm_media_outlined, size: 40),
-            SizedBox(height: 10),
-            Text('No media assets found.'),
-            SizedBox(height: 4),
-            Text('Attach media to posts, then revisit this library.'),
+            const Icon(Icons.perm_media_outlined, size: 40),
+            const SizedBox(height: 10),
+            Text(l10n.mediaEmptyTitle),
+            const SizedBox(height: 4),
+            Text(l10n.mediaEmptySubtitle),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -13,8 +14,7 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
-  List<NotificationEntity> _notifications = const <NotificationEntity>[];
-  bool _loading = true;
+  AsyncValue<List<NotificationEntity>> _notifications = const AsyncLoading();
 
   @override
   void initState() {
@@ -24,69 +24,86 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _loadNotifications() async {
     setState(() {
-      _loading = true;
+      _notifications = const AsyncLoading();
     });
 
     final result = await ref
         .read(notificationRepositoryProvider)
         .getNotifications();
-    final notifications = result.data ?? const <NotificationEntity>[];
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _notifications = notifications;
-      _loading = false;
+      _notifications = result.isSuccess
+          ? AsyncData(result.data ?? const <NotificationEntity>[])
+          : AsyncError(
+              StateError(result.message ?? 'Unable to load notifications.'),
+              StackTrace.current,
+            );
     });
   }
 
   Future<void> _markRead(String id) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final fallbackMessage = AppLocalizations.of(
+      context,
+    )!.notificationsLoadFailed;
     final result = await ref
         .read(notificationRepositoryProvider)
         .markAsRead(id);
-    if (!result.isSuccess || !mounted) {
+    if (!mounted) {
+      return;
+    }
+    if (!result.isSuccess) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(result.message ?? fallbackMessage)),
+      );
       return;
     }
     await _loadNotifications();
   }
 
   Future<void> _markAllRead() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final fallbackMessage = AppLocalizations.of(
+      context,
+    )!.notificationsLoadFailed;
     final result = await ref
         .read(notificationRepositoryProvider)
         .markAllAsRead();
-    if (!result.isSuccess || !mounted) {
+    if (!mounted) {
+      return;
+    }
+    if (!result.isSuccess) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(result.message ?? fallbackMessage)),
+      );
       return;
     }
     await _loadNotifications();
   }
 
-  void _clearRead() {
-    setState(() {
-      _notifications = _notifications
-          .where((item) => !item.isRead)
-          .toList(growable: false);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final unreadCount = _notifications.where((item) => !item.isRead).length;
+    final notifications =
+        _notifications.valueOrNull ?? const <NotificationEntity>[];
+    final unreadCount = notifications.where((item) => !item.isRead).length;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l10n.notificationsAppBarTitle),
         actions: <Widget>[
           IconButton(
-            tooltip: 'Mark all as read',
-            onPressed: _notifications.isEmpty ? null : _markAllRead,
+            tooltip: l10n.notificationsMarkAllReadTooltip,
+            onPressed:
+                _notifications is AsyncData<List<NotificationEntity>> &&
+                    notifications.isNotEmpty
+                ? _markAllRead
+                : null,
             icon: const Icon(Icons.done_all),
-          ),
-          IconButton(
-            tooltip: 'Clear read',
-            onPressed: _notifications.isEmpty ? null : _clearRead,
-            icon: const Icon(Icons.cleaning_services_outlined),
           ),
         ],
       ),
@@ -97,25 +114,46 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           children: <Widget>[
             Card(
               child: ListTile(
-                title: const Text('Inbox Summary'),
+                title: Text(l10n.notificationsInboxSummaryTitle),
                 subtitle: Text(
-                  'Unread: $unreadCount • Total: ${_notifications.length}',
+                  l10n.notificationsInboxSummarySubtitle(
+                    unreadCount,
+                    notifications.length,
+                  ),
                 ),
                 leading: const Icon(Icons.notifications_active_outlined),
               ),
             ),
             const SizedBox(height: 12),
-            if (_loading)
+            if (_notifications.isLoading)
               const Center(child: CircularProgressIndicator())
-            else if (_notifications.isEmpty)
-              const Card(
+            else if (_notifications.hasError)
+              Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No notifications available.'),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(l10n.notificationsLoadFailed),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _loadNotifications,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(l10n.commonRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (notifications.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l10n.notificationsEmpty),
                 ),
               )
             else
-              ..._notifications.map(
+              ...notifications.map(
                 (notification) => Card(
                   margin: const EdgeInsets.only(bottom: 10),
                   child: ListTile(
@@ -130,7 +168,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ? const Icon(Icons.check, size: 18)
                         : TextButton(
                             onPressed: () async => _markRead(notification.id),
-                            child: const Text('Mark read'),
+                            child: Text(l10n.notificationsMarkReadButton),
                           ),
                   ),
                 ),

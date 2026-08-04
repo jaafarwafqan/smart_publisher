@@ -1,183 +1,96 @@
 # Smart Publisher
 
-Smart Publisher هو مشروع Flutter يهدف إلى بناء منصة متقدمة لنشر المحتوى عبر منصات التواصل الاجتماعي من خلال سير عمل منظم، وليس مجرد CRUD عادي.
+Smart Publisher is a Flutter app (Windows/Web/mobile) with a Laravel backend
+(`smart_publisher_backend`, a sibling repository) for organisation-scoped
+content workflows. Its production **closed-beta** scope is deliberately only
+Telegram and Facebook Pages. Instagram, WhatsApp, LinkedIn, X, and other
+providers are visible as `Coming soon` and are rejected server-side in
+production; the product must never fabricate a publish outcome for them.
 
-التركيز الأساسي للمشروع هو:
-- إنشاء منشورات
-- تحسينها بالذكاء الاصطناعي
-- إرفاق الوسائط
-- ضغط الوسائط
-- اختيار المنصات
-- جدولة النشر
-- تنفيذ عمليات النشر عبر Queue و Engine
-- تتبع التحليلات والإشعارات
+**Status (2026-07-30): launch hardening is in progress.** This repository is
+not evidence that external provider approval, real staging credentials, or a
+signed distribution artifact exist. The concrete gates are in
+[`docs/operations/closed_beta_release_checklist.md`](docs/operations/closed_beta_release_checklist.md).
 
-## الفكرة المعمارية
+The supported release artifact is an **Android closed-beta AAB** only. Web and
+desktop builds remain developer targets; this repository does not claim a web
+deployment, backend deployment, canary rollout, or automated rollback.
 
-المشروع مبني حول مفهوم Workflow وليست مجرد CRUD. ولذلك تم تنظيمه على شكل طبقات واضحة:
+## What this app actually does
 
-1. Core Layer
-   - Result handling عبر AppResult و Success / Failure
-   - Base abstractions مثل BaseEntity و BaseRepository و BaseUseCase
-   - Event Bus و Domain Events
+- **Compose**: title/content with hashtag/mention highlighting, a formatting toolbar (bold/italic honestly rendered only where the target platform actually supports it — Telegram via real HTML `parse_mode`, everyone else gets clean stripped plain text, never literal asterisks), a real emoji picker (`emoji_picker_flutter`), per-platform caption overrides, and a per-platform live preview that shows exactly what each destination will really display.
+- **Media Library**: real upload, real compression, tagging, dedupe hints (never a silent block) — backed by the real `media_attachments` table, not a UI illusion built from scanning old post attachments.
+- **Accounts**: Telegram bot-token connection and Facebook Page OAuth are the
+  only closed-beta connection paths. The UI and API do not expose unsupported
+  providers as usable publishing destinations.
+- **Schedule or publish now**: a dedicated backend endpoint for each action (not a generic update reused with missing fields) — publish-now dispatches real background jobs per selected page; schedule sets a real future timestamp the backend's minute-by-minute job picks up.
+- **Calendar**: shows genuinely pending scheduled work (not a mix of scheduled-and-already-published posts).
+- **Analytics**: real per-page metrics where the provider actually supplies them; explicit `null`/"not enough data yet" rather than a fabricated number when it doesn't.
 
-2. Feature Layer
-   - Posts
-   - Platforms
-   - Publish
-   - Auth
-   - Media
-   - Schedule
-   - Analytics
-   - Notifications
-   - AI
+## Architecture
 
-3. Platform Abstraction Layer
-   - واجهة موحدة عبر SocialPlatform
-   - مصنع المنصات عبر PlatformFactory
-   - أول تنفيذ تجريبي لمنصة Telegram
-
-4. Publish Engine Layer
-   - PublishEngine
-   - PublishPipeline
-   - PublishStep
-   - Queue Manager
-   - Retry Policy
-   - Logger
-
-## هيكل المشروع
+Repository pattern (`*RepositoryImpl` per feature, all extending `BaseRepository`) + Riverpod as a DI container (screens call `ref.read(...)` directly — no CQRS/Mediator/Use-Case-mandatory layer; see "What's deliberately not here" below) + an offline outbox (`OutboxStore`, persisted via `StorageService`, drained by `SyncWorker`) for network-failure resilience on create/update/delete. Full detail: `docs/architecture/system_overview.md` and `docs/architecture/request_flow.md`.
 
 ```text
-lib/
-  src/
-    core/
-      base/
-      result/
-      events/
-    domain/
-      services/
-    features/
-      posts/
-      platforms/
-      publish/
-      auth/
-      media/
-      schedule/
-      analytics/
-      notifications/
-      ai/
-    platforms/
-      core/
-      telegram/
-    publish_engine/
-      engine/
-      jobs/
-      queue/
-      retry/
-      logs/
+lib/src/
+  core/           # DI (app_providers.dart), network, security, theme, router
+  features/       # posts, composer, media, schedule, auth, analytics, notifications, dashboard, administration
+  platforms/      # SocialPlatform abstraction + per-provider plugins
+  publish_engine/ # PublishEngine, retry policy, circuit breaker
+  backend_contracts/v1/  # explicit DTOs + BackendContractMapperV1, one place all API shape assumptions live
+  offline/        # OutboxStore + SyncWorker
 ```
 
-## ما تم تنفيذه حتى الآن
+### What's deliberately not here
 
-### 1. Core Architecture
-- إضافة Result pattern
-- إضافة Base abstractions
-- إضافة Event Bus و Domain Events
+Earlier commit messages referenced a CQRS/Mediator/Policy-Engine architecture. It was audited, found to be **empty scaffolding — 0-byte files, never actually wired to anything** — and deleted, along with a duplicate dead `features/authentication/` folder. The real, live flow is Repository → Riverpod → Laravel API, documented as it actually works in `docs/architecture/request_flow.md`. Don't resurrect the old pattern without reading `docs/audit/ROUND1_CTO_AUDIT.md` (BUG-007) first — it explains why it was removed rather than "connected."
 
-### 2. Domain Layer
-- إنشاء Entities للـ Posts والـ Draft والـ Attachment والـ Media
-- إضافة Entities للمنصات والنشر والحسابات والمهام
-- إنشاء Repository Interfaces الأساسية
-- إنشاء Use Cases الأساسية مثل CreatePost و PublishPost و SchedulePost و DeleteDraft و GenerateAiText و CompressMedia و UploadMedia و SyncAccounts
+## Documentation map
 
-### 3. Platform Abstraction
-- إنشاء واجهة موحدة للمنصات
-- إنشاء PlatformFactory
-- إنشاء أول تنفيذ لمنصة Telegram
+| Area | File |
+|---|---|
+| API reference (OpenAPI 3.0, real & current) | [docs/api/openapi_v1.yaml](docs/api/openapi_v1.yaml) |
+| Postman collection | [docs/api/postman_collection.json](docs/api/postman_collection.json) |
+| Database schema (ERD, real & current) | [docs/database/erd.md](docs/database/erd.md) |
+| Roles, permissions, plans/subscriptions (honest: no plans/subscriptions exist) | [docs/architecture/permissions_and_roles.md](docs/architecture/permissions_and_roles.md) |
+| Closed-beta provider scope, OAuth flows, and Meta gate | [docs/api/integrations.md](docs/api/integrations.md) |
+| Privacy policy, terms, data deletion, and support | [docs/legal/](docs/legal/) |
+| Architecture overview | [docs/architecture/system_overview.md](docs/architecture/system_overview.md) |
+| Request flow | [docs/architecture/request_flow.md](docs/architecture/request_flow.md) |
+| Architectural decisions (ADRs) | [docs/architecture/decisions/](docs/architecture/decisions/) |
+| Current test status | [docs/testing/STATUS.md](docs/testing/STATUS.md) |
+| Known issues & incomplete features (current, consolidated) | [docs/audit/KNOWN_ISSUES.md](docs/audit/KNOWN_ISSUES.md) |
+| Historical audit reports | [docs/audit/ROUND1_CTO_AUDIT.md](docs/audit/ROUND1_CTO_AUDIT.md), [ROUND2](docs/audit/ROUND2_CTO_AUDIT.md), [PRODUCTION_READINESS_AUDIT.md](docs/audit/PRODUCTION_READINESS_AUDIT.md) |
+| Closed-beta distribution, rollback boundary, canary constraints, incidents, backup | [docs/operations/](docs/operations/) |
+| Closed-beta release evidence and staging smoke test | [docs/operations/closed_beta_release_checklist.md](docs/operations/closed_beta_release_checklist.md) |
 
-### 4. Publish Engine
-- إضافة PublishEngine
-- إضافة PublishPipeline و PublishStep
-- إضافة Queue Manager و Retry Policy و Logger
+## Running locally
 
-### 5. Documentation & Design
-- إضافة مواصفات API داخل docs/api
-- إضافة تصميم قاعدة البيانات داخل docs/database
-- إضافة workflow للنشر و state machine
-- إضافة error codes و sequence diagrams
-
-## الوثائق المتوفرة
-
-- [docs/api/authentication.md](docs/api/authentication.md)
-- [docs/api/accounts.md](docs/api/accounts.md)
-- [docs/api/posts.md](docs/api/posts.md)
-- [docs/api/media.md](docs/api/media.md)
-- [docs/api/publish.md](docs/api/publish.md)
-- [docs/api/schedules.md](docs/api/schedules.md)
-- [docs/api/analytics.md](docs/api/analytics.md)
-- [docs/api/notifications.md](docs/api/notifications.md)
-- [docs/api/ai.md](docs/api/ai.md)
-- [docs/api/webhooks.md](docs/api/webhooks.md)
-
-- [docs/database/modules.md](docs/database/modules.md)
-- [docs/database/publish_state_machine.md](docs/database/publish_state_machine.md)
-- [docs/database/platform_capability_model.md](docs/database/platform_capability_model.md)
-- [docs/database/queue_workflow.md](docs/database/queue_workflow.md)
-- [docs/database/media_pipeline.md](docs/database/media_pipeline.md)
-
-- [docs/errors.md](docs/errors.md)
-- [docs/sequence_diagrams.md](docs/sequence_diagrams.md)
-
-## Production Readiness
-
-- CI workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- Release pipeline: [.github/workflows/release.yml](.github/workflows/release.yml)
-- OpenAPI contract: [docs/api/openapi_v1.yaml](docs/api/openapi_v1.yaml)
-- Operations docs:
-  - [docs/operations/release_pipeline.md](docs/operations/release_pipeline.md)
-  - [docs/operations/rollback_strategy.md](docs/operations/rollback_strategy.md)
-  - [docs/operations/canary_releases.md](docs/operations/canary_releases.md)
-  - [docs/operations/incident_runbook.md](docs/operations/incident_runbook.md)
-  - [docs/operations/backup_strategy.md](docs/operations/backup_strategy.md)
-
-## المرحلة الحالية
-
-المشروع الآن في مرحلة البناء المعماري الأساسية، قبل الانتقال إلى:
-- Repository Implementations
-- Remote/Local Data Sources
-- DTOs و Mappers
-- Laravel Backend Integration
-
-## التشغيل المحلي
-
-لتشغيل المشروع:
+Requires the Laravel backend running alongside (`smart_publisher_backend`, sibling directory — see its own README for setup). Default dev target is `http://127.0.0.1:8000/api/v1`.
 
 ```bash
 flutter pub get
-flutter run
+flutter run                      # Windows/Chrome/mobile, whatever's connected
+flutter run -d chrome            # explicit web target
+flutter build web --release      # developer build only; it is not a closed-beta deployment
 ```
 
-## المرحلة 31 - Laravel Backend (Real Integration)
+Pointing at a different backend:
 
-التطبيق مرتبط مع Backend حقيقي عبر السلسلة التالية:
-
-```text
-Flutter
-  -> Repository
-  -> Laravel API
-  -> MySQL
+```bash
+flutter run --dart-define=SP_API_BASE_URL=https://your-api-host/api/v1
 ```
 
-أهم الملفات المرتبطة بالتكامل الحقيقي:
-- `lib/src/core/network/laravel_api.dart`
-- `lib/src/core/di/app_providers.dart`
-- `lib/src/features/posts/data/post_repository_impl.dart`
-- `lib/src/features/media/data/media_repository_impl.dart`
-- `lib/src/features/analytics/data/repository/analytics_repository_impl.dart`
+### Tests
+
+```bash
+flutter analyze
+flutter test
+```
+
+Current status: see [docs/testing/STATUS.md](docs/testing/STATUS.md).
 
 ### Laravel Smoke Test (Login/Refresh/Create/Upload Draft/Schedule/Analytics)
-
-لتجربة الربط الفعلي مع Laravel شغل الاختبار التالي مع متغيرات البيئة:
 
 ```bash
 flutter test test/integration/laravel_backend_smoke_integration_test.dart \
@@ -189,26 +102,33 @@ flutter test test/integration/laravel_backend_smoke_integration_test.dart \
   --dart-define=SP_SMOKE_PASSWORD=your-password
 ```
 
-يغطي الاختبار:
-- تسجيل الدخول.
-- تجديد التوكن (refresh token).
-- إنشاء منشور.
-- رفع صورة (multipart file binary).
-- حفظ المسودة.
-- الجدولة.
-- جلب Analytics.
+## CI/CD
 
-## الخطوات القادمة
+- [.github/workflows/ci.yml](.github/workflows/ci.yml) is a hard frontend
+  gate: secret scan, release-source hardening, formatting, `flutter analyze`,
+  and tests.
+- [.github/workflows/release.yml](.github/workflows/release.yml) produces an
+  Android **closed-beta** AAB only. It fails closed when signing, HTTPS
+  endpoint, or Firebase App Distribution configuration is missing; it does
+  not deploy the web client or Laravel backend.
+- Canary controls and automated rollback are intentionally absent. See the
+  operator boundaries in [`docs/operations/`](docs/operations/).
+- Backend CI and Docker gates live in the sibling Laravel repository and must
+  pass independently; their presence in source is not staging evidence.
 
-1. إضافة DTOs و Mappers
-2. بناء Repository Implementations
-3. إضافة Remote Data Sources و Local Data Sources
-4. بناء أول Integration Test حقيقي للنشر
-5. إضافة Event Listeners للإشعارات والتحليلات
-6. إضافة Security Layer و Offline Sync Engine
+## Remaining external and product gates
 
-## ملاحظات مهمة
+- **In-app notifications** are persisted and recipient-scoped; **push
+  notifications** do not exist (no FCM/APNs anywhere).
+- **Meta approval and real Facebook Page verification** are external release
+  gates, not source-code substitutes.
+- **Public legal/support URLs and an operator identity** must be supplied by
+  the deployment owner before inviting external users.
+- **Other providers** remain intentionally unavailable in production until a
+  real integration, provider approval, and production evidence are added.
+- **No webhook receiver** exists; see [the integration scope](docs/api/integrations.md).
+- **A tested hosting-specific rollback procedure** is still an external
+  requirement; the local rollback script intentionally fails rather than
+  pretending to roll anything back.
 
-- هذا المشروع لا يركز على CRUD فقط.
-- الهدف الأساسي هو بناء نظام نشر وظيفي، قابل للتوسع، ومهيأ لإضافة منصات جديدة دون إعادة كتابة الهيكل الأساسي.
-- الطبقات الحالية مصممة لتكون أساسًا قويًا للتطوير المستقبلي.
+Full current list, including what's been fixed and verified: [docs/audit/KNOWN_ISSUES.md](docs/audit/KNOWN_ISSUES.md).

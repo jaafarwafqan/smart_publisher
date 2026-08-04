@@ -6,7 +6,7 @@ part of 'guard_state_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authStateHash() => r'8425193b99a66cf5fe6ed4a80002970ff22cff68';
+String _$authStateHash() => r'e40bee87a63b1f84f3c238cea5184c49ffcd38e4';
 
 /// See also [authState].
 @ProviderFor(authState)
@@ -23,7 +23,7 @@ final authStateProvider = FutureProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthStateRef = FutureProviderRef<bool>;
-String _$firstLaunchHash() => r'bce14ed66250b3544c71caaa705ed3a054f8b6af';
+String _$firstLaunchHash() => r'3ef57995511c0196495f362828a31484a24a642f';
 
 /// See also [firstLaunch].
 @ProviderFor(firstLaunch)
@@ -40,7 +40,7 @@ final firstLaunchProvider = FutureProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FirstLaunchRef = FutureProviderRef<bool>;
-String _$currentUserRoleHash() => r'4e3fe6d6d67f566455f2c97b014bc366971bdeae';
+String _$currentUserRoleHash() => r'be68f93c8614051769a568f346c29a4678232a09';
 
 /// See also [currentUserRole].
 @ProviderFor(currentUserRole)

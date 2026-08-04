@@ -9,7 +9,7 @@ final class AppInputTheme {
   static InputDecorationTheme theme({required ColorScheme colorScheme}) {
     final isDark = colorScheme.brightness == Brightness.dark;
     final fillColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.brandSecondary : AppColors.border;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
 
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.md),

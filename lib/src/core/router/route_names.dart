@@ -43,8 +43,14 @@ final class RouteNames {
   static const settings = 'settings';
   static const settingsPath = '/settings';
 
+  static const organizations = 'organizations';
+  static const organizationsPath = '/organizations';
+
   static const administration = 'administration';
   static const administrationPath = '/administration';
+
+  static const oauthProviderSettings = 'oauth_provider_settings';
+  static const oauthProviderSettingsPath = '/administration/oauth-providers';
 
   static const productionRelease = 'production_release';
   static const productionReleasePath = '/release/production';

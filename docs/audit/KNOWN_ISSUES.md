@@ -1,0 +1,145 @@
+# Known Issues & Incomplete Features — Smart Publisher
+
+**Last updated:** 2026-07-30
+**Purpose:** A single, current-as-of-today source of truth for "what's real, what's fake, and what's missing." This project has been through multiple audit rounds (see `ROUND1_CTO_AUDIT.md`, `ROUND2_CTO_AUDIT.md`, `PRODUCTION_READINESS_AUDIT.md`) — this document consolidates their outcomes plus everything found and fixed since, so a new reader doesn't have to reconstruct history from four long reports. Where a historical report and this document disagree, **this document is current**; the historical reports are point-in-time snapshots kept for audit trail, not living status.
+
+Severity key: 🔴 P0 (blocks production/trust) · 🟠 P1 (real gap, should fix soon) · 🟡 P2 (edge case / rough edge) · ⚪ Deliberate scope decision (not a bug)
+
+---
+
+## Current launch-hardening override (2026-07-30)
+
+The historical entries below are retained as audit evidence.  Where they
+contradict this section, this section is authoritative:
+
+- In-app notifications are no longer a facade: they have persistent tenant-
+  and recipient-scoped storage, read endpoints, lifecycle events, and tests.
+  This does **not** add FCM/APNs push delivery.
+- English and Arabic localizations are generated from ARB files; the old
+  "no localization/RTL" entry is superseded.
+- Production provider scope is Telegram and Facebook Pages only.  WhatsApp,
+  Instagram, X, LinkedIn, and all other providers are visibly unavailable and
+  server-rejected in production; a generic mock is not a live integration.
+- Android now has a release identity, TLS-only release traffic, a closed-beta
+  app icon, deep-link declaration, and a signing gate with no debug fallback.
+- Backend CI/Docker, MySQL reliability coverage, and PHPStan are implemented
+  launch gates.  Their source configuration is not proof of a successful CI
+  run or real staging deployment; refer to the final evidence.
+- The only supported release channel is Android `closed-beta`.  There is no
+  implemented canary, web/backend deployment, or automated rollback control.
+
+The remaining release blockers are external evidence, not code placeholders:
+real MySQL/InnoDB staging verification, a signed Firebase-distributed AAB,
+real Facebook Page staging publish and Meta approval, public legal/support
+URLs, a deployment owner, and a tested hosting-specific rollback procedure.
+See `docs/operations/closed_beta_release_checklist.md`.
+
+---
+
+## ✅ Fixed, verified, or deliberately superseded (do not re-report these)
+
+These were real, confirmed bugs at some point in this project's history. They are listed here **only** so nobody re-discovers and re-reports them as new — each was fixed and verified live.
+
+| Area | What was wrong | Status |
+|---|---|---|
+| Privilege escalation | Any `users.update` holder could self-assign `admin` via `UserController::update` | Fixed — `roles` field removed from that endpoint, requires `roles.assign` |
+| OAuth scope wildcard | Backend issues `'*'` scope; Flutter's `ScopeAuthorizer` didn't understand wildcards, silently blocking every write after login | Fixed |
+| Posts list always empty | Flutter read `items`, backend sends `data`/`meta` | Fixed |
+| Analytics dashboard 404 | Flutter called `/analytics/dashboard`, route didn't exist | Fixed — route + honest-zero-state `dashboard()` added |
+| Logout didn't call backend | Tokens stayed valid server-side forever after "logout" | Fixed — calls `/auth/logout`, server deletes both access + refresh tokens for the device |
+| Empty CQRS/DDD/Mediator/Policy-Engine scaffolding | `app/Domain`, `app/Application/{Handlers,UseCases}`, `app/Infrastructure/{Repositories,Persistence}` (Laravel) and `lib/src/application/{mediators,pipelines,transactions}` (Flutter) were 0-byte files despite commit messages claiming implementation | Deleted; docs (`system_overview.md`, `request_flow.md`) rewritten to describe the real Repository+Riverpod+Outbox flow |
+| OAuth tokens stored plaintext | `social_accounts.access_token`/`refresh_token` had no `encrypted` cast | Fixed |
+| Permission cache never invalidated | `events_enabled: false` + 24h TTL meant a revoked permission could stay active for a day | Fixed — `events_enabled: true` |
+| `SocialAccountPolicy` written but unused | Controller repeated manual ownership checks 5×, ignoring the registered Policy | Fixed — wired via `$this->authorize(...)` |
+| Theme toggle did nothing | `theme_provider.dart` hardcoded to `ThemeMode.system` | Fixed — real `Notifier<ThemeMode>` reading/writing storage |
+| Analytics 500 in real use (not caught by tests) | `DashboardCacheService` assumed the cache store supports tagging; the app's real driver (`database`) doesn't | Fixed |
+| Auth failures returned 500 instead of 401/403 | Default guest redirect tried a non-existent `login` named route in this API-only app | Fixed via `redirectGuestsTo(fn () => null)` |
+| Flutter blank-crashed on every launch | `String.fromEnvironment` used non-const through a helper function (illegal — must be a literal call site) | Fixed |
+| **Outbox had zero persistence** (was the single most severe finding across all audits) | `OutboxStore` was an in-memory `Map` — any offline post create/edit/delete was silently and permanently lost if the app closed/reloaded before sync | Fixed — persists via `StorageService`, survives restart |
+| Scheduler duplicate-dispatch storm | `ProcessScheduledPostsJob` never left `status='scheduled'` at dispatch time, so every 60s tick re-dispatched the same backlog (proven: 2000→4000 jobs on one extra tick) | Fixed — transitions to `'publishing'` immediately before the dispatch loop |
+| No backup/restore tooling existed at all | Zero Console Commands in the project | Fixed — `app:backup-database` / `app:restore-database` (SQLite via `VACUUM INTO`, MySQL via `mysqldump`/`mysql`), scheduled daily |
+| Large-file upload: 500 on a valid edge-case image | Uncaught `ImageDecoderException` from Intervention Image on a degenerate 1×1 PNG | Fixed — graceful `null` thumbnail on decode failure |
+| Large-file upload: thumbnail filenames doubled | `preg_replace` optional group matched twice → `..._thumb.jpg_thumb.jpg` on every upload | Fixed |
+| file_picker crashed the entire web app | `.path` is unavailable on Flutter Web; needed `.bytes` | Fixed across the full chain (entity, repository, compression, offline outbox replay) |
+| Connect/Disconnect on Dashboard was 500ing | Flutter called `AccountController` (only `index()` implemented); the real, complete controller was `SocialAccountController` at a different route | Fixed — migrated to the real controller |
+| Dashboard numbers were 100% hardcoded literals | `145/23/1880/4/12`, "99.2% Stable", fake "Recent Activity" baked into `app_routes.dart` | Fixed — real data, `Dashboard` extracted to its own feature module |
+| X/Twitter account connect always 422'd | Provider string mismatch (`twitter` locally vs `x` expected by backend) | Superseded by the closed-beta allow-list — X is `Coming soon` and production rejects connection/publishing |
+| WhatsApp connect always 422'd | Provider entirely unregistered server-side | Superseded by the closed-beta allow-list — WhatsApp is `Coming soon` and production rejects connection/publishing |
+| **Media Library** disconnected from its own real backend | Screen fabricated a "library" by scanning post attachments instead of calling the real, working `MediaLibraryController::index()`; `/media/compress` had no route at all | Fixed this session |
+| **Composer**: no rich text, no per-platform honesty | Built: hashtag/mention highlighting, formatting toolbar, real `emoji_picker_flutter`, honest per-platform preview (Telegram renders real bold/italic via HTML `parse_mode`; every other platform gets markers stripped to clean plain text — never sent as literal asterisks) | Built this session |
+| **Scheduling silently failed over the network** | `SchedulePost` reused the generic `updatePost` endpoint, whose request DTO doesn't carry `status`/`scheduled_at` at all — clicking "Schedule" updated title/content only | Fixed — dedicated `POST /posts/{id}/schedule` call, mirroring the already-correct `publishNow` pattern |
+| Calendar screen fetched all posts and filtered client-side | Real, cached, already-tested `GET /calendar` endpoint existed with zero Flutter callers | Fixed — wired up |
+| **Every post create/update silently reported "failed" despite succeeding** (found via live end-to-end testing 2026-07-27) | PHP serializes an empty `platform_content` map as JSON `[]`; Flutter's `as Map<String,dynamic>` cast threw on every post without per-platform overrides | Fixed both sides — backend normalizes empty maps to `{}`, Flutter parser no longer hard-casts. Historical Telegram delivery evidence only; re-run the current staging gate before inviting testers. |
+| Posts always showed "0 platforms" even when delivered | `PostResource` never returned which pages a post targeted | Fixed — eager-loads `socialPages.socialAccount`, returns real providers |
+| Published posts showed a false "Scheduled" badge | Backend stamps `scheduled_at` even for immediate publish (an internal queue detail); UI didn't distinguish | Fixed — label now branches on `status`; Calendar query scoped to `status='scheduled'` only |
+| Login screen was an unbranded placeholder | Literally marked "simple demo screen" in a code comment | Redesigned into its own proper, branded screen this session |
+
+---
+
+## 🟠 Open — real gaps and external gates
+
+1. **Push notifications do not exist.** In-app notifications are persistent,
+   recipient-scoped, and tested, but there is no FCM/APNs delivery path. This
+   is not a reason to describe the in-app notification API as a facade.
+2. **No general provider-webhook receiver is implemented.** Do not rely on
+   `docs/api/webhooks.md` as a deployed callback endpoint. The supported
+   Telegram/Facebook connection and publish flows are documented in
+   `docs/api/integrations.md`.
+3. **No plans, subscriptions, or billing system exists.** It is outside the
+   closed-beta publishing scope, rather than an available SaaS capability.
+4. **OAuth state cleanup needs an explicit retention job.** Historical state
+   rows must not be treated as permanent audit storage.
+5. **Publication-attempt retention needs a product decision.** Deleting a
+   post can remove related attempt history; choose a retention model before
+   any broader rollout.
+6. **Production observability is an external deployment requirement.** Source
+   configuration is not evidence of an active monitoring/alerting service.
+7. **Closed-beta evidence is incomplete until an operator records it.** The
+   remaining blockers are listed at the top of this document and in the
+   release checklist: MySQL/InnoDB staging verification, a signed Firebase
+   distribution, real provider runs, Meta approval, public legal/support
+   URLs, and a tested hosting-specific rollback.
+
+## 🟡 Environment-dependent findings — need real-topology verification
+
+Historical performance numbers were captured against **SQLite + `php artisan
+serve`** and are not production capacity evidence.  Backend CI/Docker now
+defines a MySQL/InnoDB reliability gate, but neither that configuration nor a
+local test replaces a real HTTPS staging run with the actual queue-worker
+topology.
+
+- The historical SQLite concurrency and throughput observations must not be
+  extrapolated to MySQL, PHP-FPM, or horizontally scaled workers.
+- SQLite must not be used with multiple concurrent queue workers.  The
+  production-shaped target is MySQL/InnoDB; verify that target in staging
+  before external invitations.
+
+## ⚪ Deliberate closed-beta scope decisions (not bugs)
+
+- Organisation membership and the editor's own-post rule are authorization
+  requirements, not optional global-permission behavior.
+- Instagram, WhatsApp, X, LinkedIn, and every other provider are intentionally
+  `Coming soon`; a non-production generic OAuth mock is not an integration.
+- Canary controls, web/backend deployment controls, and automated rollback
+  are intentionally unavailable.  Closed-beta tester groups and an operator's
+  tested hosting procedure are the only valid release/rollback boundary.
+- Stale-`publishing` crash recovery needs a separately designed watchdog; it
+  must not be implied by the normal batch-completion flow.
+
+---
+
+## Historical audit notes
+
+The prior audit reports and older entries in this document remain evidence of
+what was found at the time.  They must not be read as the current release
+state.  In particular, older references to notification facades, absent
+backend CI/Docker, generic OAuth support for Instagram/WhatsApp, canary
+rollouts, or a successful rollback are superseded by the launch-hardening
+override above.  The current source-of-truth documents are:
+
+- `docs/api/integrations.md` for the Telegram/Facebook Pages allow-list and
+  Meta gate;
+- `docs/operations/closed_beta_release_checklist.md` for evidence required
+  before invitations; and
+- `docs/operations/release_pipeline.md`, `rollback_strategy.md`, and
+  `canary_releases.md` for the intentionally limited operational controls.

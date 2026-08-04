@@ -14,14 +14,18 @@ class PostRequestDtoV1 {
     required this.content,
     this.attachments = const <String>[],
     this.platforms = const <String>[],
+    this.targetPageIds = const <String>[],
     this.scheduledAt,
+    this.platformContent = const <String, String>{},
   });
 
   final String title;
   final String content;
   final List<String> attachments;
   final List<String> platforms;
+  final List<String> targetPageIds;
   final DateTime? scheduledAt;
+  final Map<String, String> platformContent;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -29,19 +33,46 @@ class PostRequestDtoV1 {
       'content': content,
       'attachments': attachments,
       'platforms': platforms,
-      'scheduled_at': scheduledAt?.toIso8601String(),
+      'target_page_ids': targetPageIds.map(int.parse).toList(),
+      'scheduled_at': scheduledAt?.toUtc().toIso8601String(),
+      'meta': <String, dynamic>{'platform_content': platformContent},
     };
   }
 }
 
 class PostUpdateRequestDtoV1 {
-  const PostUpdateRequestDtoV1({required this.title, required this.content});
+  const PostUpdateRequestDtoV1({
+    required this.title,
+    required this.content,
+    this.targetPageIds = const <String>[],
+    this.platformContent = const <String, String>{},
+  });
 
   final String title;
   final String content;
+  final List<String> targetPageIds;
+  final Map<String, String> platformContent;
 
   Map<String, dynamic> toJson() {
-    return <String, dynamic>{'title': title, 'content': content};
+    return <String, dynamic>{
+      'title': title,
+      'content': content,
+      'target_page_ids': targetPageIds.map(int.parse).toList(),
+      'meta': <String, dynamic>{'platform_content': platformContent},
+    };
+  }
+}
+
+class PublishNowRequestDtoV1 {
+  const PublishNowRequestDtoV1({this.socialPageIds = const <String>[]});
+
+  final List<String> socialPageIds;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      if (socialPageIds.isNotEmpty)
+        'social_page_ids': socialPageIds.map(int.parse).toList(),
+    };
   }
 }
 
@@ -54,8 +85,11 @@ class PostResponseDtoV1 {
     this.createdAt,
     this.updatedAt,
     this.scheduledAt,
+    this.publishedAt,
     this.attachments = const <String>[],
     this.platforms = const <String>[],
+    this.targetPageIds = const <String>[],
+    this.platformContent = const <String, String>{},
   });
 
   final String id;
@@ -65,10 +99,24 @@ class PostResponseDtoV1 {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? scheduledAt;
+  final DateTime? publishedAt;
   final List<String> attachments;
   final List<String> platforms;
+  final List<String> targetPageIds;
+  final Map<String, String> platformContent;
 
   factory PostResponseDtoV1.fromJson(Map<String, dynamic> json) {
+    final metaValue = json['meta'];
+    final meta = metaValue is Map<String, dynamic>
+        ? metaValue
+        : const <String, dynamic>{};
+    // PHP serializes an empty associative array as a JSON `[]`, not `{}` —
+    // an empty `platform_content` legitimately arrives as a List here.
+    final platformContentValue = meta['platform_content'];
+    final rawPlatformContent = platformContentValue is Map<String, dynamic>
+        ? platformContentValue
+        : const <String, dynamic>{};
+
     return PostResponseDtoV1(
       id: _asString(json['id']),
       title: _asString(json['title']),
@@ -77,8 +125,13 @@ class PostResponseDtoV1 {
       createdAt: _parseDate(json['created_at']),
       updatedAt: _parseDate(json['updated_at']),
       scheduledAt: _parseDate(json['scheduled_at']),
+      publishedAt: _parseDate(json['published_at']),
       attachments: _parseStringList(json['attachments']),
       platforms: _parseStringList(json['platforms']),
+      targetPageIds: _parseStringList(json['target_page_ids']),
+      platformContent: rawPlatformContent.map(
+        (key, value) => MapEntry(key, value.toString()),
+      ),
     );
   }
 
@@ -98,6 +151,18 @@ class PostResponseDtoV1 {
           .toList(growable: false);
     }
     return const <String>[];
+  }
+}
+
+class ScheduleRequestDtoV1 {
+  const ScheduleRequestDtoV1({required this.scheduledAt});
+
+  final DateTime scheduledAt;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'scheduled_at': scheduledAt.toUtc().toIso8601String(),
+    };
   }
 }
 

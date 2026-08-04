@@ -22,12 +22,9 @@ void main() {
       expect(flags.isEnabled(FeatureFlagKeys.laravelQueueSync), isTrue);
     });
 
-    test('canary flag requires rollout key and matching canary bucket', () {
+    test('legacy canary flag is permanently fail-closed', () {
       final flags = FeatureFlags(
-        releaseConfig: ReleaseConfig(
-          channel: ReleaseChannel.canary,
-          canaryPercent: 100,
-        ),
+        releaseConfig: const ReleaseConfig(),
         overrides: const <String, bool>{
           FeatureFlagKeys.canaryPublishPipeline: true,
         },
@@ -39,7 +36,7 @@ void main() {
           FeatureFlagKeys.canaryPublishPipeline,
           rolloutKey: 'user-123',
         ),
-        isTrue,
+        isFalse,
       );
     });
   });

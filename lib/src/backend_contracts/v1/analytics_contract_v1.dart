@@ -5,6 +5,9 @@ class PostAnalyticsResponseDtoV1 {
     required this.clicks,
     required this.shares,
     required this.reactions,
+    required this.comments,
+    required this.reach,
+    required this.available,
     required this.status,
   });
 
@@ -13,6 +16,9 @@ class PostAnalyticsResponseDtoV1 {
   final int clicks;
   final int shares;
   final int reactions;
+  final int comments;
+  final int reach;
+  final bool available;
   final String status;
 
   static String _asString(Object? value, {String fallback = ''}) {
@@ -36,6 +42,13 @@ class PostAnalyticsResponseDtoV1 {
     return fallback;
   }
 
+  static bool _asBool(Object? value, {bool fallback = false}) {
+    if (value is bool) {
+      return value;
+    }
+    return fallback;
+  }
+
   factory PostAnalyticsResponseDtoV1.fromJson(Map<String, dynamic> json) {
     return PostAnalyticsResponseDtoV1(
       postId: _asString(json['post_id']),
@@ -43,6 +56,9 @@ class PostAnalyticsResponseDtoV1 {
       clicks: _asInt(json['clicks']),
       shares: _asInt(json['shares']),
       reactions: _asInt(json['reactions']),
+      comments: _asInt(json['comments']),
+      reach: _asInt(json['reach']),
+      available: _asBool(json['available']),
       status: _asString(json['status'], fallback: 'draft'),
     );
   }
@@ -54,6 +70,9 @@ class PostAnalyticsResponseDtoV1 {
       'clicks': clicks,
       'shares': shares,
       'reactions': reactions,
+      'comments': comments,
+      'reach': reach,
+      'available': available,
       'status': status,
     };
   }

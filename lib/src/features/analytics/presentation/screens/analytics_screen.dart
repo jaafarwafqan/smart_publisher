@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
+import '../../../dashboard/presentation/utils/platform_label.dart';
 import '../../domain/entities/analytics_dashboard_entity.dart';
 import '../../domain/entities/analytics_metric_entity.dart';
 import '../../../posts/domain/entities/post_entity.dart';
@@ -32,17 +35,51 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     });
 
     final postsResult = await ref.read(postRepositoryProvider).getPosts();
-    final posts = postsResult.data ?? const <PostEntity>[];
 
+    if (postsResult.isFailure) {
+      if (!mounted) {
+        return;
+      }
+      final l10n = AppLocalizations.of(context)!;
+      setState(() {
+        _loading = false;
+        _error = postsResult.message ?? l10n.analyticsFailedToLoad;
+      });
+      return;
+    }
+
+    final posts = postsResult.data ?? const <PostEntity>[];
     final repository = ref.read(analyticsRepositoryProvider);
     final rows = <_PostAnalyticsViewModel>[];
 
-    for (final post in posts) {
-      final metricResult = await repository.getPostMetrics(post.id);
-      if (metricResult.isSuccess && metricResult.data != null) {
-        rows.add(
-          _PostAnalyticsViewModel(post: post, metric: metricResult.data!),
-        );
+    if (posts.isNotEmpty) {
+      final metricsResult = await repository.getPostsMetrics(
+        posts.map((post) => post.id).toList(growable: false),
+      );
+
+      if (metricsResult.isFailure) {
+        if (!mounted) {
+          return;
+        }
+        final l10n = AppLocalizations.of(context)!;
+        setState(() {
+          _loading = false;
+          _error = metricsResult.message ?? l10n.analyticsFailedToLoad;
+        });
+        return;
+      }
+
+      final metricsByPostId = <String, AnalyticsMetricEntity>{
+        for (final metric
+            in metricsResult.data ?? const <AnalyticsMetricEntity>[])
+          metric.postId: metric,
+      };
+
+      for (final post in posts) {
+        final metric = metricsByPostId[post.id];
+        if (metric != null) {
+          rows.add(_PostAnalyticsViewModel(post: post, metric: metric));
+        }
       }
     }
 
@@ -83,15 +120,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   ) /
                   _rows.length);
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Analytics')),
+      appBar: AppBar(title: Text(l10n.analyticsAppBarTitle)),
       body: RefreshIndicator(
         onRefresh: _loadAnalytics,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: <Widget>[
             Text(
-              'Performance overview, post-level metrics, and engagement trends.',
+              l10n.analyticsSubtitle,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 14),
@@ -99,31 +137,82 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               spacing: 10,
               runSpacing: 10,
               children: <Widget>[
-                _MetricCard(label: 'Reach', value: '$totalReach'),
-                _MetricCard(label: 'Impressions', value: '$totalImpressions'),
-                _MetricCard(label: 'Engagement', value: '$totalEngagement'),
                 _MetricCard(
-                  label: 'Avg. Engagement Rate',
+                  label: l10n.analyticsMetricReach,
+                  value: '$totalReach',
+                ),
+                _MetricCard(
+                  label: l10n.analyticsMetricImpressions,
+                  value: '$totalImpressions',
+                ),
+                _MetricCard(
+                  label: l10n.analyticsMetricEngagement,
+                  value: '$totalEngagement',
+                ),
+                _MetricCard(
+                  label: l10n.analyticsMetricAvgEngagementRate,
                   value: '${(averageRate * 100).toStringAsFixed(2)}%',
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _RecommendationTile(
+                        icon: Icons.schedule_outlined,
+                        label: l10n.analyticsBestTimeToPost,
+                        value: _dashboard?.bestPublishHour == null
+                            ? l10n.analyticsNotEnoughData
+                            : _formatHour(
+                                _dashboard!.bestPublishHour!,
+                                l10n.localeName,
+                              ),
+                      ),
+                    ),
+                    const VerticalDivider(width: 24),
+                    Expanded(
+                      child: _RecommendationTile(
+                        icon: Icons.trending_up_outlined,
+                        label: l10n.analyticsBestPlatform,
+                        value: _dashboard?.bestPlatform == null
+                            ? l10n.analyticsNotEnoughData
+                            : platformLabel(_dashboard!.bestPlatform!),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
             if (_loading)
               const Center(child: CircularProgressIndicator())
-            else if (_rows.isEmpty)
-              const Card(
+            else if (_error != null)
+              Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No posts available for analytics yet.'),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(_error!),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _loadAnalytics,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(l10n.commonRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (_rows.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l10n.analyticsNoPostsYet),
                 ),
               )
             else
@@ -137,7 +226,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       children: <Widget>[
                         Text(
                           row.post.title.isEmpty
-                              ? 'Untitled post'
+                              ? l10n.postUntitled
                               : row.post.title,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
@@ -147,27 +236,27 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           runSpacing: 10,
                           children: <Widget>[
                             _MiniStat(
-                              label: 'Reach',
+                              label: l10n.analyticsMetricReach,
                               value: '${row.metric.reach}',
                             ),
                             _MiniStat(
-                              label: 'Impressions',
+                              label: l10n.analyticsMetricImpressions,
                               value: '${row.metric.impressions}',
                             ),
                             _MiniStat(
-                              label: 'Clicks',
+                              label: l10n.analyticsMetricClicks,
                               value: '${row.metric.clicks}',
                             ),
                             _MiniStat(
-                              label: 'Shares',
+                              label: l10n.analyticsMetricShares,
                               value: '${row.metric.shares}',
                             ),
                             _MiniStat(
-                              label: 'Reactions',
+                              label: l10n.analyticsMetricReactions,
                               value: '${row.metric.reactions}',
                             ),
                             _MiniStat(
-                              label: 'Engagement Rate',
+                              label: l10n.analyticsMetricEngagementRate,
                               value:
                                   '${(row.metric.engagementRate * 100).toStringAsFixed(2)}%',
                             ),
@@ -181,6 +270,47 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+String _formatHour(int hour, String localeName) {
+  final dateTime = DateTime(2026, 1, 1, hour);
+  return DateFormat.jm(localeName).format(dateTime);
+}
+
+class _RecommendationTile extends StatelessWidget {
+  const _RecommendationTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(label, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

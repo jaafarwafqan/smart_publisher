@@ -1,0 +1,305 @@
+{
+  "info": {
+    "name": "Smart Publisher API (v1)",
+    "description": "Generated 2026-07-27 directly from routes/api.php and the real controllers. Every response is wrapped by ApiEnvelopeMiddleware as {success, message, data, meta, errors}. See docs/api/openapi_v1.yaml for the full schema-level reference this collection mirrors.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "user_id", "value": "1" },
+    { "key": "post_id", "value": "1" },
+    { "key": "social_account_id", "value": "1" },
+    { "key": "social_page_id", "value": "1" },
+    { "key": "media_id", "value": "1" },
+    { "key": "branch_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@smartpublisher.local\",\n  \"password\": \"Admin@123456\"\n}" }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/refresh",
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }
+          }
+        },
+        { "name": "Me", "request": { "method": "GET", "url": "{{base_url}}/auth/me" } },
+        { "name": "Logout", "request": { "method": "POST", "url": "{{base_url}}/auth/logout" } }
+      ]
+    },
+    {
+      "name": "Accounts (legacy/broken)",
+      "item": [
+        {
+          "name": "List accounts (only working method)",
+          "request": { "method": "GET", "url": "{{base_url}}/accounts" }
+        },
+        {
+          "name": "Connect (BROKEN - no controller method)",
+          "request": { "method": "POST", "url": "{{base_url}}/accounts/connect", "body": { "mode": "raw", "raw": "{}" } }
+        }
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        { "name": "List branches", "request": { "method": "GET", "url": "{{base_url}}/branches" } },
+        {
+          "name": "Create branch",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/branches",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Headquarters\",\n  \"code\": \"HQ2\",\n  \"is_active\": true\n}" }
+          }
+        },
+        { "name": "Get branch", "request": { "method": "GET", "url": "{{base_url}}/branches/{{branch_id}}" } },
+        {
+          "name": "Update branch",
+          "request": { "method": "PUT", "url": "{{base_url}}/branches/{{branch_id}}", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Headquarters (renamed)\"\n}" } }
+        },
+        { "name": "Delete branch", "request": { "method": "DELETE", "url": "{{base_url}}/branches/{{branch_id}}" } }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "List users", "request": { "method": "GET", "url": "{{base_url}}/users" } },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Editor\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"SecurePass123\",\n  \"branch_id\": null,\n  \"roles\": [\"editor\"]\n}" }
+          }
+        },
+        { "name": "Get user", "request": { "method": "GET", "url": "{{base_url}}/users/{{user_id}}" } },
+        {
+          "name": "Update user",
+          "request": { "method": "PUT", "url": "{{base_url}}/users/{{user_id}}", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Updated\"\n}" } }
+        },
+        { "name": "Delete user", "request": { "method": "DELETE", "url": "{{base_url}}/users/{{user_id}}" } },
+        {
+          "name": "Sync user roles",
+          "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/roles", "body": { "mode": "raw", "raw": "{\n  \"roles\": [\"manager\"]\n}" } }
+        },
+        { "name": "Get user permissions", "request": { "method": "GET", "url": "{{base_url}}/users/{{user_id}}/permissions" } },
+        {
+          "name": "Assign direct permissions",
+          "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/permissions", "body": { "mode": "raw", "raw": "{\n  \"permissions\": [\"posts.view\"]\n}" } }
+        },
+        { "name": "List user tokens", "request": { "method": "GET", "url": "{{base_url}}/users/{{user_id}}/tokens" } },
+        {
+          "name": "Create token",
+          "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/tokens", "body": { "mode": "raw", "raw": "{\n  \"name\": \"integration-test\",\n  \"abilities\": [\"posts.read\"]\n}" } }
+        },
+        { "name": "Revoke token", "request": { "method": "DELETE", "url": "{{base_url}}/users/{{user_id}}/tokens/1" } },
+        { "name": "Roles & permissions catalog", "request": { "method": "GET", "url": "{{base_url}}/catalog/roles-permissions" } },
+        { "name": "Supported social providers", "request": { "method": "GET", "url": "{{base_url}}/catalog/social-providers" } }
+      ]
+    },
+    {
+      "name": "SocialAccounts",
+      "item": [
+        { "name": "List social accounts", "request": { "method": "GET", "url": "{{base_url}}/users/{{user_id}}/social-accounts" } },
+        {
+          "name": "Link social account directly",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users/{{user_id}}/social-accounts",
+            "body": { "mode": "raw", "raw": "{\n  \"provider\": \"facebook\",\n  \"provider_account_id\": \"1234567890\",\n  \"account_name\": \"My Page\",\n  \"status\": \"connected\"\n}" }
+          }
+        },
+        {
+          "name": "Begin OAuth authorization",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users/{{user_id}}/social-accounts/authorize",
+            "body": { "mode": "raw", "raw": "{\n  \"provider\": \"facebook\",\n  \"redirect_uri\": \"http://localhost:5055/\"\n}" }
+          }
+        },
+        {
+          "name": "OAuth callback",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users/{{user_id}}/social-accounts/callback",
+            "body": { "mode": "raw", "raw": "{\n  \"provider\": \"facebook\",\n  \"code\": \"auth-code-from-redirect\",\n  \"state\": \"state-value-from-authorize-step\"\n}" }
+          }
+        },
+        {
+          "name": "Connect Telegram bot",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/users/{{user_id}}/social-accounts/telegram/connect",
+            "body": { "mode": "raw", "raw": "{\n  \"bot_token\": \"123456:ABC-DEF...\"\n}" }
+          }
+        },
+        { "name": "Get social account", "request": { "method": "GET", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}" } },
+        {
+          "name": "Update social account",
+          "request": { "method": "PUT", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}", "body": { "mode": "raw", "raw": "{\n  \"account_name\": \"Renamed\"\n}" } }
+        },
+        { "name": "Delete social account", "request": { "method": "DELETE", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}" } },
+        { "name": "Refresh token", "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/refresh-token" } },
+        { "name": "Test connection", "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/test" } },
+        {
+          "name": "Set status",
+          "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/status", "body": { "mode": "raw", "raw": "{\n  \"status\": \"connected\"\n}" } }
+        },
+        { "name": "List pages", "request": { "method": "GET", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/pages" } },
+        { "name": "Sync pages", "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/pages/sync" } },
+        {
+          "name": "Add page (Telegram only)",
+          "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/pages/add", "body": { "mode": "raw", "raw": "{\n  \"identifier\": \"@my_channel\"\n}" } }
+        },
+        { "name": "Delete page", "request": { "method": "DELETE", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/pages/{{social_page_id}}" } },
+        {
+          "name": "Select pages",
+          "request": { "method": "POST", "url": "{{base_url}}/users/{{user_id}}/social-accounts/{{social_account_id}}/pages/select", "body": { "mode": "raw", "raw": "{\n  \"page_ids\": [{{social_page_id}}]\n}" } }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        { "name": "List posts", "request": { "method": "GET", "url": "{{base_url}}/posts?status=" } },
+        {
+          "name": "Create post",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/posts",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Launch announcement\",\n  \"content\": \"We're live! **Exciting** news for everyone.\",\n  \"target_page_ids\": [{{social_page_id}}],\n  \"meta\": { \"platform_content\": {} }\n}"
+            }
+          }
+        },
+        { "name": "Get post", "request": { "method": "GET", "url": "{{base_url}}/posts/{{post_id}}" } },
+        {
+          "name": "Update post",
+          "request": { "method": "PUT", "url": "{{base_url}}/posts/{{post_id}}", "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated title\"\n}" } }
+        },
+        { "name": "Delete post", "request": { "method": "DELETE", "url": "{{base_url}}/posts/{{post_id}}" } },
+        {
+          "name": "Schedule post",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/posts/{{post_id}}/schedule",
+            "body": { "mode": "raw", "raw": "{\n  \"scheduled_at\": \"2026-12-31T10:00:00Z\"\n}" }
+          }
+        },
+        {
+          "name": "Publish now",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/posts/{{post_id}}/publish-now",
+            "body": { "mode": "raw", "raw": "{\n  \"social_page_ids\": [{{social_page_id}}]\n}" }
+          }
+        },
+        { "name": "Revert to draft", "request": { "method": "POST", "url": "{{base_url}}/posts/{{post_id}}/draft" } }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        { "name": "List media library", "request": { "method": "GET", "url": "{{base_url}}/media?type=image" } },
+        {
+          "name": "Upload media",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/media",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "collection", "value": "default", "type": "text" },
+                { "key": "tags[]", "value": "launch", "type": "text" }
+              ]
+            }
+          }
+        },
+        { "name": "Compress image", "request": { "method": "POST", "url": "{{base_url}}/media/{{media_id}}/compress" } },
+        {
+          "name": "Attach media to post",
+          "request": { "method": "POST", "url": "{{base_url}}/posts/{{post_id}}/media/attach", "body": { "mode": "raw", "raw": "{\n  \"attachment_ids\": [{{media_id}}]\n}" } }
+        },
+        { "name": "Detach media from post", "request": { "method": "DELETE", "url": "{{base_url}}/posts/{{post_id}}/media/{{media_id}}" } },
+        { "name": "Delete media", "request": { "method": "DELETE", "url": "{{base_url}}/media/{{media_id}}" } }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        { "name": "Post-count summary", "request": { "method": "GET", "url": "{{base_url}}/analytics" } },
+        { "name": "Dashboard (real per-page metrics)", "request": { "method": "GET", "url": "{{base_url}}/analytics/dashboard" } },
+        { "name": "Bulk per-post metrics", "request": { "method": "GET", "url": "{{base_url}}/analytics/posts?post_ids[]={{post_id}}" } },
+        { "name": "Single post metrics", "request": { "method": "GET", "url": "{{base_url}}/analytics/posts/{{post_id}}" } }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        { "name": "List notifications (facade - see KNOWN_ISSUES.md)", "request": { "method": "GET", "url": "{{base_url}}/notifications" } },
+        { "name": "Mark all read (no-op)", "request": { "method": "POST", "url": "{{base_url}}/notifications/mark-all-read" } },
+        { "name": "Mark one read (no-op)", "request": { "method": "PATCH", "url": "{{base_url}}/notifications/1" } }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "item": [
+        { "name": "Upcoming scheduled posts", "request": { "method": "GET", "url": "{{base_url}}/calendar" } }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        { "name": "Get settings", "request": { "method": "GET", "url": "{{base_url}}/settings" } }
+      ]
+    },
+    {
+      "name": "SystemSettings",
+      "item": [
+        { "name": "List OAuth provider configs", "request": { "method": "GET", "url": "{{base_url}}/system-settings/oauth-providers" } },
+        {
+          "name": "Update OAuth provider config",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/system-settings/oauth-providers/facebook",
+            "body": { "mode": "raw", "raw": "{\n  \"client_id\": \"your-app-id\",\n  \"client_secret\": \"only-send-when-changing-it\"\n}" }
+          }
+        },
+        { "name": "Test provider connection", "request": { "method": "POST", "url": "{{base_url}}/system-settings/oauth-providers/facebook/test" } },
+        { "name": "Provider audit log", "request": { "method": "GET", "url": "{{base_url}}/system-settings/oauth-providers/facebook/audit-log" } }
+      ]
+    },
+    {
+      "name": "Publishing",
+      "item": [
+        { "name": "Run scheduler tick manually", "request": { "method": "POST", "url": "{{base_url}}/publishing/tick" } },
+        { "name": "List dead letters", "request": { "method": "GET", "url": "{{base_url}}/publishing/dead-letters" } },
+        {
+          "name": "Clear provider circuit breaker",
+          "request": { "method": "POST", "url": "{{base_url}}/publishing/circuit-breaker/clear", "body": { "mode": "raw", "raw": "{\n  \"provider\": \"facebook\"\n}" } }
+        }
+      ]
+    }
+  ]
+}

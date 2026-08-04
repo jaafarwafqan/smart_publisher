@@ -1,15 +1,37 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
+import 'package:smart_publisher/src/features/schedule/data/schedule_repository_impl.dart';
 import 'package:smart_publisher/src/offline/queue/outbox_store.dart';
+
+import '../helpers/fake_network_client.dart';
 
 void main() {
   group('Integration - Queue and Schedule', () {
     test('schedule post updates status and queues change', () async {
       final outbox = OutboxStore();
       final repository = PostRepositoryImpl(outboxStore: outbox);
-      final schedule = SchedulePost(repository: repository);
+      final scheduleRepo = ScheduleRepositoryImpl(
+        networkClient: FakeNetworkClient(
+          postHandler: (path, data) async {
+            final body = data as Map<String, dynamic>;
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'id': 'sched-1',
+                'title': 'Scheduled',
+                'content': 'Body',
+                'status': 'scheduled',
+                'scheduled_at': body['scheduled_at'],
+              },
+            );
+          },
+        ),
+      );
+      final schedule = SchedulePost(repository: scheduleRepo);
 
       final post = PostEntity(
         id: 'sched-1',

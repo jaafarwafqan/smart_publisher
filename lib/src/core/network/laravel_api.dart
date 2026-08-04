@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum ApiVersion { v1 }
 
 final class LaravelApi {
@@ -24,6 +26,41 @@ final class LaravelApi {
   );
 
   static const String _versionPrefix = '';
+
+  /// A release build must never fall back to the localhost HTTP defaults used
+  /// for developer tooling. The pipeline supplies all three values via
+  /// `--dart-define`; this runtime guard protects a manually built AAB too.
+  static void assertReleaseConfiguration() {
+    if (!kReleaseMode) {
+      return;
+    }
+
+    if (!hasSecureReleaseEndpoints(
+      api: apiBaseUrl,
+      auth: authBaseUrl,
+      oauth: oauthBaseUrl,
+    )) {
+      throw StateError(
+        'Release builds require HTTPS SP_API_BASE_URL, SP_AUTH_BASE_URL, and '
+        'SP_OAUTH_BASE_URL dart-defines.',
+      );
+    }
+  }
+
+  static bool hasSecureReleaseEndpoints({
+    required String api,
+    required String auth,
+    required String oauth,
+  }) {
+    return isSecureProductionEndpoint(api) &&
+        isSecureProductionEndpoint(auth) &&
+        isSecureProductionEndpoint(oauth);
+  }
+
+  static bool isSecureProductionEndpoint(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
+  }
 
   static String apiPath(String path) {
     if (path.isEmpty) {
@@ -76,19 +113,84 @@ final class LaravelEndpoints {
   static final String posts = LaravelApi.versioned('/posts');
   static String postById(String id) => LaravelApi.versioned('/posts/$id');
 
-  static final String mediaUpload = LaravelApi.versioned('/media/upload');
-  static final String mediaCompress = LaravelApi.versioned('/media/compress');
+  static final String mediaUpload = LaravelApi.versioned('/media');
+  static String mediaCompress(String id) =>
+      LaravelApi.versioned('/media/$id/compress');
   static String mediaById(String id) => LaravelApi.versioned('/media/$id');
-
-  static final String publishJobs = LaravelApi.versioned('/publish/jobs');
-  static String publishJobById(String id) =>
-      LaravelApi.versioned('/publish/jobs/$id');
+  static String postMediaAttach(String postId) =>
+      LaravelApi.versioned('/posts/$postId/media/attach');
 
   static final String accounts = LaravelApi.versioned('/accounts');
   static final String accountsConnect = LaravelApi.versioned(
     '/accounts/connect',
   );
   static String accountById(String id) => LaravelApi.versioned('/accounts/$id');
+
+  static String socialAccountsList(String userId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts');
+  static String socialAccountsStore(String userId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts');
+  static String socialAccountById(String userId, String socialAccountId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts/$socialAccountId');
+  static String socialAccountRefreshToken(
+    String userId,
+    String socialAccountId,
+  ) => LaravelApi.versioned(
+    '/users/$userId/social-accounts/$socialAccountId/refresh-token',
+  );
+  static String socialAccountTestConnection(
+    String userId,
+    String socialAccountId,
+  ) => LaravelApi.versioned(
+    '/users/$userId/social-accounts/$socialAccountId/test',
+  );
+
+  static String telegramConnect(String userId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts/telegram/connect');
+  static String socialAccountsAuthorize(String userId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts/authorize');
+  static String socialAccountsCallback(String userId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts/callback');
+  static String socialPages(String userId, String socialAccountId) =>
+      LaravelApi.versioned(
+        '/users/$userId/social-accounts/$socialAccountId/pages',
+      );
+  static String socialPagesSync(String userId, String socialAccountId) =>
+      '${socialPages(userId, socialAccountId)}/sync';
+  static String socialPagesAdd(String userId, String socialAccountId) =>
+      '${socialPages(userId, socialAccountId)}/add';
+  static String socialPagesSelect(String userId, String socialAccountId) =>
+      '${socialPages(userId, socialAccountId)}/select';
+  static String socialPageById(
+    String userId,
+    String socialAccountId,
+    String pageId,
+  ) => '${socialPages(userId, socialAccountId)}/$pageId';
+
+  static String postPublishNow(String postId) =>
+      LaravelApi.versioned('/posts/$postId/publish-now');
+  static String postSchedule(String postId) =>
+      LaravelApi.versioned('/posts/$postId/schedule');
+  static String postDraft(String postId) =>
+      LaravelApi.versioned('/posts/$postId/draft');
+
+  static final String calendar = LaravelApi.versioned('/calendar');
+
+  static final String organizations = LaravelApi.versioned('/organizations');
+  static String organizationSwitch(String organizationId) =>
+      LaravelApi.versioned('/organizations/$organizationId/switch');
+
+  static final String systemSettingsOAuthProviders = LaravelApi.versioned(
+    '/system-settings/oauth-providers',
+  );
+  static String systemSettingsOAuthProviderById(String provider) =>
+      LaravelApi.versioned('/system-settings/oauth-providers/$provider');
+  static String systemSettingsOAuthProviderTest(String provider) =>
+      LaravelApi.versioned('/system-settings/oauth-providers/$provider/test');
+  static String systemSettingsOAuthProviderAuditLog(String provider) =>
+      LaravelApi.versioned(
+        '/system-settings/oauth-providers/$provider/audit-log',
+      );
 
   static final List<String> authLoginCandidates = <String>[
     LaravelApi.apiPath('/auth/login'),
@@ -98,12 +200,20 @@ final class LaravelEndpoints {
   ];
   static final String authLogin = authLoginCandidates.first;
   static final String authRefresh = authRefreshCandidates.first;
+  static final String authLogout = LaravelApi.apiPath('/auth/logout');
 
   static final String analyticsDashboard = LaravelApi.versioned(
     '/analytics/dashboard',
   );
+  static final String analyticsSummary = LaravelApi.versioned('/analytics');
   static String analyticsPostById(String postId) =>
       LaravelApi.versioned('/analytics/posts/$postId');
+  static String analyticsPostsBulk(List<String> postIds) {
+    final query = postIds
+        .map((id) => 'post_ids[]=${Uri.encodeQueryComponent(id)}')
+        .join('&');
+    return '${LaravelApi.versioned('/analytics/posts')}?$query';
+  }
 
   static final String notifications = LaravelApi.versioned('/notifications');
   static String notificationById(String id) =>

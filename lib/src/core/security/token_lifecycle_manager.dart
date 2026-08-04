@@ -8,11 +8,19 @@ class TokenLifecycleManager {
     required this.tokenStorage,
     this.refreshExecutor,
     this.refreshWindow = const Duration(minutes: 2),
+    this.onRefreshFailed,
   });
 
   final SecureTokenStorage tokenStorage;
   final RefreshExecutor? refreshExecutor;
   final Duration refreshWindow;
+  // Called only when a refresh attempt was genuinely made and the server
+  // rejected it (revoked/expired refresh token) — never for "no executor
+  // configured" or "no refresh token to try" cases, which aren't failures.
+  // Lets the DI layer also clear the separate GuardStorageKeys.authToken
+  // flag the route guard reads, so a truly-dead session stops looking
+  // authenticated instead of silently keeping a stale token around forever.
+  final Future<void> Function()? onRefreshFailed;
 
   Future<TokenBundle?> readTokens() {
     return tokenStorage.readTokens();
@@ -55,6 +63,8 @@ class TokenLifecycleManager {
 
     final rotated = await refreshExecutor!.call(tokens.refreshToken);
     if (rotated == null) {
+      await tokenStorage.clearTokens();
+      await onRefreshFailed?.call();
       return null;
     }
 

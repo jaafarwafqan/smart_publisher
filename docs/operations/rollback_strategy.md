@@ -1,36 +1,29 @@
 # Rollback Strategy
 
-## Scope
-Rollback applies to mobile release artifacts, web static bundle, and backend-release channel routing metadata.
+Automated rollback is deliberately **not** implemented in this repository.
+`scripts/rollback.ps1` fails rather than printing a deceptive success message.
+The deployment owner must establish and test the real rollback procedure for
+the chosen Firebase distribution and backend hosting targets before external
+closed-beta invitations.
 
-## Preconditions
-- Incident severity confirmed (SEV-1 or SEV-2).
-- Incident commander assigned.
-- Target rollback version identified (tag or build number).
+## Required operator procedure
 
-## Fast Rollback Procedure
-1. Stop progressive rollout (set canary to 0%).
-2. Re-point traffic to previous stable release.
-3. Disable risky flags:
-   - `SP_FF_CANARY_PUBLISH_PIPELINE=false`
-   - `SP_FF_PERFORMANCE_DASHBOARD=false` (optional)
-4. Validate core user journey:
-   - login
-   - create post
-   - media upload
-   - publish job creation
-5. Announce rollback completion in incident channel.
+1. Assign an incident owner and stop new release workflow runs.
+2. Identify the prior verified signed AAB, its version code, SHA-256, and
+   Firebase App Distribution record.
+3. Use the authorised Firebase distribution process to re-distribute the
+   prior artifact to the closed-beta tester group.  Record the resulting
+   release URL; do not claim a rollback merely because a shell script ran.
+4. Roll back backend code/configuration only through the hosting provider's
+   documented process.  Do not perform destructive database rollbacks without
+   a tested backup and migration plan.
+5. Run the staging smoke path: login, organisation selection, draft, upload,
+   approval, publish/schedule, status, and notification.
+6. Keep the incident evidence, queue/DLQ state, and audit logs for the
+   follow-up investigation.
 
-## Data Safety
-- Do not run destructive migrations during rollback.
-- Preserve queue jobs and replay after stabilization.
-- Keep audit logs for all rollback commands.
+## Release blocker
 
-## Verification Checklist
-- Error rate back to baseline
-- Crash-free sessions recovered
-- Queue retry/dead-letter growth stabilized
-
-## Post-Rollback
-- Freeze new deployments until RCA is complete.
-- Create remediation tasks and owner assignment.
+If the operator cannot identify a prior signed artifact and a tested backend
+rollback path, the release is not ready.  A checklist or UI switch is not a
+rollback mechanism.

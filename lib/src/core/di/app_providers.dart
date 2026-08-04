@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dio/dio.dart'
     show BaseOptions, Dio, DioException, RequestOptions;
@@ -12,6 +14,7 @@ import '../network/laravel_api.dart';
 import '../network/network_client.dart';
 import '../network/network_interceptor.dart';
 import '../release/release_config.dart';
+import '../router/guard_state_provider.dart';
 import '../security/encryption_service.dart';
 import '../security/oauth_manager.dart';
 import '../security/scope_authorizer.dart';
@@ -20,6 +23,7 @@ import '../security/secure_token_storage.dart';
 import '../security/token_lifecycle_manager.dart';
 import '../security/token_bundle.dart';
 import '../storage/storage_provider.dart';
+import '../tenancy/active_organization_store.dart';
 import '../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../backend_contracts/v1/auth_contract_v1.dart';
 import '../../features/media/data/media_repository_impl.dart';
@@ -30,8 +34,12 @@ import '../../features/auth/data/account_repository_impl.dart';
 import '../../features/auth/application/auth_event_publisher.dart';
 import '../../features/auth/application/auth_session_controller.dart';
 import '../../features/auth/domain/repositories/account_repository.dart';
+import '../../features/administration/data/system_settings_repository_impl.dart';
+import '../../features/administration/domain/repositories/system_settings_repository.dart';
 import '../../features/notifications/data/notification_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/organizations/data/organization_repository_impl.dart';
+import '../../features/organizations/domain/repositories/organization_repository.dart';
 import '../../features/posts/data/post_repository_impl.dart';
 import '../../features/posts/domain/repositories/post_repository.dart';
 import '../../features/posts/domain/usecases/compress_media.dart';
@@ -39,15 +47,24 @@ import '../../features/posts/domain/usecases/create_post.dart';
 import '../../features/posts/domain/usecases/publish_post.dart';
 import '../../features/posts/domain/usecases/schedule_post.dart';
 import '../../features/posts/domain/usecases/upload_media.dart';
+import '../../features/schedule/data/schedule_repository_impl.dart';
+import '../../features/schedule/domain/repositories/schedule_repository.dart';
 import '../../offline/cache/draft_storage.dart';
 import '../../offline/queue/outbox_store.dart';
 import '../../offline/sync/conflict_resolution.dart';
+import '../../offline/sync/outbox_sync_handlers.dart';
 import '../../offline/sync/resumable_upload_manager.dart';
 import '../../offline/sync/sync_worker.dart';
 import '../../platforms/core/platform_factory.dart';
 import '../../publish_engine/engine/publish_engine.dart';
 
 part 'app_providers.g.dart';
+
+final activeOrganizationStoreProvider = Provider<ActiveOrganizationStore>((
+  ref,
+) {
+  return ActiveOrganizationStore(storage: ref.read(storageServiceProvider));
+});
 
 @Riverpod(keepAlive: true)
 NetworkClient networkClient(NetworkClientRef ref) {
@@ -59,9 +76,16 @@ NetworkClient networkClient(NetworkClientRef ref) {
         headers: <String, Object>{
           'Accept': LaravelApi.acceptHeader(),
           'X-Api-Version': LaravelApi.apiVersionHeaderValue(),
-          'X-Release-Channel': releaseConfig.channel.name,
-          'X-Canary-Percent': releaseConfig.canaryPercent,
+          'X-Release-Channel': releaseConfig.wireValue,
         },
+        // Without these, Dio has no default at all — a hung/unresponsive
+        // backend (or a socket that never completes) leaves the request
+        // (and whatever screen is awaiting it) stuck loading indefinitely.
+        // Per-call timeoutInSeconds (DioNetworkClient._withTimeout) still
+        // overrides receiveTimeout for callers that pass it explicitly.
+        connectTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
       ),
     ),
     interceptors: <NetworkInterceptor>[
@@ -69,6 +93,9 @@ NetworkClient networkClient(NetworkClientRef ref) {
         tokenLifecycleManager: ref.read(tokenLifecycleManagerProvider),
         scopeAuthorizer: ref.read(scopeAuthorizerProvider),
         requiredScopesResolver: _requiredScopesForPath,
+      ),
+      OrganizationHeaderInterceptor(
+        store: ref.read(activeOrganizationStoreProvider),
       ),
       RefreshTokenInterceptor(
         tokenLifecycleManager: ref.read(tokenLifecycleManagerProvider),
@@ -107,7 +134,7 @@ Set<String> _requiredScopesForPath(RequestOptions options) {
 SecretsManager secretsManager(SecretsManagerRef ref) {
   const allowInsecureForDebug = bool.fromEnvironment(
     'SP_ALLOW_INSECURE_SECRETS_IN_DEBUG',
-    defaultValue: true,
+    defaultValue: false,
   );
 
   if (kIsWeb) {
@@ -167,6 +194,11 @@ ScopeAuthorizer scopeAuthorizer(ScopeAuthorizerRef ref) {
 TokenLifecycleManager tokenLifecycleManager(TokenLifecycleManagerRef ref) {
   return TokenLifecycleManager(
     tokenStorage: ref.read(secureTokenStorageProvider),
+    onRefreshFailed: () async {
+      final storage = ref.read(storageServiceProvider);
+      await storage.delete(GuardStorageKeys.authToken);
+      await storage.delete(GuardStorageKeys.userRole);
+    },
     refreshExecutor: (refreshToken) async {
       try {
         final response = await Dio().post<dynamic>(
@@ -242,6 +274,21 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
   );
 });
 
+final systemSettingsRepositoryProvider = Provider<SystemSettingsRepository>((
+  ref,
+) {
+  return SystemSettingsRepositoryImpl(
+    networkClient: ref.read(networkClientProvider),
+  );
+});
+
+final organizationRepositoryProvider = Provider<OrganizationRepository>((ref) {
+  return OrganizationRepositoryImpl(
+    networkClient: ref.read(networkClientProvider),
+    store: ref.read(activeOrganizationStoreProvider),
+  );
+});
+
 @Riverpod(keepAlive: true)
 PublishEngine publishEngine(PublishEngineRef ref) {
   return PublishEngine(eventDispatcher: ref.read(eventDispatcherProvider));
@@ -254,7 +301,7 @@ DraftStorage draftStorage(DraftStorageRef ref) {
 
 @Riverpod(keepAlive: true)
 OutboxStore outboxStore(OutboxStoreRef ref) {
-  return OutboxStore();
+  return OutboxStore(storage: ref.read(storageServiceProvider));
 }
 
 @Riverpod(keepAlive: true)
@@ -270,6 +317,46 @@ SyncWorker syncWorker(SyncWorkerRef ref) {
   );
 }
 
+/// Reading this provider (once, at app start) is what actually drains the
+/// offline outbox: it periodically calls [SyncWorker.runOnce] with real
+/// handlers. Without it, SyncWorker exists but is never invoked and queued
+/// operations never sync.
+final syncSchedulerProvider = Provider<bool>((ref) {
+  final syncWorker = ref.read(syncWorkerProvider);
+  final handlers = buildOutboxSyncHandlers(
+    postRepository: ref.read(postRepositoryProvider),
+    mediaRepository: ref.read(mediaRepositoryProvider),
+  );
+
+  Future<void> runSync() async {
+    try {
+      await syncWorker.runOnce(
+        handlers,
+        currentOrganizationId: () =>
+            ref.read(activeOrganizationStoreProvider).read(),
+      );
+    } catch (_) {
+      // Best-effort background sync: per-entry retry/dead-letter handling
+      // already happens inside runOnce, so a failure here just means we
+      // try again on the next tick.
+    }
+  }
+
+  unawaited(runSync());
+  final timer = Timer.periodic(
+    const Duration(seconds: 45),
+    (_) => unawaited(runSync()),
+  );
+  ref.onDispose(timer.cancel);
+
+  return true;
+});
+
+@Riverpod(keepAlive: true)
+ScheduleRepository scheduleRepository(ScheduleRepositoryRef ref) {
+  return ScheduleRepositoryImpl(networkClient: ref.read(networkClientProvider));
+}
+
 @Riverpod(keepAlive: true)
 PostRepository postRepository(PostRepositoryRef ref) {
   return PostRepositoryImpl(
@@ -277,6 +364,7 @@ PostRepository postRepository(PostRepositoryRef ref) {
     eventDispatcher: ref.read(eventDispatcherProvider),
     draftStorage: ref.read(draftStorageProvider),
     outboxStore: ref.read(outboxStoreProvider),
+    activeOrganizationStore: ref.read(activeOrganizationStoreProvider),
   );
 }
 
@@ -314,7 +402,7 @@ PublishPost publishPostUseCase(PublishPostUseCaseRef ref) {
 
 @Riverpod(keepAlive: true)
 SchedulePost schedulePostUseCase(SchedulePostUseCaseRef ref) {
-  return SchedulePost(repository: ref.read(postRepositoryProvider));
+  return SchedulePost(repository: ref.read(scheduleRepositoryProvider));
 }
 
 @Riverpod(keepAlive: true)

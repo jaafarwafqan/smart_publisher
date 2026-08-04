@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../organizations/application/current_organization_access.dart';
 import '../../domain/entities/post_entity.dart';
 
 class PostsListScreen extends ConsumerStatefulWidget {
@@ -18,6 +20,9 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
 
   List<PostEntity> _posts = const <PostEntity>[];
   bool _loading = true;
+  bool _loadingMore = false;
+  int _currentPage = 1;
+  bool _hasMorePages = false;
   String _statusFilter = 'all';
   String? _error;
 
@@ -39,18 +44,51 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
       _error = null;
     });
 
-    final result = await ref.read(postRepositoryProvider).getPosts();
+    final result = await ref.read(postRepositoryProvider).getPostsPage(page: 1);
+    if (!mounted) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _loading = false;
+      if (result.isSuccess) {
+        final page = result.data;
+        _posts = page?.items ?? const <PostEntity>[];
+        _currentPage = page?.page ?? 1;
+        _hasMorePages = page != null && _currentPage < page.totalPages;
+      } else {
+        _error = result.message ?? l10n.postsListFailedToLoad;
+      }
+    });
+  }
+
+  Future<void> _loadMorePosts() async {
+    setState(() {
+      _loadingMore = true;
+    });
+
+    final result = await ref
+        .read(postRepositoryProvider)
+        .getPostsPage(page: _currentPage + 1);
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _loading = false;
+      _loadingMore = false;
       if (result.isSuccess) {
-        _posts = result.data ?? const <PostEntity>[];
-      } else {
-        _error = result.message ?? 'Failed to load posts.';
+        final page = result.data;
+        if (page != null) {
+          _posts = <PostEntity>[..._posts, ...page.items];
+          _currentPage = page.page;
+          _hasMorePages = _currentPage < page.totalPages;
+        }
       }
+      // A failed "load more" leaves the already-loaded posts on screen —
+      // only the initial load surfaces a page-replacing error state, since
+      // a load-more failure isn't "we have nothing to show," just "we
+      // couldn't get the next batch." The button stays available to retry.
     });
   }
 
@@ -69,17 +107,27 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         .toList(growable: false);
   }
 
+  bool get _canEditPosts {
+    final access = ref.watch(currentOrganizationAccessProvider).valueOrNull;
+    return access?.hasAnyPermission(<String>[
+          OrganizationPermissions.postsUpdateOwn,
+          OrganizationPermissions.postsUpdateAll,
+        ]) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final posts = _filteredPosts;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Posts'),
+        title: Text(l10n.postsListAppBarTitle),
         actions: <Widget>[
           IconButton(
-            tooltip: 'Create post',
+            tooltip: l10n.postsListCreateTooltip,
             onPressed: () => context.go(RouteNames.postsCreatePath),
             icon: const Icon(Icons.add_circle_outline),
           ),
@@ -90,21 +138,18 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: <Widget>[
-            Text('Posts Library', style: theme.textTheme.headlineSmall),
+            Text(l10n.postsListHeadline, style: theme.textTheme.headlineSmall),
             const SizedBox(height: 8),
-            Text(
-              'Search, filter, and edit your drafts, scheduled, and published posts.',
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(l10n.postsListSubtitle, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 14),
             TextField(
               controller: _searchController,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Search posts',
-                hintText: 'Title or content',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.postsListSearchLabel,
+                hintText: l10n.postsListSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -113,22 +158,22 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
               runSpacing: 8,
               children: <Widget>[
                 _StatusChip(
-                  label: 'All',
+                  label: l10n.postsListFilterAll,
                   selected: _statusFilter == 'all',
                   onSelected: () => setState(() => _statusFilter = 'all'),
                 ),
                 _StatusChip(
-                  label: 'Draft',
+                  label: l10n.postsListFilterDraft,
                   selected: _statusFilter == 'draft',
                   onSelected: () => setState(() => _statusFilter = 'draft'),
                 ),
                 _StatusChip(
-                  label: 'Scheduled',
+                  label: l10n.postsListFilterScheduled,
                   selected: _statusFilter == 'scheduled',
                   onSelected: () => setState(() => _statusFilter = 'scheduled'),
                 ),
                 _StatusChip(
-                  label: 'Published',
+                  label: l10n.postsListFilterPublished,
                   selected: _statusFilter == 'published',
                   onSelected: () => setState(() => _statusFilter = 'published'),
                 ),
@@ -140,7 +185,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
             else if (_error != null)
               Text(_error!, style: TextStyle(color: theme.colorScheme.error))
             else if (posts.isEmpty)
-              const _EmptyPostsState()
+              _EmptyPostsState(message: l10n.postsListEmpty)
             else
               ...posts.map(
                 (post) => Card(
@@ -152,7 +197,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
                       ),
                     ),
                     title: Text(
-                      post.title.isEmpty ? 'Untitled post' : post.title,
+                      post.title.isEmpty ? l10n.postUntitled : post.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -171,30 +216,65 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
                           runSpacing: 6,
                           children: <Widget>[
                             _StatusBadge(status: post.status),
-                            if (post.scheduledAt != null)
+                            if (post.status == 'published' &&
+                                post.publishedAt != null)
                               _MetaBadge(
-                                text:
-                                    'Scheduled ${_formatDateTime(post.scheduledAt!)}',
+                                text: l10n.postsListPublishedMeta(
+                                  _formatDateTime(post.publishedAt!),
+                                ),
+                                icon: Icons.check_circle_outline,
+                              )
+                            else if (post.status == 'scheduled' &&
+                                post.scheduledAt != null)
+                              _MetaBadge(
+                                text: l10n.postsListScheduledMeta(
+                                  _formatDateTime(post.scheduledAt!),
+                                ),
                                 icon: Icons.schedule,
                               ),
                             _MetaBadge(
-                              text: '${post.attachments.length} media',
+                              text: l10n.postsListMediaCountMeta(
+                                post.attachments.length,
+                              ),
                               icon: Icons.attach_file,
                             ),
                             _MetaBadge(
-                              text: '${post.platforms.length} platforms',
+                              text: l10n.postsListPlatformsCountMeta(
+                                post.platforms.length,
+                              ),
                               icon: Icons.public,
                             ),
                           ],
                         ),
                       ],
                     ),
-                    trailing: IconButton(
-                      tooltip: 'Edit draft',
-                      onPressed: () =>
-                          context.go(RouteNames.postsCreatePath, extra: post),
-                      icon: const Icon(Icons.edit_outlined),
-                    ),
+                    trailing: _canEditPosts
+                        ? IconButton(
+                            tooltip: l10n.postsListEditTooltip,
+                            onPressed: () => context.go(
+                              RouteNames.postsCreatePath,
+                              extra: post,
+                            ),
+                            icon: const Icon(Icons.edit_outlined),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            if (!_loading && _error == null && _hasMorePages)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Center(
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingMore ? null : _loadMorePosts,
+                    icon: _loadingMore
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.expand_more),
+                    label: Text(l10n.postsListLoadMore),
                   ),
                 ),
               ),
@@ -204,7 +284,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go(RouteNames.postsCreatePath),
         icon: const Icon(Icons.add),
-        label: const Text('New Post'),
+        label: Text(l10n.postsListNewPostButton),
       ),
     );
   }
@@ -248,8 +328,10 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final bool warning = status == 'scheduled';
+    final l10n = AppLocalizations.of(context)!;
+    final bool warning = status == 'scheduled' || status == 'publishing';
     final bool success = status == 'published';
+    final bool danger = status == 'failed';
 
     Color bg = colorScheme.secondaryContainer;
     Color fg = colorScheme.onSecondaryContainer;
@@ -262,6 +344,10 @@ class _StatusBadge extends StatelessWidget {
       bg = colorScheme.primaryContainer;
       fg = colorScheme.onPrimaryContainer;
     }
+    if (danger) {
+      bg = colorScheme.errorContainer;
+      fg = colorScheme.onErrorContainer;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -270,10 +356,26 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        status.toUpperCase(),
+        _statusLabel(status, l10n),
         style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: 11),
       ),
     );
+  }
+
+  String _statusLabel(String status, AppLocalizations l10n) {
+    switch (status) {
+      case 'scheduled':
+        return l10n.postsListFilterScheduled;
+      case 'publishing':
+        return l10n.postsListStatusPublishing;
+      case 'published':
+        return l10n.postsListFilterPublished;
+      case 'failed':
+        return l10n.postsListStatusFailed;
+      case 'draft':
+      default:
+        return l10n.postsListFilterDraft;
+    }
   }
 }
 
@@ -304,18 +406,20 @@ class _MetaBadge extends StatelessWidget {
 }
 
 class _EmptyPostsState extends StatelessWidget {
-  const _EmptyPostsState();
+  const _EmptyPostsState({required this.message});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    return Card(
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: <Widget>[
-            Icon(Icons.inbox_outlined, size: 40),
-            SizedBox(height: 10),
-            Text('No posts found for this filter.'),
+            const Icon(Icons.inbox_outlined, size: 40),
+            const SizedBox(height: 10),
+            Text(message),
           ],
         ),
       ),

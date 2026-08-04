@@ -1,17 +1,44 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/domain/publish_target.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/create_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
+import 'package:smart_publisher/src/features/schedule/data/schedule_repository_impl.dart';
 import 'package:smart_publisher/src/publish_engine/engine/publish_engine.dart';
+
+import '../helpers/fake_network_client.dart';
 
 void main() {
   group('Integration - Post Creation Composer Flow', () {
     test('create with media/platforms then schedule and publish', () async {
       final repository = PostRepositoryImpl();
       final createPost = CreatePost(repository: repository);
-      final schedulePost = SchedulePost(repository: repository);
+      final scheduleRepo = ScheduleRepositoryImpl(
+        networkClient: FakeNetworkClient(
+          postHandler: (path, data) async {
+            final body = data as Map<String, dynamic>;
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'id': 'composer-flow-1',
+                'title': 'Campaign: Summer Launch',
+                'content': 'New features are live. Check them out today.',
+                'status': 'scheduled',
+                'scheduled_at': body['scheduled_at'],
+                'attachments': <String>[
+                  'https://cdn.smartpublisher.local/media/post-1-image.png',
+                  'https://cdn.smartpublisher.local/media/post-1-video.mp4',
+                ],
+                'platforms': <String>['facebook', 'linkedin'],
+              },
+            );
+          },
+        ),
+      );
+      final schedulePost = SchedulePost(repository: scheduleRepo);
       final publishEngine = PublishEngine();
 
       final draft = PostEntity(
@@ -54,10 +81,12 @@ void main() {
           PublishTarget(
             category: PublishTargetCategory.social,
             destinationKey: 'facebook',
+            socialPageId: 'page-1',
           ),
           PublishTarget(
             category: PublishTargetCategory.professional,
             destinationKey: 'linkedin',
+            socialPageId: 'page-2',
           ),
         ],
       );

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:smart_publisher/src/core/logger/app_logger.dart';
 import 'package:smart_publisher/src/core/observability/crash_reporter.dart';
 import 'package:smart_publisher/src/core/observability/error_correlation.dart';
@@ -9,6 +10,7 @@ import 'package:smart_publisher/src/core/observability/trace_context.dart';
 import 'package:smart_publisher/src/core/performance/background_task_manager.dart';
 import 'package:smart_publisher/src/core/performance/image_cache_manager.dart';
 import 'package:smart_publisher/src/core/performance/startup_profiler.dart';
+import 'package:smart_publisher/src/core/network/laravel_api.dart';
 
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   const crashReporter = ConsoleCrashReporter();
@@ -74,6 +76,11 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     () => runZonedGuarded(
       () async {
         WidgetsFlutterBinding.ensureInitialized();
+        LaravelApi.assertReleaseConfiguration();
+        // Required for DateFormat (used for locale-correct Arabic/English
+        // date/month names, e.g. dashboard/recent-activity subtitles) —
+        // without this, DateFormat throws for any non-English locale.
+        await initializeDateFormatting();
         imageCacheManager.configure(
           maxEntries: 120,
           maxBytes: 120 * 1024 * 1024,

@@ -25,6 +25,7 @@ import 'package:smart_publisher/src/features/posts/domain/entities/media_entity.
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/create_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
+import 'package:smart_publisher/src/features/schedule/data/schedule_repository_impl.dart';
 
 void main() {
   const runSmoke = bool.fromEnvironment(
@@ -85,7 +86,10 @@ void main() {
         networkClient: networkClient,
       );
       final createPost = CreatePost(repository: postRepository);
-      final schedulePost = SchedulePost(repository: postRepository);
+      final scheduleRepository = ScheduleRepositoryImpl(
+        networkClient: networkClient,
+      );
+      final schedulePost = SchedulePost(repository: scheduleRepository);
 
       final created = await createPost(
         PostEntity(

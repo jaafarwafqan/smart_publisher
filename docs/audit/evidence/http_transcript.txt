@@ -1,0 +1,180 @@
+NOTE (P0-4 remediation, redacted retroactively): the access/refresh/bearer
+tokens originally captured here were live Sanctum tokens issued by the
+throwaway ephemeral SQLite dev DB used for live-testing on 2026-07-25. That
+DB has since been recreated via migrate:fresh multiple times, so these
+specific tokens are no longer valid against any running instance. They were
+redacted anyway per the CTO audit's P0-4 finding: real-looking secrets must
+never be committed to a docs/ tree regardless of whether they still work,
+since anyone cloning the repo has no way to know that without checking.
+
+=== 1. LOGIN ===
+Note: Unnecessary use of -X or --request, POST is already inferred.
+*   Trying 127.0.0.1:8000...
+* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54103 
+* using HTTP/1.x
+> POST /api/v1/auth/login HTTP/1.1
+> Host: 127.0.0.1:8000
+> User-Agent: curl/8.21.0
+> Content-Type: application/json
+> Accept: application/json
+> Content-Length: 93
+> 
+} [93 bytes data]
+* upload completely sent off: 93 bytes
+< HTTP/1.1 200 OK
+< Host: 127.0.0.1:8000
+< Connection: close
+< X-Powered-By: PHP/8.3.30
+< Cache-Control: no-cache, private
+< Date: Sat, 25 Jul 2026 06:40:50 GMT
+< Content-Type: application/json
+< X-RateLimit-Limit: 10
+< X-RateLimit-Remaining: 9
+< X-Request-ID: 727f2bcf-af06-4fe4-9d7a-e7aa0d0d6216
+< X-Correlation-ID: 727f2bcf-af06-4fe4-9d7a-e7aa0d0d6216
+< X-Trace-ID: 4b2f45d0-79fe-4100-a185-99bbc2cb908d
+< X-Request-Duration-Ms: 525
+< Vary: Origin
+< 
+{ [1296 bytes data]
+* shutting down connection #0
+{"success":true,"message":"Login successful.","data":{"message":"Login successful.","access_token":"[REDACTED_SANCTUM_TOKEN]","refresh_token":"[REDACTED_SANCTUM_TOKEN]","expires_in":3599,"token_type":"Bearer","scope":"*","user":{"id":1,"name":"Smart Publisher Admin","email":"admin@smartpublisher.local","role":"admin","branch":{"id":1,"name":"Headquarters","code":"HQ"},"roles":[{"id":1,"name":"admin","guard_name":"sanctum"}],"social_accounts_count":1,"created_at":"2026-07-24T14:44:40+00:00","updated_at":"2026-07-24T14:44:40+00:00"},"roles":["admin"],"permissions":["users.view","users.create","users.update","users.delete","roles.view","roles.assign","permissions.view","branches.view","branches.create","branches.update","branches.delete","tokens.view","tokens.revoke","social-accounts.view","social-accounts.create","social-accounts.update","social-accounts.delete","social-accounts.refresh-token","social-accounts.change-status","social-accounts.oauth.authorize","social-accounts.oauth.callback","posts.view","posts.create","posts.update","posts.delete","posts.schedule","posts.publish","media.view","media.upload","media.delete","notifications.view","settings.view","publishing.monitor","publishing.manage"]},"meta":{},"errors":null}
+=== 2. CREATE POST ===
+Note: Unnecessary use of -X or --request, POST is already inferred.
+*   Trying 127.0.0.1:8000...
+* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54105 
+* using HTTP/1.x
+> POST /api/v1/posts HTTP/1.1
+> Host: 127.0.0.1:8000
+> User-Agent: curl/8.21.0
+> Authorization: Bearer [REDACTED_SANCTUM_TOKEN]
+> Content-Type: application/json
+> Accept: application/json
+> Content-Length: 81
+> 
+} [81 bytes data]
+* upload completely sent off: 81 bytes
+< HTTP/1.1 201 Created
+< Host: 127.0.0.1:8000
+< Connection: close
+< X-Powered-By: PHP/8.3.30
+< Cache-Control: no-cache, private
+< Date: Sat, 25 Jul 2026 06:40:52 GMT
+< Content-Type: application/json
+< X-Request-ID: 3c9ae18e-8fbc-4a7c-878d-efcef63801fb
+< X-Correlation-ID: 3c9ae18e-8fbc-4a7c-878d-efcef63801fb
+< X-Trace-ID: f088fe61-f3e7-4340-8585-09f9941ad0c4
+< X-Request-Duration-Ms: 109
+< Vary: Origin
+< 
+{ [486 bytes data]
+* shutting down connection #0
+{"success":true,"message":"Post created as draft.","data":{"id":4343,"title":"Evidence Run Post","content":"Captured for forensic evidence appendix","status":"draft","meta":[],"publish_batch_key":null,"user":{"id":1,"name":"Smart Publisher Admin","email":"admin@smartpublisher.local"},"branch":null,"media_attachments":[],"scheduled_at":null,"published_at":null,"failed_at":null,"created_at":"2026-07-25T06:40:52+00:00","updated_at":"2026-07-25T06:40:52+00:00"},"meta":{},"errors":null}
+=== 3. LIST POSTS ===
+*   Trying 127.0.0.1:8000...
+* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54108 
+* using HTTP/1.x
+> GET /api/v1/posts HTTP/1.1
+> Host: 127.0.0.1:8000
+> User-Agent: curl/8.21.0
+> Authorization: Bearer [REDACTED_SANCTUM_TOKEN]
+> Accept: application/json
+>
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Host: 127.0.0.1:8000
+< Connection: close
+< X-Powered-By: PHP/8.3.30
+< Cache-Control: no-cache, private
+< Date: Sat, 25 Jul 2026 06:40:52 GMT
+< Content-Type: application/json
+< X-Request-ID: 0518e3bd-f112-4e50-9b0d-28927c8f431c
+< X-Correlation-ID: 0518e3bd-f112-4e50-9b0d-28927c8f431c
+< X-Trace-ID: 45316dc2-75ef-465d-8992-b4122f3d2997
+< X-Request-Duration-Ms: 79
+< Vary: Origin
+< 
+{ [522 bytes data]
+* shutting down connection #0
+{"success":true,"message":"OK","data":[{"id":4343,"title":"Evidence Run Post","content":"Captured for forensic evidence appendix","status":"draft","meta":[],"publish_batch_key":null,"user":{"id":1,"name":"Smart Publisher Admin","email":"admin@smartpublisher.local"},"branch":null,"media_attachments":[],"scheduled_at":null,"published_at":null,"failed_at":null,"created_at":"2026-07-25T06:40:52+00:00","updated_at":"2026-07-25T06:40:52+00:00"}],"meta":{"current_page":1,"last_page":1,"per_page":20,"total":1},"errors":null}
+=== 4. ANALYTICS ===
+*   Trying 127.0.0.1:8000...
+* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54109 
+* using HTTP/1.x
+> GET /api/v1/analytics HTTP/1.1
+> Host: 127.0.0.1:8000
+> User-Agent: curl/8.21.0
+> Authorization: Bearer [REDACTED_SANCTUM_TOKEN]
+> Accept: application/json
+>
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Host: 127.0.0.1:8000
+< Connection: close
+< X-Powered-By: PHP/8.3.30
+< Cache-Control: no-cache, private
+< Date: Sat, 25 Jul 2026 06:40:53 GMT
+< Content-Type: application/json
+< X-Request-ID: 79afaabc-f1aa-4cd4-949a-d095948665dd
+< X-Correlation-ID: 79afaabc-f1aa-4cd4-949a-d095948665dd
+< X-Trace-ID: ae570df6-161f-4d4c-8b1b-e715a3d35fe3
+< X-Request-Duration-Ms: 78
+< Vary: Origin
+< 
+{ [208 bytes data]
+* shutting down connection #0
+{"success":true,"message":"OK","data":{"total_posts":1,"published":0,"failed":0,"scheduled":0,"draft":1,"engagement":{"score":0,"trend":"up"},"updated_at":"2026-07-25T06:40:53+00:00"},"meta":{},"errors":null}
+=== 5. LOGOUT ===
+*   Trying 127.0.0.1:8000...
+* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54110 
+* using HTTP/1.x
+> POST /api/v1/auth/logout HTTP/1.1
+> Host: 127.0.0.1:8000
+> User-Agent: curl/8.21.0
+> Authorization: Bearer [REDACTED_SANCTUM_TOKEN]
+> Accept: application/json
+>
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Host: 127.0.0.1:8000
+< Connection: close
+< X-Powered-By: PHP/8.3.30
+< Cache-Control: no-cache, private
+< Date: Sat, 25 Jul 2026 06:40:53 GMT
+< Content-Type: application/json
+< X-Request-ID: 8e578b2c-7b14-4300-a8dc-ab67aa17480a
+< X-Correlation-ID: 8e578b2c-7b14-4300-a8dc-ab67aa17480a
+< X-Trace-ID: 34ea6737-76de-446f-9cb8-7bab97be99a1
+< X-Request-Duration-Ms: 64
+< Vary: Origin
+< 
+{ [123 bytes data]
+* shutting down connection #0
+{"success":true,"message":"Logged out successfully.","data":{"message":"Logged out successfully."},"meta":{},"errors":null}
+=== 6. REUSE REVOKED TOKEN (expect 401) ===
+*   Trying 127.0.0.1:8000...
+* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54111 
+* using HTTP/1.x
+> GET /api/v1/posts HTTP/1.1
+> Host: 127.0.0.1:8000
+> User-Agent: curl/8.21.0
+> Authorization: Bearer [REDACTED_SANCTUM_TOKEN]
+> Accept: application/json
+>
+* Request completely sent off
+< HTTP/1.1 401 Unauthorized
+< Host: 127.0.0.1:8000
+< Connection: close
+< X-Powered-By: PHP/8.3.30
+< Cache-Control: no-cache, private
+< Date: Sat, 25 Jul 2026 06:40:54 GMT
+< Content-Type: application/json
+< X-Request-ID: 25a28f3b-d931-44c8-a64e-9125a63d1fea
+< X-Correlation-ID: 25a28f3b-d931-44c8-a64e-9125a63d1fea
+< X-Trace-ID: 8b9cda15-d5bd-401f-ac7b-2a5d584241a7
+< X-Request-Duration-Ms: 45
+< Vary: Origin
+< 
+{ [119 bytes data]
+* shutting down connection #0
+{"success":false,"message":"Unauthenticated.","data":null,"meta":{},"errors":{"exception":["AuthenticationException"]}}

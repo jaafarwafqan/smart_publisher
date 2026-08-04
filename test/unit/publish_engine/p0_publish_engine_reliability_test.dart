@@ -18,6 +18,7 @@ void main() {
     const target = PublishTarget(
       category: PublishTargetCategory.social,
       destinationKey: 'test-social',
+      socialPageId: 'page-1',
     );
 
     test(

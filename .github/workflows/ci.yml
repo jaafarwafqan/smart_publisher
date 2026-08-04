@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -12,11 +15,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Hard gate, no continue-on-error — a real secret leak must fail the
+        # build outright (P0-4 from the CTO audit: Sanctum tokens were
+        # previously committed under docs/audit/evidence/).
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Release source hardening
+        run: dart scripts/ci/check_release_hardening.dart
 
       - name: Cache Pub dependencies
         uses: actions/cache@v4
@@ -32,10 +48,13 @@ jobs:
         run: flutter pub get
 
       - name: Enforce formatting
-        run: dart format --set-exit-if-changed lib test
+        run: dart format --set-exit-if-changed lib test scripts/ci
 
       - name: Static analysis
         run: flutter analyze
+
+      - name: Android release configuration
+        run: flutter test test/release/android_release_configuration_test.dart
 
       - name: All tests with coverage
         run: flutter test --coverage

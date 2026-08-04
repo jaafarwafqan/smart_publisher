@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
-import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../organizations/application/current_organization_access.dart';
 
 class AdministrationScreen extends ConsumerStatefulWidget {
   const AdministrationScreen({super.key});
@@ -14,21 +15,32 @@ class AdministrationScreen extends ConsumerStatefulWidget {
 }
 
 class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
-  bool _maintenanceMode = false;
-  bool _freezePublishing = false;
-
   @override
   Widget build(BuildContext context) {
-    final roleFuture = ref.read(currentUserRoleProvider.future);
+    final l10n = AppLocalizations.of(context)!;
+    final access = ref.watch(currentOrganizationAccessProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final chevron = isRtl ? Icons.chevron_left : Icons.chevron_right;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Administration')),
-      body: FutureBuilder<UserRole>(
-        future: roleFuture,
-        builder: (context, snapshot) {
-          final role = snapshot.data ?? UserRole.guest;
-          final canManagePolicies = role == UserRole.admin;
-          final canViewReleaseOps = role == UserRole.admin;
+      appBar: AppBar(title: Text(l10n.administrationAppBarTitle)),
+      body: access.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => _AdministrationAccessUnavailable(
+          message: l10n.administrationReadOnlyNotice,
+        ),
+        data: (state) {
+          if (!state.hasActiveOrganization) {
+            return _AdministrationAccessUnavailable(
+              message: l10n.administrationReadOnlyNotice,
+            );
+          }
+
+          final canManagePolicies = state.hasPermission(
+            OrganizationPermissions.settingsManage,
+          );
+          final canViewReleaseOps = canManagePolicies;
+          final membershipRole = state.currentOrganization!.role.toUpperCase();
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -39,7 +51,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      'Administrative actions are restricted to admins. You currently have read-only access.',
+                      l10n.administrationReadOnlyNotice,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onErrorContainer,
                         fontWeight: FontWeight.w600,
@@ -50,32 +62,29 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.admin_panel_settings_outlined),
-                  title: const Text('Access Profile'),
-                  subtitle: Text('Current role: ${role.name.toUpperCase()}'),
+                  title: Text(l10n.administrationAccessProfileTitle),
+                  subtitle: Text(
+                    l10n.administrationAccessProfileSubtitle(membershipRole),
+                  ),
                 ),
               ),
               Card(
                 child: SwitchListTile(
-                  title: const Text('Maintenance Mode'),
-                  subtitle: const Text(
-                    'Limit editor access while conducting maintenance operations.',
-                  ),
-                  value: _maintenanceMode,
-                  onChanged: canManagePolicies
-                      ? (value) => setState(() => _maintenanceMode = value)
-                      : null,
+                  title: Text(l10n.administrationMaintenanceModeTitle),
+                  subtitle: Text(l10n.administrationOperationsUnavailable),
+                  value: false,
+                  // There is no authenticated/audited backend operation for
+                  // this yet. A local switch would falsely imply production
+                  // maintenance mode changed, so it stays visibly disabled.
+                  onChanged: null,
                 ),
               ),
               Card(
                 child: SwitchListTile(
-                  title: const Text('Freeze Publishing Queue'),
-                  subtitle: const Text(
-                    'Pause new publish jobs while existing jobs complete.',
-                  ),
-                  value: _freezePublishing,
-                  onChanged: canManagePolicies
-                      ? (value) => setState(() => _freezePublishing = value)
-                      : null,
+                  title: Text(l10n.administrationFreezePublishingTitle),
+                  subtitle: Text(l10n.administrationOperationsUnavailable),
+                  value: false,
+                  onChanged: null,
                 ),
               ),
               Card(
@@ -83,11 +92,9 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                   children: <Widget>[
                     ListTile(
                       leading: const Icon(Icons.history_outlined),
-                      title: const Text('Release History'),
-                      subtitle: const Text(
-                        'Review recently deployed versions and rollout notes.',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
+                      title: Text(l10n.administrationReleaseHistoryTitle),
+                      subtitle: Text(l10n.administrationReleaseHistorySubtitle),
+                      trailing: Icon(chevron),
                       onTap: canViewReleaseOps
                           ? () => context.go(RouteNames.productionReleasePath)
                           : null,
@@ -95,11 +102,11 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.health_and_safety_outlined),
-                      title: const Text('Operational Readiness'),
-                      subtitle: const Text(
-                        'Track go-live checks, incident playbooks, and rollback readiness.',
+                      title: Text(l10n.administrationOperationalReadinessTitle),
+                      subtitle: Text(
+                        l10n.administrationOperationalReadinessSubtitle,
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: Icon(chevron),
                       onTap: canViewReleaseOps
                           ? () => context.go(RouteNames.productionReleasePath)
                           : null,
@@ -109,23 +116,29 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
               ),
               const SizedBox(height: 8),
               FilledButton.icon(
-                onPressed: canManagePolicies
-                    ? () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Administrative policies applied successfully.',
-                            ),
-                          ),
-                        );
-                      }
-                    : null,
+                onPressed: null,
                 icon: const Icon(Icons.gavel_outlined),
-                label: const Text('Apply Administrative Policies'),
+                label: Text(l10n.administrationApplyPoliciesButton),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _AdministrationAccessUnavailable extends StatelessWidget {
+  const _AdministrationAccessUnavailable({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(message, textAlign: TextAlign.center),
       ),
     );
   }

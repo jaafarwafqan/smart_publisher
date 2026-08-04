@@ -121,6 +121,14 @@ class AuthSessionController {
 
   Future<void> logout() async {
     final session = await currentSession();
+
+    try {
+      await networkClient.post(LaravelEndpoints.authLogout);
+    } catch (_) {
+      // Best-effort: the server-side token(s) may already be expired/revoked,
+      // or the device may be offline. Local cleanup below must still happen.
+    }
+
     await tokenLifecycleManager.clearTokens();
     await storageService.delete(GuardStorageKeys.authToken);
     await storageService.delete(GuardStorageKeys.userRole);

@@ -7,6 +7,7 @@ import '../../domain/entities/analytics_dashboard_entity.dart';
 import '../../domain/entities/analytics_insight_entity.dart';
 import '../../domain/entities/analytics_metric_entity.dart';
 import '../../domain/entities/analytics_report_entity.dart';
+import '../../domain/entities/analytics_summary_entity.dart';
 import '../../domain/repositories/analytics_repository.dart';
 
 class AnalyticsRepositoryImpl extends AnalyticsRepository {
@@ -74,15 +75,71 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
           clicks: 0,
           shares: 0,
           reactions: 0,
+          comments: 0,
           reach: 0,
           engagement: 0,
           status: 'draft',
+          available: false,
         );
         _cache[postId] = generated;
         return generated;
       },
       operation: 'analytics.metrics.local',
       fallbackMessage: 'Failed to build local analytics metrics',
+    );
+  }
+
+  @override
+  Future<AppResult<List<AnalyticsMetricEntity>>> getPostsMetrics(
+    List<String> postIds,
+  ) async {
+    if (networkClient != null) {
+      return executeList(
+        () async {
+          final response = await networkClient!.get(
+            LaravelEndpoints.analyticsPostsBulk(postIds),
+          );
+          final payload = _unwrapPayload(response.data);
+          final items = payload is List<dynamic> ? payload : <dynamic>[];
+
+          final metrics = items
+              .whereType<Map<String, dynamic>>()
+              .map(PostAnalyticsResponseDtoV1.fromJson)
+              .map(_toMetric)
+              .toList(growable: false);
+
+          for (final metric in metrics) {
+            _cache[metric.postId] = metric;
+          }
+
+          return metrics;
+        },
+        operation: 'analytics.metrics.bulk.remote',
+        fallbackMessage: 'Failed to fetch analytics metrics',
+      );
+    }
+
+    return executeList(
+      () async => postIds
+          .map((id) => _cache[id] ?? _localMetric(id))
+          .toList(growable: false),
+      operation: 'analytics.metrics.bulk.local',
+      fallbackMessage: 'Failed to build local analytics metrics',
+    );
+  }
+
+  AnalyticsMetricEntity _localMetric(String postId) {
+    return AnalyticsMetricEntity(
+      postId: postId,
+      impressions: 0,
+      clicks: 0,
+      shares: 0,
+      reactions: 0,
+      comments: 0,
+      reach: 0,
+      engagement: 0,
+      status: 'draft',
+      available: false,
     );
   }
 
@@ -116,6 +173,10 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
           final totalEngagement = _asInt(payload['total_engagement']);
           final totalImpressions = _asInt(payload['total_impressions']);
           final avgRate = _asDouble(payload['average_engagement_rate']);
+          final bestPlatform = payload['best_platform'] as String?;
+          final bestPublishHour = payload['best_publish_hour'] == null
+              ? null
+              : _asInt(payload['best_publish_hour']);
 
           return AnalyticsDashboardEntity(
             generatedAt: DateTime.now(),
@@ -124,6 +185,8 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
             totalImpressions: totalImpressions,
             averageEngagementRate: avgRate,
             topPosts: topPosts,
+            bestPlatform: bestPlatform,
+            bestPublishHour: bestPublishHour,
           );
         },
         operation: 'analytics.dashboard.remote',
@@ -169,6 +232,58 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
       },
       operation: 'analytics.dashboard',
       fallbackMessage: 'Failed to build analytics dashboard',
+    );
+  }
+
+  @override
+  Future<AppResult<AnalyticsSummaryEntity>> getSummary() {
+    if (networkClient != null) {
+      return execute(
+        () async {
+          final response = await networkClient!.get(
+            LaravelEndpoints.analyticsSummary,
+          );
+          final payload = _unwrapPayload(response.data);
+
+          if (payload is! Map<String, dynamic>) {
+            throw StateError('Invalid analytics summary response');
+          }
+
+          final engagement =
+              payload['engagement'] as Map<String, dynamic>? ??
+              const <String, dynamic>{};
+
+          return AnalyticsSummaryEntity(
+            totalPosts: _asInt(payload['total_posts']),
+            published: _asInt(payload['published']),
+            failed: _asInt(payload['failed']),
+            scheduled: _asInt(payload['scheduled']),
+            draft: _asInt(payload['draft']),
+            engagementScore: _asDouble(engagement['score']),
+            engagementTrend: (engagement['trend'] as String?) ?? 'stable',
+            updatedAt:
+                DateTime.tryParse((payload['updated_at'] as String?) ?? '') ??
+                DateTime.now(),
+          );
+        },
+        operation: 'analytics.summary.remote',
+        fallbackMessage: 'Failed to fetch analytics summary',
+      );
+    }
+
+    return execute(
+      () async => AnalyticsSummaryEntity(
+        totalPosts: 0,
+        published: 0,
+        failed: 0,
+        scheduled: 0,
+        draft: 0,
+        engagementScore: 0,
+        engagementTrend: 'stable',
+        updatedAt: DateTime.now(),
+      ),
+      operation: 'analytics.summary.local',
+      fallbackMessage: 'Failed to build local analytics summary',
     );
   }
 
@@ -288,17 +403,18 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
   }
 
   AnalyticsMetricEntity _toMetric(PostAnalyticsResponseDtoV1 dto) {
-    final engagement = dto.clicks + dto.shares + dto.reactions;
-    final reach = dto.impressions;
+    final engagement = dto.clicks + dto.shares + dto.reactions + dto.comments;
     return AnalyticsMetricEntity(
       postId: dto.postId,
       impressions: dto.impressions,
       clicks: dto.clicks,
       shares: dto.shares,
       reactions: dto.reactions,
-      reach: reach,
+      comments: dto.comments,
+      reach: dto.reach,
       engagement: engagement,
       status: dto.status,
+      available: dto.available,
     );
   }
 

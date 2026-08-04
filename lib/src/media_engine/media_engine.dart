@@ -99,6 +99,7 @@ class MediaEngine {
       mimeType: media.mimeType,
       sizeInBytes: compressedSize,
       isCompressed: hasCompression || media.isCompressed,
+      bytes: media.bytes,
     );
   }
 }

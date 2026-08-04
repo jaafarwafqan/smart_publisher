@@ -1,0 +1,58 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...             47.8s
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+This app is linked to the debug service: ws://127.0.0.1:61095/UfOxV17ZAHA=/ws
+Debug service listening on ws://127.0.0.1:61095/UfOxV17ZAHA=/ws
+A Dart VM Service on Chrome is available at: http://127.0.0.1:61095/UfOxV17ZAHA=
+The Flutter DevTools debugger and profiler on Chrome is available at: http://127.0.0.1:61095/UfOxV17ZAHA=/devtools/?uri=ws://127.0.0.1:61095/UfOxV17ZAHA=/ws
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+[CRASH] trace=trc-1784903244715000 correlation=err-ec0080c error=      On web `path` is unavailable and accessing it causes this exception.
+      You should access `bytes` property instead,
+      Read more about it [here](https://github.com/miguelpruivo/flutter_file_picker/wiki/FAQ)
+       context={} stack=dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3                      throw_
+package:file_picker/src/platform_file.dart 41:7                                                  get path
+package:smart_publisher/src/features/composer/presentation/pages/create_post_screen.dart 276:22  <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 618:19                              <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 643:23                              <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 589:19                              <fn>
+dart-sdk/lib/async/zone_root.dart 48:47                                                          _rootRunUnary
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77                 tear
+dart-sdk/lib/async/zone.dart 733:19                                                              runUnary
+dart-sdk/lib/async/future_impl.dart 222:18                                                       handleValue
+dart-sdk/lib/async/future_impl.dart 948:44                                                       handleValueCallback
+dart-sdk/lib/async/future_impl.dart 977:13                                                       _propagateToListeners
+dart-sdk/lib/async/future_impl.dart 720:5                                                        [_completeWithValue]
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 499:7                               complete
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 566:12                              _asyncReturn
+package:file_picker/_internal/file_picker_web.dart 179:3                                         <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 618:19                              <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 643:23                              <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 589:19                              <fn>
+dart-sdk/lib/async/zone_root.dart 48:47                                                          _rootRunUnary
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77                 tear
+dart-sdk/lib/async/zone.dart 733:19                                                              runUnary
+dart-sdk/lib/async/future_impl.dart 222:18                                                       handleValue
+dart-sdk/lib/async/future_impl.dart 948:44                                                       handleValueCallback
+dart-sdk/lib/async/future_impl.dart 977:13                                                       _propagateToListeners
+dart-sdk/lib/async/future_impl.dart 720:5                                                        [_completeWithValue]
+dart-sdk/lib/async/future_impl.dart 804:7                                                        <fn>
+dart-sdk/lib/async/zone_root.dart 35:13                                                          _rootRun
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77                 tear
+dart-sdk/lib/async/zone.dart 726:19                                                              run
+dart-sdk/lib/async/zone.dart 625:7                                                               runGuarded
+dart-sdk/lib/async/zone.dart 666:23                                                              <fn>
+dart-sdk/lib/async/schedule_microtask.dart 40:34                                                 _microtaskLoop
+dart-sdk/lib/async/schedule_microtask.dart 49:5                                                  _startMicrotaskLoop
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77                 tear
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 183:69                              <fn>
+
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.

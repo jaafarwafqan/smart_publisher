@@ -8,6 +8,8 @@ class AnalyticsDashboardEntity {
     required this.totalImpressions,
     required this.averageEngagementRate,
     required this.topPosts,
+    this.bestPlatform,
+    this.bestPublishHour,
   });
 
   final DateTime generatedAt;
@@ -16,4 +18,9 @@ class AnalyticsDashboardEntity {
   final int totalImpressions;
   final double averageEngagementRate;
   final List<AnalyticsMetricEntity> topPosts;
+
+  /// Null means there isn't yet enough real engagement data to make an
+  /// honest recommendation — never a fabricated guess.
+  final String? bestPlatform;
+  final int? bestPublishHour;
 }

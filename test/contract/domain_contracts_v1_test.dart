@@ -59,6 +59,44 @@ void main() {
       expect(entity.postId, 'p1');
       expect(entity.isCompressed, isTrue);
     });
+
+    test(
+      'parses the real MediaResource shape (integer ids, size not size_in_bytes, url present)',
+      () {
+        // Regression test: MediaResource actually sends `id`/`post_id` as
+        // JSON integers (not strings) and `size` (not `size_in_bytes`) — a
+        // naive `as String`/`as int` cast here previously threw a TypeError
+        // on every real upload response, silently masked for a long time
+        // because the endpoint that would have exercised it was itself
+        // broken (pointed at a route that didn't exist).
+        final dto = MediaResponseDtoV1.fromJson(<String, dynamic>{
+          'id': 5,
+          'post_id': 3,
+          'user_id': 1,
+          'type': 'document',
+          'collection': 'default',
+          'disk': 'public',
+          'path': 'media/2026/07/report.xlsx',
+          'url': 'http://127.0.0.1:8000/storage/media/2026/07/report.xlsx',
+          'thumbnail_path': null,
+          'mime_type':
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'size': 16384,
+          'width': null,
+          'height': null,
+          'duration_seconds': null,
+          'meta': <String, dynamic>{'original_name': 'report.xlsx'},
+        });
+
+        expect(dto.id, '5');
+        expect(dto.postId, '3');
+        expect(
+          dto.url,
+          'http://127.0.0.1:8000/storage/media/2026/07/report.xlsx',
+        );
+        expect(dto.sizeInBytes, 16384);
+      },
+    );
   });
 
   group('Contract - Analytics v1', () {
@@ -108,19 +146,21 @@ void main() {
         'success': true,
         'version': 'v1',
         'data': <String, dynamic>{
-          'id': 'acc1',
-          'name': 'Main FB',
-          'platform': 'facebook',
-          'is_connected': true,
+          'id': '42',
+          'provider': 'facebook',
+          'provider_account_id': 'fb-acc-1',
+          'account_name': 'Main FB',
+          'status': 'connected',
         },
       });
 
-      final dto = AccountResponseDtoV1.fromJson(
+      final dto = SocialAccountResponseDtoV1.fromJson(
         envelope.data as Map<String, dynamic>,
       );
       final entity = BackendContractMapperV1.toAccountEntity(dto);
 
-      expect(entity.id, 'acc1');
+      expect(entity.id, '42');
+      expect(entity.remoteId, '42');
       expect(entity.platform, 'facebook');
       expect(entity.isConnected, isTrue);
     });

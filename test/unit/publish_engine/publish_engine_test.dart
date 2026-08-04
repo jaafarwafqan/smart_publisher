@@ -15,6 +15,7 @@ void main() {
           PublishTarget(
             category: PublishTargetCategory.social,
             destinationKey: 'facebook',
+            socialPageId: 'page-1',
           ),
         ],
       );

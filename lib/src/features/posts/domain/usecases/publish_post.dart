@@ -23,6 +23,7 @@ class PublishPost extends BaseUseCase<PostEntity, PostEntity> {
         scheduledAt: params.scheduledAt,
         attachments: params.attachments,
         platforms: params.platforms,
+        targetPageIds: params.targetPageIds,
       ),
     );
   }

@@ -1,24 +1,18 @@
 name: Release Pipeline
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
       release_channel:
         description: Release channel
         required: true
-        default: stable
+        default: closed-beta
         type: choice
         options:
-          - stable
-          - canary
-      canary_percent:
-        description: Canary traffic percentage (0-100)
-        required: true
-        default: '10'
-      rollback_to:
-        description: Optional release tag to rollback to
-        required: false
-        default: ''
+          - closed-beta
 
 jobs:
   pre-release-quality-gate:
@@ -26,17 +20,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
+      - name: Release source hardening
+        run: dart scripts/ci/check_release_hardening.dart
+
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Enforce formatting
+        run: dart format --set-exit-if-changed lib test scripts/ci
+
       - name: Analyze
         run: flutter analyze
+
+      - name: Android release configuration
+        run: flutter test test/release/android_release_configuration_test.dart
 
       - name: Tests
         run: flutter test
@@ -44,6 +54,16 @@ jobs:
   build:
     needs: pre-release-quality-gate
     runs-on: ubuntu-latest
+    env:
+      # The keystore is materialized only inside the ephemeral runner.  The
+      # Gradle task fails closed if any signing input is absent.
+      ANDROID_RELEASE_STORE_FILE: ${{ runner.temp }}/smart_publisher_release.jks
+      ANDROID_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}
+      ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+      ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+      SP_API_BASE_URL: ${{ vars.SP_API_BASE_URL }}
+      SP_AUTH_BASE_URL: ${{ vars.SP_AUTH_BASE_URL }}
+      SP_OAUTH_BASE_URL: ${{ vars.SP_OAUTH_BASE_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,19 +76,32 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Android AppBundle
-        run: flutter build appbundle --release
+      - name: Materialize Android release keystore
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_RELEASE_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_RELEASE_STORE_FILE"
+          test -s "$ANDROID_RELEASE_STORE_FILE"
 
-      - name: Build Web
-        run: flutter build web --release
+      - name: Build Android AppBundle
+        run: |
+          test -n "$SP_API_BASE_URL"
+          test -n "$SP_AUTH_BASE_URL"
+          test -n "$SP_OAUTH_BASE_URL"
+          case "$SP_API_BASE_URL" in https://*) ;; *) exit 1 ;; esac
+          case "$SP_AUTH_BASE_URL" in https://*) ;; *) exit 1 ;; esac
+          case "$SP_OAUTH_BASE_URL" in https://*) ;; *) exit 1 ;; esac
+          flutter build appbundle --release \
+            --dart-define=SP_API_BASE_URL="$SP_API_BASE_URL" \
+            --dart-define=SP_AUTH_BASE_URL="$SP_AUTH_BASE_URL" \
+            --dart-define=SP_OAUTH_BASE_URL="$SP_OAUTH_BASE_URL"
 
       - name: Generate release manifest
         run: |
           cat <<EOF > release-manifest.json
           {
             "release_channel": "${{ inputs.release_channel }}",
-            "canary_percent": "${{ inputs.canary_percent }}",
-            "rollback_to": "${{ inputs.rollback_to }}",
             "git_sha": "${{ github.sha }}",
             "run_id": "${{ github.run_id }}"
           }
@@ -80,7 +113,6 @@ jobs:
           name: smart-publisher-release-${{ inputs.release_channel }}
           path: |
             build/app/outputs/bundle/release/*.aab
-            build/web/**
             release-manifest.json
 
   deploy:
@@ -96,20 +128,9 @@ jobs:
       - name: Deploy release
         env:
           RELEASE_CHANNEL: ${{ inputs.release_channel }}
-          CANARY_PERCENT: ${{ inputs.canary_percent }}
-          ROLLBACK_TO: ${{ inputs.rollback_to }}
           FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS }}
-          WEB_DEPLOY_TARGET: ${{ secrets.WEB_DEPLOY_TARGET }}
         run: |
           chmod +x scripts/release/deploy_release.sh
           ./scripts/release/deploy_release.sh
-
-      - name: Rollback execute
-        if: ${{ inputs.rollback_to != '' }}
-        env:
-          TARGET_RELEASE_TAG: ${{ inputs.rollback_to }}
-          RELEASE_CHANNEL: ${{ inputs.release_channel }}
-        run: |
-          pwsh -File scripts/rollback.ps1 -TargetReleaseTag "$TARGET_RELEASE_TAG" -Channel "$RELEASE_CHANNEL"

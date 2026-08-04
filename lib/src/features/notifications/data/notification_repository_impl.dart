@@ -21,7 +21,12 @@ class NotificationRepositoryImpl extends NotificationRepository {
             LaravelEndpoints.notifications,
           );
           final payload = _unwrapPayload(response.data);
-          final rawItems = payload is List<dynamic> ? payload : <dynamic>[];
+          final rawItems = payload is List<dynamic>
+              ? payload
+              : (payload is Map<String, dynamic> &&
+                    payload['items'] is List<dynamic>)
+              ? payload['items'] as List<dynamic>
+              : <dynamic>[];
 
           final items = rawItems
               .whereType<Map<String, dynamic>>()

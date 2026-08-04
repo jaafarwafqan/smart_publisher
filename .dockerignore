@@ -1,0 +1,29 @@
+# Keep local credentials and environment-specific configuration out of every
+# future Docker build context. The repository currently has no Docker image,
+# but this policy must exist before one is introduced.
+.env
+.env.*
+*.env
+.envrc
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+**/key.properties
+
+# Source-control metadata and local/generated dependencies are not runtime
+# inputs for a Flutter build image.
+.git
+.github
+.dart_tool
+.pub-cache
+.flutter-plugins-dependencies
+build
+coverage
+node_modules
+vendor

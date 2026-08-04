@@ -5,9 +5,11 @@ class AnalyticsMetricEntity {
     required this.clicks,
     required this.shares,
     required this.reactions,
+    required this.comments,
     required this.reach,
     required this.engagement,
     required this.status,
+    this.available = true,
   });
 
   final String postId;
@@ -15,9 +17,15 @@ class AnalyticsMetricEntity {
   final int clicks;
   final int shares;
   final int reactions;
+  final int comments;
   final int reach;
   final int engagement;
   final String status;
+
+  /// Whether these numbers reflect real fetched data — false means the
+  /// provider (or the post itself) has no real metrics yet, so every field
+  /// above is a zeroed placeholder, not a genuine zero result.
+  final bool available;
 
   double get engagementRate {
     if (reach <= 0) {
@@ -33,10 +41,12 @@ class AnalyticsMetricEntity {
       'clicks': clicks,
       'shares': shares,
       'reactions': reactions,
+      'comments': comments,
       'reach': reach,
       'engagement': engagement,
       'engagement_rate': engagementRate,
       'status': status,
+      'available': available,
     };
   }
 }

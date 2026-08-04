@@ -1,61 +1,7 @@
-# Webhooks API
+# Webhooks API — RETIRED (never actually built)
 
-## Purpose
-Receive platform delivery and engagement updates.
+**2026-07-27**: This document previously described a `POST /api/webhooks/{platform}` endpoint as if it were a real, implemented feature. It never was — there is no webhook route anywhere in `routes/api.php`, no signature-verification code, no handler. It was aspirational documentation written during early scaffolding and never corrected until now.
 
-## Authentication
-Signature header or shared secret.
+If you need to know what's actually true about platform integrations (OAuth flows, which providers are real vs. mocked, how publishing actually works), see [`docs/api/integrations.md`](integrations.md).
 
-## Endpoint
-POST /api/webhooks/{platform}
-
-## Method
-POST
-
-## Headers
-```http
-X-Signature: sha256=...
-Content-Type: application/json
-```
-
-## Request
-```json
-{
-  "event": "publish.completed",
-  "post_id": 15,
-  "platform": "facebook"
-}
-```
-
-## Validation
-- signature: required
-- event: known event type
-- platform: supported platform identifier
-
-## Success Response
-```json
-{
-  "success": true,
-  "message": "Webhook processed.",
-  "data": {},
-  "meta": {},
-  "errors": []
-}
-```
-
-## Error Response
-```json
-{
-  "success": false,
-  "message": "Invalid signature.",
-  "data": {},
-  "meta": {},
-  "errors": ["SP9001"]
-}
-```
-
-## Permissions
-- platform webhook provider
-
-## Notes
-These webhooks should update analytics and publish states.
+If inbound webhooks (platform delivery/engagement callbacks) are genuinely needed, that's a real feature to design and build — including signature verification, event routing, and idempotent processing — not something to assume already exists. Track it in `docs/audit/KNOWN_ISSUES.md` under open gaps.

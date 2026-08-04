@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart' show FormData, MultipartFile;
 
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
@@ -10,6 +12,7 @@ import '../../../offline/queue/outbox_entry.dart';
 import '../../../offline/queue/outbox_store.dart';
 import '../../../offline/sync/resumable_upload_manager.dart';
 import '../../../core/events/event_dispatcher.dart';
+import '../../../core/base/pagination.dart';
 import '../../../core/network/laravel_api.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/app_result.dart';
@@ -62,7 +65,15 @@ class MediaRepositoryImpl extends MediaRepository {
 
         final isRemoteUrl = _isRemoteUrl(preparedMedia.url);
         final payload = <String, dynamic>{...request.toJson()};
-        if (!isRemoteUrl) {
+        if (preparedMedia.bytes != null) {
+          // Flutter Web has no filesystem to read a path from — file_picker
+          // can only supply raw bytes there, so upload those directly instead
+          // of MultipartFile.fromFile (which requires dart:io and a real path).
+          payload['file'] = MultipartFile.fromBytes(
+            preparedMedia.bytes!,
+            filename: request.fileName,
+          );
+        } else if (!isRemoteUrl) {
           final multipartFile = await MultipartFile.fromFile(
             preparedMedia.url,
             filename: request.fileName,
@@ -169,12 +180,8 @@ class MediaRepositoryImpl extends MediaRepository {
 
     if (networkClient != null) {
       try {
-        final request = BackendContractMapperV1.toMediaCompressRequest(
-          processedMedia,
-        );
         final response = await networkClient!.post(
-          LaravelEndpoints.mediaCompress,
-          data: request.toJson(),
+          LaravelEndpoints.mediaCompress(processedMedia.id),
         );
         final data = _unwrapPayload(response.data) as Map<String, dynamic>;
         return Success<MediaEntity>(
@@ -249,6 +256,152 @@ class MediaRepositoryImpl extends MediaRepository {
     );
   }
 
+  @override
+  Future<AppResult<List<MediaEntity>>> getMediaLibrary({
+    String? collection,
+    String? type,
+    List<String>? tags,
+    String? search,
+  }) async {
+    if (networkClient == null) {
+      return executeList(
+        () async => _inMemoryStore.values.toList(growable: false),
+        operation: 'media.library.local',
+        fallbackMessage: 'Failed to list local media',
+      );
+    }
+
+    return executeList(
+      () async {
+        final queryParts = <String>[
+          if (collection != null && collection.isNotEmpty)
+            'collection=${Uri.encodeQueryComponent(collection)}',
+          if (type != null && type.isNotEmpty)
+            'type=${Uri.encodeQueryComponent(type)}',
+          if (search != null && search.isNotEmpty)
+            'search=${Uri.encodeQueryComponent(search)}',
+          if (tags != null)
+            for (final tag in tags) 'tags[]=${Uri.encodeQueryComponent(tag)}',
+        ];
+        final path = queryParts.isEmpty
+            ? LaravelEndpoints.mediaUpload
+            : '${LaravelEndpoints.mediaUpload}?${queryParts.join('&')}';
+
+        final response = await networkClient!.get(path);
+        final payload = _unwrapPayload(response.data);
+        final items = payload is List<dynamic> ? payload : <dynamic>[];
+
+        return items
+            .whereType<Map<String, dynamic>>()
+            .map(MediaResponseDtoV1.fromJson)
+            .map(BackendContractMapperV1.toMediaEntity)
+            .toList(growable: false);
+      },
+      operation: 'media.library.remote',
+      fallbackMessage: 'Failed to load media library',
+    );
+  }
+
+  @override
+  Future<AppResult<PaginatedResult<MediaEntity>>> getMediaLibraryPage({
+    String? collection,
+    String? type,
+    List<String>? tags,
+    String? search,
+    int page = 1,
+  }) async {
+    if (networkClient == null) {
+      final all = _inMemoryStore.values.toList(growable: false);
+      return Success<PaginatedResult<MediaEntity>>(
+        PaginatedResult<MediaEntity>(
+          items: all,
+          page: 1,
+          pageSize: all.length,
+          totalCount: all.length,
+        ),
+      );
+    }
+
+    try {
+      final queryParts = <String>[
+        'page=$page',
+        if (collection != null && collection.isNotEmpty)
+          'collection=${Uri.encodeQueryComponent(collection)}',
+        if (type != null && type.isNotEmpty)
+          'type=${Uri.encodeQueryComponent(type)}',
+        if (search != null && search.isNotEmpty)
+          'search=${Uri.encodeQueryComponent(search)}',
+        if (tags != null)
+          for (final tag in tags) 'tags[]=${Uri.encodeQueryComponent(tag)}',
+      ];
+      final path = '${LaravelEndpoints.mediaUpload}?${queryParts.join('&')}';
+
+      final response = await networkClient!.get(path);
+      final raw = response.data;
+      final payload = _unwrapPayload(raw);
+      final rawItems = payload is List<dynamic> ? payload : <dynamic>[];
+      final items = rawItems
+          .whereType<Map<String, dynamic>>()
+          .map(MediaResponseDtoV1.fromJson)
+          .map(BackendContractMapperV1.toMediaEntity)
+          .toList(growable: false);
+
+      // Same as posts: the pagination envelope lives as a sibling of
+      // `data`, not inside it — ApiEnvelopeMiddleware preserves the
+      // controller's `meta` object either way.
+      final rawMeta = raw is Map<String, dynamic> ? raw['meta'] : null;
+      final meta = rawMeta is Map<String, dynamic>
+          ? rawMeta
+          : const <String, dynamic>{};
+      final currentPage = (meta['current_page'] as num?)?.toInt() ?? page;
+      final perPage = (meta['per_page'] as num?)?.toInt() ?? items.length;
+      final total = (meta['total'] as num?)?.toInt() ?? items.length;
+
+      return Success<PaginatedResult<MediaEntity>>(
+        PaginatedResult<MediaEntity>(
+          items: items,
+          page: currentPage,
+          pageSize: perPage,
+          totalCount: total,
+        ),
+        message: 'Media library page retrieved remotely',
+      );
+    } catch (error, stackTrace) {
+      return Failure<PaginatedResult<MediaEntity>>.fromFailure(
+        mapFailure(
+          error,
+          stackTrace,
+          fallbackMessage: 'Failed to load media library',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<AppResult<void>> attachMediaToPost({
+    required String mediaId,
+    required String postId,
+  }) async {
+    if (networkClient == null) {
+      return const Failure<void>(
+        'Reusing media in another post requires a connection.',
+      );
+    }
+
+    return execute<void>(
+      () async {
+        await networkClient!.post(
+          LaravelEndpoints.postMediaAttach(postId),
+          data: <String, dynamic>{
+            'attachment_ids': <int>[int.parse(mediaId)],
+          },
+        );
+      },
+      operation: 'media.attach_to_post',
+      fallbackMessage: 'Failed to reuse media in the post',
+    );
+  }
+
   Future<void> _enqueueMediaOperation(
     OutboxOperation operation,
     MediaEntity media,
@@ -264,6 +417,10 @@ class MediaRepositoryImpl extends MediaRepository {
           'mime_type': media.mimeType,
           'size_in_bytes': media.sizeInBytes,
           'is_compressed': media.isCompressed,
+          // On web there is no real file path to re-read from when this is
+          // replayed later — the bytes have to travel with the queued entry
+          // itself, or a retried upload would have no content to send.
+          if (media.bytes != null) 'bytes_base64': base64Encode(media.bytes!),
         },
         resumeToken: operation == OutboxOperation.uploadMedia ? media.id : null,
       ),

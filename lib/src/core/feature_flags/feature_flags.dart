@@ -23,36 +23,39 @@ class FeatureFlags {
     }
 
     if (key == FeatureFlagKeys.canaryPublishPipeline) {
-      if (rolloutKey == null || rolloutKey.isEmpty) {
-        return false;
-      }
-      return releaseConfig.isUserInCanary(rolloutKey);
+      // This app has no audited progressive-delivery controller. Keep the
+      // legacy key fail-closed instead of pretending a local hash controls a
+      // production rollout.
+      return false;
     }
 
     return true;
   }
 
+  // String.fromEnvironment must be invoked directly with a literal key at each
+  // call site (the compiler substitutes it at compile time) — it cannot be
+  // routed through a helper taking a runtime `key` parameter, which is what
+  // the previous _envBool(key, fallback) did and crashed with
+  // "Unsupported operation: String.fromEnvironment can only be used as a
+  // const constructor" the moment any flag was actually read at runtime.
   static final Map<String, bool> _defaults = <String, bool>{
-    FeatureFlagKeys.performanceDashboard: _envBool(
-      'SP_FF_PERFORMANCE_DASHBOARD',
+    FeatureFlagKeys.performanceDashboard: _parseBool(
+      const String.fromEnvironment('SP_FF_PERFORMANCE_DASHBOARD'),
       true,
     ),
-    FeatureFlagKeys.laravelQueueSync: _envBool(
-      'SP_FF_LARAVEL_QUEUE_SYNC',
+    FeatureFlagKeys.laravelQueueSync: _parseBool(
+      const String.fromEnvironment('SP_FF_LARAVEL_QUEUE_SYNC'),
       true,
     ),
-    FeatureFlagKeys.canaryPublishPipeline: _envBool(
-      'SP_FF_CANARY_PUBLISH_PIPELINE',
-      false,
-    ),
+    FeatureFlagKeys.canaryPublishPipeline: false,
   };
 
-  static bool _envBool(String key, bool fallback) {
-    final raw = String.fromEnvironment(key, defaultValue: '').toLowerCase();
-    if (raw.isEmpty) {
+  static bool _parseBool(String raw, bool fallback) {
+    final value = raw.toLowerCase();
+    if (value.isEmpty) {
       return fallback;
     }
-    return raw == '1' || raw == 'true' || raw == 'yes' || raw == 'on';
+    return value == '1' || value == 'true' || value == 'yes' || value == 'on';
   }
 }
 

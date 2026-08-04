@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_publisher/src/core/base/pagination.dart';
 import 'package:smart_publisher/src/core/result/app_result.dart';
 import 'package:smart_publisher/src/features/media/domain/repositories/media_repository.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/media_entity.dart';
@@ -9,6 +10,8 @@ import 'package:smart_publisher/src/features/posts/domain/usecases/create_post.d
 import 'package:smart_publisher/src/features/posts/domain/usecases/publish_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/upload_media.dart';
+import 'package:smart_publisher/src/features/schedule/domain/entities/schedule_entity.dart';
+import 'package:smart_publisher/src/features/schedule/domain/repositories/schedule_repository.dart';
 
 void main() {
   group('UseCases', () {
@@ -42,21 +45,35 @@ void main() {
       expect(repo.lastUpdated?.status, 'published');
     });
 
-    test('SchedulePost sets status to scheduled', () async {
-      final repo = _FakePostRepository();
+    test(
+      'SchedulePost delegates to ScheduleRepository.schedulePost, not updatePost',
+      () async {
+        final repo = _FakeScheduleRepository();
+        final useCase = SchedulePost(repository: repo);
+
+        final result = await useCase(
+          PostEntity(
+            id: post.id,
+            title: post.title,
+            body: post.body,
+            scheduledAt: DateTime.now().add(const Duration(hours: 2)),
+          ),
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(repo.scheduleCalls, 1);
+        expect(repo.lastScheduled?.id, post.id);
+      },
+    );
+
+    test('SchedulePost fails fast when scheduledAt is missing', () async {
+      final repo = _FakeScheduleRepository();
       final useCase = SchedulePost(repository: repo);
 
-      final result = await useCase(
-        PostEntity(
-          id: post.id,
-          title: post.title,
-          body: post.body,
-          scheduledAt: DateTime.now().add(const Duration(hours: 2)),
-        ),
-      );
+      final result = await useCase(post);
 
-      expect(result.isSuccess, isTrue);
-      expect(repo.lastUpdated?.status, 'scheduled');
+      expect(result.isSuccess, isFalse);
+      expect(repo.scheduleCalls, 0);
     });
 
     test('UploadMedia delegates to media repository', () async {
@@ -108,9 +125,53 @@ class _FakePostRepository extends PostRepository {
   }
 
   @override
+  Future<AppResult<PaginatedResult<PostEntity>>> getPostsPage({
+    int page = 1,
+  }) async {
+    return const Success<PaginatedResult<PostEntity>>(
+      PaginatedResult<PostEntity>(
+        items: <PostEntity>[],
+        page: 1,
+        pageSize: 20,
+        totalCount: 0,
+      ),
+    );
+  }
+
+  @override
   Future<AppResult<PostEntity>> updatePost(PostEntity post) async {
     lastUpdated = post;
     return Success<PostEntity>(post);
+  }
+
+  @override
+  Future<AppResult<void>> publishNow(
+    String postId, {
+    List<String> socialPageIds = const <String>[],
+  }) async {
+    return const Success<void>(null);
+  }
+}
+
+class _FakeScheduleRepository extends ScheduleRepository {
+  int scheduleCalls = 0;
+  PostEntity? lastScheduled;
+
+  @override
+  Future<AppResult<PostEntity>> schedulePost(PostEntity post) async {
+    scheduleCalls += 1;
+    lastScheduled = post;
+    return Success<PostEntity>(post.copyWith(status: 'scheduled'));
+  }
+
+  @override
+  Future<AppResult<void>> cancelSchedule(String postId) async {
+    return const Success<void>(null);
+  }
+
+  @override
+  Future<AppResult<List<ScheduleEntity>>> getCalendarEntries() async {
+    return const Success<List<ScheduleEntity>>(<ScheduleEntity>[]);
   }
 }
 
@@ -141,6 +202,42 @@ class _FakeMediaRepository extends MediaRepository {
 
   @override
   Future<AppResult<void>> deleteMedia(String id) async {
+    return const Success<void>(null);
+  }
+
+  @override
+  Future<AppResult<List<MediaEntity>>> getMediaLibrary({
+    String? collection,
+    String? type,
+    List<String>? tags,
+    String? search,
+  }) async {
+    return const Success<List<MediaEntity>>(<MediaEntity>[]);
+  }
+
+  @override
+  Future<AppResult<PaginatedResult<MediaEntity>>> getMediaLibraryPage({
+    String? collection,
+    String? type,
+    List<String>? tags,
+    String? search,
+    int page = 1,
+  }) async {
+    return const Success<PaginatedResult<MediaEntity>>(
+      PaginatedResult<MediaEntity>(
+        items: <MediaEntity>[],
+        page: 1,
+        pageSize: 30,
+        totalCount: 0,
+      ),
+    );
+  }
+
+  @override
+  Future<AppResult<void>> attachMediaToPost({
+    required String mediaId,
+    required String postId,
+  }) async {
     return const Success<void>(null);
   }
 }

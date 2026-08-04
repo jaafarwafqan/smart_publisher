@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c//**)",
+      "Bash([ -f \"$JOURNAL\" ])",
+      "Bash(node -e ' *)",
+      "Bash(grep -rl \"Application\\\\\\\\\\\\\\\\DTOs\" app --include=*.php)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(xargs grep -ln \"AppLogger\\\\|logger\\\\.\")"
+    ]
+  }
+}

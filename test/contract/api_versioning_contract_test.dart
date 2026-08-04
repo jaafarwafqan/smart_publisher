@@ -10,11 +10,22 @@ import '../helpers/fake_network_client.dart';
 
 void main() {
   group('Contract - API Versioning', () {
-    test('versioned endpoints use api/v1 prefix', () {
-      expect(LaravelEndpoints.posts, '/api/v1/posts');
-      expect(LaravelEndpoints.postById('11'), '/api/v1/posts/11');
-      expect(LaravelEndpoints.mediaUpload, '/api/v1/media/upload');
-      expect(LaravelEndpoints.publishJobs, '/api/v1/publish/jobs');
+    test('versioned endpoints resolve to the api/v1 prefix via apiBaseUrl', () {
+      // The /api/v1 prefix lives in LaravelApi.apiBaseUrl (the Dio base URL),
+      // not in these path constants, so what matters is the final request
+      // URL (base + path) rather than the bare path string.
+      String fullUrl(String path) => '${LaravelApi.apiBaseUrl}$path';
+
+      expect(fullUrl(LaravelEndpoints.posts), '${LaravelApi.apiBaseUrl}/posts');
+      expect(
+        fullUrl(LaravelEndpoints.postById('11')),
+        '${LaravelApi.apiBaseUrl}/posts/11',
+      );
+      expect(
+        fullUrl(LaravelEndpoints.mediaUpload),
+        '${LaravelApi.apiBaseUrl}/media',
+      );
+      expect(LaravelApi.apiBaseUrl, endsWith('/api/v1'));
     });
 
     test('post and media repositories call versioned routes', () async {
@@ -81,9 +92,12 @@ void main() {
         ),
       );
 
-      expect(calls, contains('POST /api/v1/posts'));
-      expect(calls, contains('GET /api/v1/posts'));
-      expect(calls, contains('UPLOAD /api/v1/media/upload'));
+      // FakeNetworkClient records the raw path handed to it (mirroring how
+      // the real NetworkClient receives it before Dio prepends baseUrl), so
+      // these are the bare LaravelEndpoints paths, not the full request URL.
+      expect(calls, contains('POST /posts'));
+      expect(calls, contains('GET /posts'));
+      expect(calls, contains('UPLOAD /media'));
     });
   });
 }

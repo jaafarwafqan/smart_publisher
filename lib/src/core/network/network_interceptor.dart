@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 
 import '../logger/app_logger.dart';
@@ -6,6 +8,7 @@ import '../observability/metrics_registry.dart';
 import '../observability/trace_context.dart';
 import '../security/scope_authorizer.dart';
 import '../security/token_lifecycle_manager.dart';
+import '../tenancy/active_organization_store.dart';
 
 abstract interface class NetworkInterceptor {
   Future<void> onRequest(
@@ -70,6 +73,46 @@ class AuthorizationInterceptor implements NetworkInterceptor {
         : await tokenProvider?.call();
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+
+  @override
+  Future<void> onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    handler.next(response);
+  }
+
+  @override
+  Future<void> onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    handler.next(error);
+  }
+}
+
+/// Sends the device's currently-selected organization on every request, so
+/// ResolveTenantContext on the backend can honor a multi-membership user's
+/// choice instead of always falling back to their last-used organization.
+/// Sending nothing (no active organization stored yet) is safe — the
+/// backend falls back to the user's own current_organization_id, then their
+/// first membership.
+class OrganizationHeaderInterceptor implements NetworkInterceptor {
+  const OrganizationHeaderInterceptor({required this.store});
+
+  final ActiveOrganizationStore store;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final organizationId = await store.read();
+    if (organizationId != null) {
+      options.headers['X-Organization-Id'] = organizationId.toString();
     }
     handler.next(options);
   }
@@ -194,11 +237,17 @@ class LoggingInterceptor implements NetworkInterceptor {
 class RetryInterceptor implements NetworkInterceptor {
   const RetryInterceptor({
     this.maxRetries = 3,
-    this.delay = const Duration(seconds: 1),
+    this.baseDelay = const Duration(seconds: 1),
   });
 
   final int maxRetries;
-  final Duration delay;
+  final Duration baseDelay;
+
+  /// Methods where the server processing an already-sent request twice is
+  /// safe to risk. A bare POST has no such guarantee here (most write
+  /// endpoints aren't keyed for client-side dedup), so it's deliberately
+  /// excluded from the one ambiguous case below (receiveTimeout).
+  static const _idempotentMethods = {'GET', 'HEAD', 'PUT', 'DELETE'};
 
   @override
   Future<void> onRequest(
@@ -221,16 +270,36 @@ class RetryInterceptor implements NetworkInterceptor {
     DioException error,
     ErrorInterceptorHandler handler,
   ) async {
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.connectionError) {
+    // connectionTimeout/connectionError mean the request never reached the
+    // server at all — always safe to retry regardless of method.
+    // receiveTimeout means the request WAS sent and the server may already
+    // be processing it (or done) — only safe to auto-retry there for
+    // methods where repeating the call can't duplicate a real-world effect
+    // (CTO audit 4.6: blindly retrying every method on receiveTimeout risked
+    // double-submitting a non-idempotent POST whose original attempt had
+    // actually already succeeded server-side, just slow to respond).
+    final method = error.requestOptions.method.toUpperCase();
+    final isRetryable =
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.connectionError ||
+        (error.type == DioExceptionType.receiveTimeout &&
+            _idempotentMethods.contains(method));
+
+    if (isRetryable) {
       if (error.requestOptions.extra['retryCount'] == null) {
         error.requestOptions.extra['retryCount'] = 0;
       }
       final retryCount = error.requestOptions.extra['retryCount'] as int;
       if (retryCount < maxRetries) {
         error.requestOptions.extra['retryCount'] = retryCount + 1;
-        await Future<void>.delayed(delay);
+        // Exponential backoff with jitter — avoids every in-flight request
+        // that failed at once (e.g. a brief network blip) retrying in the
+        // exact same synchronized wave.
+        final backoffMs = baseDelay.inMilliseconds * (1 << retryCount);
+        final jitterMs = Random().nextInt(250);
+        await Future<void>.delayed(
+          Duration(milliseconds: backoffMs + jitterMs),
+        );
         handler.resolve(await Dio().fetch(error.requestOptions));
         return;
       }

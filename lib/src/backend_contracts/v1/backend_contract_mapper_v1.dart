@@ -1,4 +1,5 @@
 import '../../features/auth/domain/entities/account_entity.dart';
+import '../../features/auth/domain/entities/social_page_entity.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/notifications/domain/entities/notification_entity.dart';
 import '../../features/posts/domain/entities/media_entity.dart';
@@ -11,6 +12,7 @@ import 'media_contract_v1.dart';
 import 'notifications_contract_v1.dart';
 import 'posts_contract_v1.dart';
 import 'publish_contract_v1.dart';
+import 'social_pages_contract_v1.dart';
 
 class BackendContractMapperV1 {
   const BackendContractMapperV1._();
@@ -21,12 +23,19 @@ class BackendContractMapperV1 {
       content: entity.body,
       attachments: entity.attachments,
       platforms: entity.platforms,
+      targetPageIds: entity.targetPageIds,
       scheduledAt: entity.scheduledAt,
+      platformContent: entity.platformContent,
     );
   }
 
   static PostUpdateRequestDtoV1 toPostUpdateRequest(PostEntity entity) {
-    return PostUpdateRequestDtoV1(title: entity.title, content: entity.body);
+    return PostUpdateRequestDtoV1(
+      title: entity.title,
+      content: entity.body,
+      targetPageIds: entity.targetPageIds,
+      platformContent: entity.platformContent,
+    );
   }
 
   static PostEntity toPostEntity(PostResponseDtoV1 dto) {
@@ -38,10 +47,13 @@ class BackendContractMapperV1 {
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
       scheduledAt: dto.scheduledAt,
+      publishedAt: dto.publishedAt,
       aiImproved: false,
       hasMedia: dto.attachments.isNotEmpty,
       attachments: dto.attachments,
       platforms: dto.platforms,
+      targetPageIds: dto.targetPageIds,
+      platformContent: dto.platformContent,
     );
   }
 
@@ -55,10 +67,6 @@ class BackendContractMapperV1 {
     );
   }
 
-  static MediaCompressRequestDtoV1 toMediaCompressRequest(MediaEntity entity) {
-    return MediaCompressRequestDtoV1(mediaId: entity.id);
-  }
-
   static MediaEntity toMediaEntity(MediaResponseDtoV1 dto) {
     return MediaEntity(
       id: dto.id,
@@ -67,6 +75,11 @@ class BackendContractMapperV1 {
       mimeType: dto.mimeType,
       sizeInBytes: dto.sizeInBytes,
       isCompressed: dto.isCompressed,
+      thumbnailUrl: dto.thumbnailUrl,
+      collection: dto.collection,
+      tags: dto.tags,
+      createdAt: dto.createdAt,
+      isDuplicateOfId: dto.duplicateOfId,
     );
   }
 
@@ -96,15 +109,40 @@ class BackendContractMapperV1 {
     }
   }
 
-  static AccountEntity toAccountEntity(AccountResponseDtoV1 dto) {
+  static AccountEntity toAccountEntity(SocialAccountResponseDtoV1 dto) {
     return AccountEntity(
       id: dto.id,
-      name: dto.name,
-      platform: dto.platform,
-      isConnected: dto.isConnected,
-      avatarUrl: dto.avatarUrl,
-      status: dto.isConnected ? 'Connected' : 'Disconnected',
-      permissions: dto.permissions,
+      remoteId: dto.id,
+      name: dto.accountName?.isNotEmpty == true
+          ? dto.accountName!
+          : dto.provider,
+      platform: dto.provider,
+      status: dto.status,
+      hasRefreshToken: dto.hasRefreshToken,
+      permissions: dto.scopes,
+      discoveryMode: dto.discoveryMode,
+      metadata: dto.metadata,
+      tokenExpiresAt: dto.tokenExpiresAt,
+      lastSyncedAt: dto.lastSyncedAt,
+      lastPublishedAt: dto.lastPublishedAt,
+    );
+  }
+
+  static SocialPageEntity toSocialPageEntity(SocialPageResponseDtoV1 dto) {
+    return SocialPageEntity(
+      id: dto.id,
+      socialAccountId: dto.socialAccountId,
+      pageId: dto.pageId,
+      kind: dto.kind,
+      name: dto.name?.isNotEmpty == true ? dto.name! : dto.pageId,
+      username: dto.username,
+      pictureUrl: dto.pictureUrl,
+      canPublish: dto.canPublish,
+      isSelected: dto.isSelected,
+      status: dto.status,
+      memberCount: dto.memberCount,
+      lastSyncedAt: dto.lastSyncedAt,
+      lastVerifiedAt: dto.lastVerifiedAt,
     );
   }
 

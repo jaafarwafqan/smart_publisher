@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../logger/app_logger.dart';
 import 'event.dart';
 import 'event_handler.dart';
 
@@ -29,7 +30,20 @@ class EventBus {
     }
 
     for (final handler in handlers) {
-      await handler.handle(event);
+      try {
+        await handler.handle(event);
+      } catch (error, stackTrace) {
+        // A handler failing (e.g. logging) must never make the publisher of
+        // the event look like it failed too — event dispatch runs inside
+        // repository write transactions, and an uncaught handler error here
+        // used to surface as "post creation failed" even though the write
+        // itself had already succeeded.
+        AppLogger.e(
+          'Event handler ${handler.runtimeType} failed for $T',
+          error,
+          stackTrace,
+        );
+      }
     }
   }
 }

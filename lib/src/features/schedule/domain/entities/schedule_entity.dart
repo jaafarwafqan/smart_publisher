@@ -4,13 +4,15 @@ class ScheduleEntity extends BaseEntity {
   const ScheduleEntity({
     required this.id,
     required this.postId,
+    required this.title,
+    required this.status,
     required this.scheduledAt,
-    this.isActive = true,
   });
 
   @override
   final String id;
   final String postId;
+  final String title;
+  final String status;
   final DateTime scheduledAt;
-  final bool isActive;
 }

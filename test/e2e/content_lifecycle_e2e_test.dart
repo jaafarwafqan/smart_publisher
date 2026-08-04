@@ -8,6 +8,7 @@ import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dar
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/create_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
+import 'package:smart_publisher/src/features/schedule/data/schedule_repository_impl.dart';
 import 'package:smart_publisher/src/publish_engine/engine/publish_engine.dart';
 
 import '../helpers/fake_network_client.dart';
@@ -17,7 +18,25 @@ void main() {
     test('create -> schedule -> publish -> analytics report/export', () async {
       final postRepo = PostRepositoryImpl();
       final create = CreatePost(repository: postRepo);
-      final schedule = SchedulePost(repository: postRepo);
+      final scheduleRepo = ScheduleRepositoryImpl(
+        networkClient: FakeNetworkClient(
+          postHandler: (path, data) async {
+            final body = data as Map<String, dynamic>;
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'id': 'e2e-post-1',
+                'title': 'Title',
+                'content': 'Body',
+                'status': 'scheduled',
+                'scheduled_at': body['scheduled_at'],
+              },
+            );
+          },
+        ),
+      );
+      final schedule = SchedulePost(repository: scheduleRepo);
       final engine = PublishEngine();
 
       final analyticsRepo = AnalyticsRepositoryImpl(
@@ -67,6 +86,7 @@ void main() {
           PublishTarget(
             category: PublishTargetCategory.social,
             destinationKey: 'facebook',
+            socialPageId: 'page-1',
           ),
         ],
       );

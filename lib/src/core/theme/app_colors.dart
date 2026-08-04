@@ -22,6 +22,11 @@ final class AppColors {
 
   // Border
   static const border = Color(0xFFE2E8F0);
+  // A dedicated dark-mode border tone — AppInputTheme previously used
+  // brandSecondary here, which is byte-for-byte identical to surfaceDark
+  // (both 0xFF1E293B), making every input field's border completely
+  // invisible against its own fill in dark mode.
+  static const borderDark = Color(0xFF475569);
 
   // Text
   static const textPrimary = Color(0xFF0F172A);
