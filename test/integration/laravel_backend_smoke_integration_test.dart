@@ -10,16 +10,19 @@ import 'package:smart_publisher/src/backend_contracts/v1/auth_contract_v1.dart';
 import 'package:smart_publisher/src/core/network/dio_network_client.dart';
 import 'package:smart_publisher/src/core/network/laravel_api.dart';
 import 'package:smart_publisher/src/core/network/network_client.dart';
+import 'package:smart_publisher/src/core/network/network_interceptor.dart';
 import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
 import 'package:smart_publisher/src/core/security/token_bundle.dart';
 import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
 import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart';
+import 'package:smart_publisher/src/core/tenancy/active_organization_store.dart';
 import 'package:smart_publisher/src/features/analytics/data/repository/analytics_repository_impl.dart';
 import 'package:smart_publisher/src/features/auth/application/auth_event_publisher.dart';
 import 'package:smart_publisher/src/features/auth/application/auth_session_controller.dart';
 import 'package:smart_publisher/src/features/media/data/media_repository_impl.dart';
+import 'package:smart_publisher/src/features/organizations/data/organization_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/media_entity.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
@@ -47,13 +50,27 @@ void main() {
         );
       }
 
-      final networkClient = _buildNetworkClient();
       final storage = InMemoryStorageService();
       final tokenStorage = EncryptedTokenStorage(
         secretsManager: InMemorySecretsManager(),
         encryptionService: const DefaultEncryptionService(),
       );
       final tokenLifecycleManager = _buildTokenLifecycleManager(tokenStorage);
+      final organizationStore = ActiveOrganizationStore(storage: storage);
+      // Every interceptor the real app wires in app_providers.dart
+      // (networkClientProvider) except LoggingInterceptor/RateLimiterInterceptor,
+      // which have no bearing on correctness here. Without
+      // AuthorizationInterceptor/OrganizationHeaderInterceptor this smoke
+      // test could only ever exercise login() (the one endpoint that needs
+      // neither header) — every authenticated step below (createPost,
+      // uploadMedia, schedulePost, analytics) would 401 regardless of
+      // whether the backend itself is healthy. Confirmed live: this test
+      // failed at createPost with a bare, interceptor-less Dio instance
+      // before this fix, against a fully working backend.
+      final networkClient = _buildNetworkClient(
+        tokenLifecycleManager: tokenLifecycleManager,
+        organizationStore: organizationStore,
+      );
       final authController = AuthSessionController(
         networkClient: networkClient,
         tokenLifecycleManager: tokenLifecycleManager,
@@ -68,6 +85,27 @@ void main() {
         password: smokePassword,
       );
       expect(session.user.email, isNotEmpty);
+
+      // Mirrors what the real app's post-login flow does (organization
+      // switcher / first-membership bootstrap) — the login response itself
+      // carries no organization id at all, and every tenant-scoped endpoint
+      // below requires X-Organization-Id to be set via organizationStore.
+      final organizationRepository = OrganizationRepositoryImpl(
+        networkClient: networkClient,
+        store: organizationStore,
+      );
+      final organizations = await organizationRepository.getMyOrganizations();
+      expect(organizations.isSuccess, isTrue, reason: organizations.message);
+      final firstOrganization = organizations.data?.firstOrNull;
+      expect(
+        firstOrganization,
+        isNotNull,
+        reason: 'smoke user must belong to at least one organization',
+      );
+      final switched = await organizationRepository.switchTo(
+        firstOrganization!.id,
+      );
+      expect(switched.isSuccess, isTrue, reason: switched.message);
 
       final accessBeforeRefresh =
           (await tokenStorage.readTokens())?.accessToken ?? '';
@@ -178,7 +216,10 @@ TokenLifecycleManager _buildTokenLifecycleManager(
   );
 }
 
-NetworkClient _buildNetworkClient() {
+NetworkClient _buildNetworkClient({
+  required TokenLifecycleManager tokenLifecycleManager,
+  required ActiveOrganizationStore organizationStore,
+}) {
   return DioNetworkClient(
     dio: Dio(
       BaseOptions(
@@ -189,6 +230,11 @@ NetworkClient _buildNetworkClient() {
         },
       ),
     ),
+    interceptors: <NetworkInterceptor>[
+      AuthorizationInterceptor(tokenLifecycleManager: tokenLifecycleManager),
+      OrganizationHeaderInterceptor(store: organizationStore),
+      RefreshTokenInterceptor(tokenLifecycleManager: tokenLifecycleManager),
+    ],
   );
 }
 
