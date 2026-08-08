@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
-import '../../../../core/theme/app_curves.dart';
-import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/theme_tokens.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../application/auth_session_controller.dart';
@@ -24,18 +23,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _submitting = false;
-  bool _showBrand = false;
   String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() => _showBrand = true);
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -106,8 +94,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: AlignmentDirectional.topStart,
-            end: AlignmentDirectional.bottomEnd,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: <Color>[colorScheme.primary, colorScheme.primaryContainer],
           ),
         ),
@@ -125,29 +113,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          AnimatedOpacity(
-                            duration: AppDuration.normal,
-                            curve: AppCurves.standard,
-                            opacity: _showBrand ? 1 : 0,
-                            child: AnimatedScale(
-                              duration: AppDuration.slow,
-                              curve: AppCurves.standard,
-                              scale: _showBrand ? 1 : 0.94,
-                              child: Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.lg,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.campaign_outlined,
-                                  color: Colors.white,
-                                  size: AppIconSize.xl,
-                                ),
-                              ),
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                            ),
+                            child: const Icon(
+                              Icons.campaign_outlined,
+                              color: Colors.white,
+                              size: AppIconSize.xl,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -244,8 +220,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onPressed: _submitting ? null : _login,
                               child: _submitting
                                   ? const SizedBox(
-                                      width: AppIconSize.md,
-                                      height: AppIconSize.md,
+                                      width: 18,
+                                      height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         valueColor:
