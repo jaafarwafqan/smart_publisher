@@ -33,6 +33,7 @@ import '../../features/analytics/domain/repositories/analytics_repository.dart';
 import '../../features/auth/data/account_repository_impl.dart';
 import '../../features/auth/application/auth_event_publisher.dart';
 import '../../features/auth/application/auth_session_controller.dart';
+import '../../features/auth/application/two_factor_controller.dart';
 import '../../features/auth/domain/repositories/account_repository.dart';
 import '../../features/administration/data/system_settings_repository_impl.dart';
 import '../../features/administration/domain/repositories/system_settings_repository.dart';
@@ -261,6 +262,10 @@ final authSessionControllerProvider = Provider<AuthSessionController>((ref) {
     storageService: ref.read(storageServiceProvider),
     authEventPublisher: ref.read(authEventPublisherProvider),
   );
+});
+
+final twoFactorControllerProvider = Provider<TwoFactorController>((ref) {
+  return TwoFactorController(networkClient: ref.read(networkClientProvider));
 });
 
 final platformFactoryProvider = Provider<PlatformFactory>((ref) {

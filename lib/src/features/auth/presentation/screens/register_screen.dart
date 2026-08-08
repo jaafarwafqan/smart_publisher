@@ -6,45 +6,39 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
-import '../../../../core/theme/app_curves.dart';
-import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/theme_tokens.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../application/auth_session_controller.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+/// Sprint 4 (Commercial SaaS): public self-registration
+/// (POST /api/v1/auth/register) — mirrors [LoginScreen]'s layout so the two
+/// feel like one continuous flow rather than two different apps.
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordConfirmationController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _submitting = false;
-  bool _showBrand = false;
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() => _showBrand = true);
-      }
-    });
-  }
-
-  @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordConfirmationController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -53,31 +47,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      final outcome = await ref
+      await ref
           .read(authSessionControllerProvider)
-          .login(
+          .register(
+            name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            passwordConfirmation: _passwordConfirmationController.text,
           );
-
+      ref.invalidate(authStateProvider);
+      ref.invalidate(currentUserRoleProvider);
+      ref.invalidate(currentOrganizationAccessProvider);
+      ref.invalidate(firstLaunchProvider);
       if (!mounted) {
         return;
       }
-
-      switch (outcome) {
-        case LoginRequiresTwoFactor(:final challengeToken):
-          context.push(
-            RouteNames.twoFactorChallengePath,
-            extra: challengeToken,
-          );
-          return;
-        case LoginSuccess():
-          ref.invalidate(authStateProvider);
-          ref.invalidate(currentUserRoleProvider);
-          ref.invalidate(currentOrganizationAccessProvider);
-          ref.invalidate(firstLaunchProvider);
-          context.go(RouteNames.dashboardPath);
-      }
+      context.go(RouteNames.dashboardPath);
     } catch (error) {
       if (!mounted) {
         return;
@@ -125,34 +110,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          AnimatedOpacity(
-                            duration: AppDuration.normal,
-                            curve: AppCurves.standard,
-                            opacity: _showBrand ? 1 : 0,
-                            child: AnimatedScale(
-                              duration: AppDuration.slow,
-                              curve: AppCurves.standard,
-                              scale: _showBrand ? 1 : 0.94,
-                              child: Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.lg,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.campaign_outlined,
-                                  color: Colors.white,
-                                  size: AppIconSize.xl,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
                           Text(
-                            l10n.loginTitle,
+                            l10n.registerTitle,
                             textAlign: TextAlign.center,
                             style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w700,
@@ -160,7 +119,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            l10n.loginSubtitle,
+                            l10n.registerSubtitle,
                             textAlign: TextAlign.center,
                             style: textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
@@ -168,16 +127,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: AppSpacing.xxl),
                           TextFormField(
+                            controller: _nameController,
+                            keyboardType: TextInputType.name,
+                            decoration: InputDecoration(
+                              labelText: l10n.registerNameLabel,
+                              prefixIcon: const Icon(Icons.person_outline),
+                            ),
+                            validator: (value) {
+                              if ((value ?? '').trim().isEmpty) {
+                                return l10n.registerNameValidationError;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText: l10n.loginEmailLabel,
+                              labelText: l10n.registerEmailLabel,
                               prefixIcon: const Icon(Icons.mail_outline),
                             ),
                             validator: (value) {
                               final text = value?.trim() ?? '';
                               if (text.isEmpty || !text.contains('@')) {
-                                return l10n.loginEmailValidationError;
+                                return l10n.registerEmailValidationError;
                               }
                               return null;
                             },
@@ -187,17 +161,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             controller: _passwordController,
                             obscureText: true,
                             decoration: InputDecoration(
-                              labelText: l10n.loginPasswordLabel,
+                              labelText: l10n.registerPasswordLabel,
                               prefixIcon: const Icon(Icons.lock_outline),
                             ),
                             validator: (value) {
-                              if ((value ?? '').length < 6) {
-                                return l10n.loginPasswordValidationError;
+                              if ((value ?? '').length < 8) {
+                                return l10n.registerPasswordValidationError;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextFormField(
+                            controller: _passwordConfirmationController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: l10n.registerPasswordConfirmationLabel,
+                              prefixIcon: const Icon(Icons.lock_outline),
+                            ),
+                            validator: (value) {
+                              if (value != _passwordController.text) {
+                                return l10n
+                                    .registerPasswordConfirmationValidationError;
                               }
                               return null;
                             },
                             onFieldSubmitted: (_) =>
-                                _submitting ? null : _login(),
+                                _submitting ? null : _register(),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           if (_error != null)
@@ -241,7 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton(
-                              onPressed: _submitting ? null : _login,
+                              onPressed: _submitting ? null : _register,
                               child: _submitting
                                   ? const SizedBox(
                                       width: AppIconSize.md,
@@ -254,37 +244,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                             ),
                                       ),
                                     )
-                                  : Text(l10n.loginButton),
+                                  : Text(l10n.registerButton),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              TextButton(
-                                onPressed: _submitting
-                                    ? null
-                                    : () => context.push(
-                                        RouteNames.forgotPasswordPath,
-                                      ),
-                                child: Text(l10n.loginForgotPasswordLink),
-                              ),
-                            ],
-                          ),
                           Wrap(
                             alignment: WrapAlignment.center,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: <Widget>[
                               Text(
-                                l10n.loginNoAccountPrompt,
+                                l10n.registerHaveAccountPrompt,
                                 style: textTheme.bodySmall,
                               ),
                               TextButton(
                                 onPressed: _submitting
                                     ? null
-                                    : () =>
-                                          context.push(RouteNames.registerPath),
-                                child: Text(l10n.loginCreateAccountLink),
+                                    : () => context.pop(),
+                                child: Text(l10n.registerLoginLink),
                               ),
                             ],
                           ),

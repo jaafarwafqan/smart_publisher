@@ -192,5 +192,91 @@ void main() {
         );
       },
     );
+
+    test(
+      'Sprint 4 pre-auth routes stay reachable while unauthenticated',
+      () async {
+        final container = _containerFor(
+          _accessFor('owner'),
+          authenticated: false,
+        );
+        addTearDown(container.dispose);
+
+        for (final path in <String>[
+          RouteNames.registerPath,
+          RouteNames.forgotPasswordPath,
+          RouteNames.resetPasswordPath,
+          RouteNames.twoFactorChallengePath,
+        ]) {
+          expect(await _redirect(container, path), isNull, reason: path);
+        }
+      },
+    );
+
+    test(
+      'Sprint 4 pre-auth routes bounce an already-authenticated user to the dashboard',
+      () async {
+        final container = _containerFor(_accessFor('owner'));
+        addTearDown(container.dispose);
+
+        for (final path in <String>[
+          RouteNames.registerPath,
+          RouteNames.forgotPasswordPath,
+          RouteNames.resetPasswordPath,
+          RouteNames.twoFactorChallengePath,
+        ]) {
+          expect(
+            await _redirect(container, path),
+            RouteNames.dashboardPath,
+            reason: path,
+          );
+        }
+      },
+    );
+
+    test(
+      'two-factor setup is reachable by every role, unlike the rest of /settings',
+      () async {
+        for (final role in <String>[
+          'owner',
+          'admin',
+          'manager',
+          'editor',
+          'viewer',
+        ]) {
+          final container = _containerFor(_accessFor(role));
+          addTearDown(container.dispose);
+
+          expect(
+            await _redirect(container, RouteNames.twoFactorSetupPath),
+            isNull,
+            reason: role,
+          );
+        }
+      },
+    );
+
+    test(
+      'organization members requires members.view but not settings.manage',
+      () async {
+        for (final role in <String>[
+          'owner',
+          'admin',
+          'manager',
+          'editor',
+          'viewer',
+        ]) {
+          final container = _containerFor(_accessFor(role));
+          addTearDown(container.dispose);
+
+          // Every documented role template grants members.view.
+          expect(
+            await _redirect(container, RouteNames.organizationMembersPath),
+            isNull,
+            reason: role,
+          );
+        }
+      },
+    );
   });
 }

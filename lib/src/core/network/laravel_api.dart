@@ -181,6 +181,12 @@ final class LaravelEndpoints {
   static String organizationSwitch(String organizationId) =>
       LaravelApi.versioned('/organizations/$organizationId/switch');
 
+  static final String organizationMembers = LaravelApi.versioned(
+    '/organization/members',
+  );
+  static String organizationMemberById(String userId) =>
+      LaravelApi.versioned('/organization/members/$userId');
+
   static final String systemSettingsOAuthProviders = LaravelApi.versioned(
     '/system-settings/oauth-providers',
   );
@@ -202,6 +208,33 @@ final class LaravelEndpoints {
   static final String authLogin = authLoginCandidates.first;
   static final String authRefresh = authRefreshCandidates.first;
   static final String authLogout = LaravelApi.apiPath('/auth/logout');
+  static final String me = LaravelApi.versioned('/me');
+
+  // Sprint 4 (Commercial SaaS): registration, password reset, email
+  // verification resend, and TOTP-based MFA — all under /auth like the
+  // pre-auth endpoints above.
+  static final String authRegister = LaravelApi.apiPath('/auth/register');
+  static final String authForgotPassword = LaravelApi.apiPath(
+    '/auth/forgot-password',
+  );
+  static final String authResetPassword = LaravelApi.apiPath(
+    '/auth/reset-password',
+  );
+  static final String authEmailVerificationResend = LaravelApi.apiPath(
+    '/auth/email/verification-notification',
+  );
+  static final String authTwoFactorEnable = LaravelApi.apiPath(
+    '/auth/two-factor/enable',
+  );
+  static final String authTwoFactorConfirm = LaravelApi.apiPath(
+    '/auth/two-factor/confirm',
+  );
+  static final String authTwoFactorDisable = LaravelApi.apiPath(
+    '/auth/two-factor/disable',
+  );
+  static final String authTwoFactorChallenge = LaravelApi.apiPath(
+    '/auth/two-factor/challenge',
+  );
 
   static final String analyticsDashboard = LaravelApi.versioned(
     '/analytics/dashboard',

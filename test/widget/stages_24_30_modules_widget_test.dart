@@ -118,6 +118,15 @@ void main() {
     (tester) async {
       await pumpModule(tester, const SettingsScreen());
 
+      // Sprint 4 (Commercial SaaS) added two more entries above these
+      // toggles (Team members, Two-factor authentication), pushing the
+      // switches below the default test viewport — a real ListView only
+      // builds RenderObjects near the visible/cache extent regardless of
+      // whether it was constructed with a fixed children list or
+      // .builder, so they must be scrolled into view first.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+      await tester.pumpAndSettle();
+
       final switches = tester
           .widgetList<SwitchListTile>(find.byType(SwitchListTile))
           .toList();

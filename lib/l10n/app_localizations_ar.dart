@@ -92,6 +92,151 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loginButton => 'تسجيل الدخول';
 
   @override
+  String get loginForgotPasswordLink => 'نسيت كلمة المرور؟';
+
+  @override
+  String get loginNoAccountPrompt => 'ليس لديك حساب؟';
+
+  @override
+  String get loginCreateAccountLink => 'أنشئ حسابًا';
+
+  @override
+  String get registerTitle => 'إنشاء حسابك';
+
+  @override
+  String get registerSubtitle => 'أعدّ مساحة عمل Smart Publisher الخاصة بك.';
+
+  @override
+  String get registerNameLabel => 'الاسم الكامل';
+
+  @override
+  String get registerNameValidationError => 'أدخل اسمك';
+
+  @override
+  String get registerEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get registerEmailValidationError => 'أدخل بريدًا إلكترونيًا صحيحًا';
+
+  @override
+  String get registerPasswordLabel => 'كلمة المرور';
+
+  @override
+  String get registerPasswordValidationError =>
+      'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل';
+
+  @override
+  String get registerPasswordConfirmationLabel => 'تأكيد كلمة المرور';
+
+  @override
+  String get registerPasswordConfirmationValidationError =>
+      'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get registerButton => 'إنشاء الحساب';
+
+  @override
+  String get registerHaveAccountPrompt => 'لديك حساب بالفعل؟';
+
+  @override
+  String get registerLoginLink => 'تسجيل الدخول';
+
+  @override
+  String get forgotPasswordTitle => 'استعادة كلمة المرور';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'أدخل البريد الإلكتروني لحسابك وسنرسل لك رابط إعادة تعيين كلمة المرور.';
+
+  @override
+  String get forgotPasswordEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get forgotPasswordEmailValidationError =>
+      'أدخل بريدًا إلكترونيًا صحيحًا';
+
+  @override
+  String get forgotPasswordSubmitButton => 'إرسال رابط إعادة التعيين';
+
+  @override
+  String get forgotPasswordSuccessMessage =>
+      'إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة تعيين كلمة المرور.';
+
+  @override
+  String get forgotPasswordHaveTokenLink => 'لديك رمز إعادة تعيين بالفعل؟';
+
+  @override
+  String get forgotPasswordBackToLoginLink => 'العودة لتسجيل الدخول';
+
+  @override
+  String get resetPasswordTitle => 'تعيين كلمة مرور جديدة';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'أدخل رمز إعادة التعيين من بريدك الإلكتروني مع كلمة المرور الجديدة.';
+
+  @override
+  String get resetPasswordEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get resetPasswordTokenLabel => 'رمز إعادة التعيين';
+
+  @override
+  String get resetPasswordNewPasswordLabel => 'كلمة المرور الجديدة';
+
+  @override
+  String get resetPasswordPasswordValidationError =>
+      'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل';
+
+  @override
+  String get resetPasswordConfirmPasswordLabel => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get resetPasswordConfirmPasswordValidationError =>
+      'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get resetPasswordSubmitButton => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get resetPasswordSuccessMessage =>
+      'تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.';
+
+  @override
+  String get resetPasswordBackToLoginLink => 'العودة لتسجيل الدخول';
+
+  @override
+  String get twoFactorChallengeTitle => 'التحقق بخطوتين';
+
+  @override
+  String get twoFactorChallengeSubtitle =>
+      'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.';
+
+  @override
+  String get twoFactorChallengeCodeLabel => 'رمز التحقق';
+
+  @override
+  String get twoFactorChallengeCodeValidationError => 'أدخل رمز التحقق';
+
+  @override
+  String get twoFactorChallengeUseRecoveryCodeLink =>
+      'استخدام رمز استرداد بدلاً من ذلك';
+
+  @override
+  String get twoFactorChallengeRecoveryCodeLabel => 'رمز الاسترداد';
+
+  @override
+  String get twoFactorChallengeRecoveryCodeValidationError =>
+      'أدخل رمز استرداد';
+
+  @override
+  String get twoFactorChallengeUseCodeLink =>
+      'استخدام رمز تطبيق المصادقة بدلاً من ذلك';
+
+  @override
+  String get twoFactorChallengeSubmitButton => 'تحقق';
+
+  @override
   String get logoutTooltip => 'تسجيل الخروج';
 
   @override
@@ -600,6 +745,150 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsOrganizationsSubtitle =>
       'التبديل بين المؤسسات التي تنتمي إليها.';
+
+  @override
+  String get settingsMembersTitle => 'أعضاء الفريق';
+
+  @override
+  String get settingsMembersSubtitle => 'إضافة أو إدارة أعضاء مؤسستك.';
+
+  @override
+  String get settingsTwoFactorTitle => 'المصادقة الثنائية';
+
+  @override
+  String get settingsTwoFactorSubtitle => 'أضف طبقة حماية إضافية لحسابك.';
+
+  @override
+  String get organizationMembersAppBarTitle => 'أعضاء الفريق';
+
+  @override
+  String get organizationMembersEmptyMessage => 'لا يوجد أعضاء بعد.';
+
+  @override
+  String get organizationMembersLoadError => 'فشل تحميل الأعضاء.';
+
+  @override
+  String get organizationMembersYouLabel => 'أنت';
+
+  @override
+  String get organizationMembersAddButton => 'إضافة عضو';
+
+  @override
+  String get organizationMembersAddDialogTitle => 'إضافة عضو للفريق';
+
+  @override
+  String get organizationMembersAddDialogSubtitle =>
+      'يجب أن يكون البريد الإلكتروني مرتبطًا بحساب مسجّل بالفعل في Smart Publisher.';
+
+  @override
+  String get organizationMembersEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get organizationMembersEmailValidationError =>
+      'أدخل بريدًا إلكترونيًا صحيحًا';
+
+  @override
+  String get organizationMembersRoleLabel => 'الدور';
+
+  @override
+  String get organizationMembersAddSubmitButton => 'إضافة';
+
+  @override
+  String get organizationMembersAddedSuccess => 'تمت إضافة العضو.';
+
+  @override
+  String get organizationMembersRoleUpdatedSuccess => 'تم تحديث الدور.';
+
+  @override
+  String get organizationMembersRemoveConfirmTitle => 'حذف العضو؟';
+
+  @override
+  String organizationMembersRemoveConfirmMessage(String name) {
+    return 'سيفقد $name إمكانية الوصول إلى هذه المؤسسة.';
+  }
+
+  @override
+  String get organizationMembersRemovedSuccess => 'تم حذف العضو.';
+
+  @override
+  String get organizationMembersRemoveButton => 'حذف';
+
+  @override
+  String get twoFactorSetupAppBarTitle => 'المصادقة الثنائية';
+
+  @override
+  String get twoFactorSetupEnabledStatus =>
+      'المصادقة الثنائية مفعّلة على حسابك.';
+
+  @override
+  String get twoFactorSetupDisabledStatus => 'المصادقة الثنائية غير مفعّلة.';
+
+  @override
+  String get twoFactorSetupIntro =>
+      'احمِ حسابك باستخدام تطبيق مصادقة (Google Authenticator أو Authy أو 1Password وغيرها).';
+
+  @override
+  String get twoFactorSetupEnableButton => 'تفعيل المصادقة الثنائية';
+
+  @override
+  String get twoFactorSetupDisableButton => 'إلغاء تفعيل المصادقة الثنائية';
+
+  @override
+  String get twoFactorSetupSecretLabel => 'المفتاح السري';
+
+  @override
+  String get twoFactorSetupSecretHint =>
+      'أدخل هذا المفتاح يدويًا في تطبيق المصادقة، أو انسخ رابط الإعداد أدناه.';
+
+  @override
+  String get twoFactorSetupOtpAuthUrlLabel => 'رابط الإعداد';
+
+  @override
+  String get twoFactorSetupCopyTooltip => 'نسخ';
+
+  @override
+  String get twoFactorSetupCopiedMessage => 'تم النسخ إلى الحافظة.';
+
+  @override
+  String get twoFactorSetupCodeLabel =>
+      'أدخل الرمز المكوّن من 6 أرقام من التطبيق';
+
+  @override
+  String get twoFactorSetupCodeValidationError =>
+      'أدخل الرمز المكوّن من 6 أرقام';
+
+  @override
+  String get twoFactorSetupConfirmButton => 'تأكيد والتفعيل';
+
+  @override
+  String get twoFactorSetupCancelButton => 'إلغاء';
+
+  @override
+  String get twoFactorSetupRecoveryCodesTitle => 'احفظ رموز الاسترداد';
+
+  @override
+  String get twoFactorSetupRecoveryCodesWarning =>
+      'احفظ هذه الرموز في مكان آمن. يمكن استخدام كل رمز مرة واحدة فقط لتسجيل الدخول في حال فقدان الوصول إلى تطبيق المصادقة. لن تُعرض هذه الرموز مرة أخرى.';
+
+  @override
+  String get twoFactorSetupDoneButton => 'تم';
+
+  @override
+  String get twoFactorSetupDisablePasswordLabel => 'كلمة المرور الحالية';
+
+  @override
+  String get twoFactorSetupDisablePasswordValidationError =>
+      'أدخل كلمة المرور الحالية';
+
+  @override
+  String get twoFactorSetupDisableConfirmButton => 'إلغاء التفعيل';
+
+  @override
+  String get twoFactorSetupSuccessEnabled => 'تم تفعيل المصادقة الثنائية.';
+
+  @override
+  String get twoFactorSetupSuccessDisabled =>
+      'تم إلغاء تفعيل المصادقة الثنائية.';
 
   @override
   String get settingsPushNotificationsTitle => 'الإشعارات الفورية';

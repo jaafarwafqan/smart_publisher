@@ -56,11 +56,13 @@ void main() {
         ),
       );
 
-      final session = await controller.login(
+      final outcome = await controller.login(
         email: 'jane@example.com',
         password: 'password123',
       );
 
+      expect(outcome, isA<LoginSuccess>());
+      final session = (outcome as LoginSuccess).session;
       expect(session.user.email, 'jane@example.com');
       expect(session.role, UserRole.publisher);
       expect(await storage.readString(GuardStorageKeys.authToken), 'access-1');

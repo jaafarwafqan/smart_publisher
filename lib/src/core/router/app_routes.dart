@@ -4,6 +4,12 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 import '../feature_flags/feature_flags.dart';
 import '../observability/metrics_registry.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
+import '../../features/auth/presentation/screens/two_factor_challenge_screen.dart';
+import '../../features/auth/presentation/screens/two_factor_setup_screen.dart';
+import '../../features/organizations/presentation/screens/organization_members_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/administration/presentation/screens/administration_screen.dart';
 import '../../features/administration/presentation/screens/oauth_provider_settings_screen.dart';
@@ -57,7 +63,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: FilledButton(
                         onPressed: () => context.go(RouteNames.loginPath),
                         child: Text(l10n.welcomeContinueButton),
@@ -204,6 +210,41 @@ final List<GoRoute> appRoutes = [
     path: RouteNames.loginPath,
     name: RouteNames.login,
     builder: (context, state) => const LoginScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.registerPath,
+    name: RouteNames.register,
+    builder: (context, state) => const RegisterScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.forgotPasswordPath,
+    name: RouteNames.forgotPassword,
+    builder: (context, state) => const ForgotPasswordScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.resetPasswordPath,
+    name: RouteNames.resetPassword,
+    builder: (context, state) => const ResetPasswordScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.twoFactorChallengePath,
+    name: RouteNames.twoFactorChallenge,
+    builder: (context, state) {
+      final challengeToken = state.extra;
+      return TwoFactorChallengeScreen(
+        challengeToken: challengeToken is String ? challengeToken : '',
+      );
+    },
+  ),
+  GoRoute(
+    path: RouteNames.twoFactorSetupPath,
+    name: RouteNames.twoFactorSetup,
+    builder: (context, state) => const TwoFactorSetupScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.organizationMembersPath,
+    name: RouteNames.organizationMembers,
+    builder: (context, state) => const OrganizationMembersScreen(),
   ),
   GoRoute(
     path: RouteNames.dashboardPath,

@@ -10,6 +10,24 @@ final class RouteNames {
   static const login = 'login';
   static const loginPath = '/login';
 
+  static const register = 'register';
+  static const registerPath = '/register';
+
+  static const forgotPassword = 'forgot_password';
+  static const forgotPasswordPath = '/forgot-password';
+
+  static const resetPassword = 'reset_password';
+  static const resetPasswordPath = '/reset-password';
+
+  static const twoFactorChallenge = 'two_factor_challenge';
+  static const twoFactorChallengePath = '/two-factor-challenge';
+
+  static const twoFactorSetup = 'two_factor_setup';
+  static const twoFactorSetupPath = '/settings/two-factor';
+
+  static const organizationMembers = 'organization_members';
+  static const organizationMembersPath = '/settings/members';
+
   static const dashboard = 'dashboard';
   static const dashboardPath = '/dashboard';
 

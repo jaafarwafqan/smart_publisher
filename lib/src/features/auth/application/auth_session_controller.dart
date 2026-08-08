@@ -18,6 +18,26 @@ class AuthSession {
   final UserRole role;
 }
 
+/// The result of [AuthSessionController.login] — a password match alone is
+/// not a completed login once the account has 2FA enabled (see Sprint 4's
+/// backend AuthController::login(), which short-circuits into a
+/// challenge_token instead of issuing real tokens in that case).
+sealed class LoginOutcome {
+  const LoginOutcome();
+}
+
+class LoginSuccess extends LoginOutcome {
+  const LoginSuccess(this.session);
+
+  final AuthSession session;
+}
+
+class LoginRequiresTwoFactor extends LoginOutcome {
+  const LoginRequiresTwoFactor(this.challengeToken);
+
+  final String challengeToken;
+}
+
 class AuthSessionException implements Exception {
   const AuthSessionException(this.message);
 
@@ -44,7 +64,7 @@ class AuthSessionController {
   static const _userNameKey = 'auth.user.name';
   static const _userEmailKey = 'auth.user.email';
 
-  Future<AuthSession> login({
+  Future<LoginOutcome> login({
     required String email,
     required String password,
   }) async {
@@ -60,62 +80,165 @@ class AuthSessionController {
         throw const AuthSessionException('Invalid login response from server.');
       }
 
-      final dto = LoginResponseDtoV1.fromJson(payload);
-      if (dto.accessToken.trim().isEmpty) {
-        throw const AuthSessionException(
-          'Authentication access token is missing from server response.',
-        );
+      if (payload['two_factor_required'] == true) {
+        final challengeToken = (payload['challenge_token'] ?? '').toString();
+        if (challengeToken.trim().isEmpty) {
+          throw const AuthSessionException(
+            'Two-factor challenge token is missing from server response.',
+          );
+        }
+        return LoginRequiresTwoFactor(challengeToken);
       }
 
-      final scopes = dto.scope
-          .split(' ')
-          .where((scope) => scope.trim().isNotEmpty)
-          .toSet();
-      final role = UserRoleStorage.fromStorageValue(dto.user.role);
-
-      await tokenLifecycleManager.writeTokens(
-        TokenBundle(
-          accessToken: dto.accessToken,
-          refreshToken: dto.refreshToken?.trim() ?? '',
-          expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
-          scopes: scopes,
-        ),
-      );
-      await storageService.writeString(
-        GuardStorageKeys.authToken,
-        dto.accessToken,
-      );
-      await storageService.writeString(
-        GuardStorageKeys.userRole,
-        role.toStorageValue(),
-      );
-      await storageService.writeString(
-        GuardStorageKeys.firstLaunchCompleted,
-        'true',
-      );
-      await storageService.writeString(_userIdKey, dto.user.id);
-      await storageService.writeString(_userNameKey, dto.user.name);
-      await storageService.writeString(_userEmailKey, dto.user.email);
-
-      await authEventPublisher.publishLoggedIn(
-        userId: dto.user.id,
-        email: dto.user.email,
-      );
-
-      return AuthSession(
-        user: UserEntity(
-          id: dto.user.id,
-          name: dto.user.name,
-          email: dto.user.email,
-        ),
-        role: role,
-      );
+      return LoginSuccess(await _finalizeSession(payload));
     } on DioException catch (error) {
       throw AuthSessionException(_messageFromDio(error));
     } catch (error) {
       throw AuthSessionException(
         error.toString().replaceFirst('Exception: ', ''),
       );
+    }
+  }
+
+  /// Sprint 4 (Commercial SaaS): public self-registration — auto-logs the
+  /// new account in exactly like [login] on success (same token pair
+  /// shape), so this returns a completed [AuthSession] directly rather than
+  /// a [LoginOutcome]: a brand-new account can never already have 2FA
+  /// confirmed.
+  Future<AuthSession> register({
+    required String name,
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final response = await networkClient.post(
+        LaravelEndpoints.authRegister,
+        data: RegisterRequestDtoV1(
+          name: name,
+          email: email,
+          password: password,
+          passwordConfirmation: passwordConfirmation,
+        ).toJson(),
+        options: Options(headers: <String, Object>{'Authorization': ''}),
+      );
+
+      final payload = _unwrapPayload(response.data);
+      if (payload is! Map<String, dynamic>) {
+        throw const AuthSessionException(
+          'Invalid registration response from server.',
+        );
+      }
+
+      return _finalizeSession(payload);
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    } catch (error) {
+      throw AuthSessionException(
+        error.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
+  /// Completes a login that [login] paused on with [LoginRequiresTwoFactor]
+  /// — exactly one of [code] (a TOTP code) or [recoveryCode] must be
+  /// provided, matching the backend's own either/or validation.
+  Future<AuthSession> completeTwoFactorChallenge({
+    required String challengeToken,
+    String? code,
+    String? recoveryCode,
+  }) async {
+    try {
+      final response = await networkClient.post(
+        LaravelEndpoints.authTwoFactorChallenge,
+        data: <String, dynamic>{
+          'challenge_token': challengeToken,
+          if (code != null && code.trim().isNotEmpty) 'code': code.trim(),
+          if (recoveryCode != null && recoveryCode.trim().isNotEmpty)
+            'recovery_code': recoveryCode.trim(),
+        },
+        options: Options(headers: <String, Object>{'Authorization': ''}),
+      );
+
+      final payload = _unwrapPayload(response.data);
+      if (payload is! Map<String, dynamic>) {
+        throw const AuthSessionException(
+          'Invalid two-factor challenge response from server.',
+        );
+      }
+
+      return _finalizeSession(payload);
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    } catch (error) {
+      throw AuthSessionException(
+        error.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
+  /// Always succeeds from the caller's point of view — the backend
+  /// deliberately returns the same generic message whether or not the
+  /// email belongs to a real account, to avoid leaking which emails are
+  /// registered.
+  Future<void> forgotPassword({required String email}) async {
+    try {
+      await networkClient.post(
+        LaravelEndpoints.authForgotPassword,
+        data: ForgotPasswordRequestDtoV1(email: email).toJson(),
+        options: Options(headers: <String, Object>{'Authorization': ''}),
+      );
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      await networkClient.post(
+        LaravelEndpoints.authResetPassword,
+        data: ResetPasswordRequestDtoV1(
+          email: email,
+          token: token,
+          password: password,
+          passwordConfirmation: passwordConfirmation,
+        ).toJson(),
+        options: Options(headers: <String, Object>{'Authorization': ''}),
+      );
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    }
+  }
+
+  /// Requires an active session — resends the verification link for the
+  /// currently authenticated (but not yet verified) account.
+  Future<void> resendVerificationEmail() async {
+    try {
+      await networkClient.post(LaravelEndpoints.authEmailVerificationResend);
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    }
+  }
+
+  /// Reads the current account's 2FA/verification status from GET /me —
+  /// there is no dedicated status endpoint for either.
+  Future<CurrentUserStatusDtoV1> fetchCurrentUserStatus() async {
+    try {
+      final response = await networkClient.get(LaravelEndpoints.me);
+      final payload = _unwrapPayload(response.data);
+      if (payload is! Map<String, dynamic>) {
+        throw const AuthSessionException(
+          'Invalid account status response from server.',
+        );
+      }
+      return CurrentUserStatusDtoV1.fromJson(payload);
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
     }
   }
 
@@ -162,6 +285,62 @@ class AuthSessionController {
     );
   }
 
+  /// Shared by [login], [register], and [completeTwoFactorChallenge] — all
+  /// three receive the identical AuthResource-shaped payload (access/
+  /// refresh token pair + user) and must persist it identically.
+  Future<AuthSession> _finalizeSession(Map<String, dynamic> payload) async {
+    final dto = LoginResponseDtoV1.fromJson(payload);
+    if (dto.accessToken.trim().isEmpty) {
+      throw const AuthSessionException(
+        'Authentication access token is missing from server response.',
+      );
+    }
+
+    final scopes = dto.scope
+        .split(' ')
+        .where((scope) => scope.trim().isNotEmpty)
+        .toSet();
+    final role = UserRoleStorage.fromStorageValue(dto.user.role);
+
+    await tokenLifecycleManager.writeTokens(
+      TokenBundle(
+        accessToken: dto.accessToken,
+        refreshToken: dto.refreshToken?.trim() ?? '',
+        expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
+        scopes: scopes,
+      ),
+    );
+    await storageService.writeString(
+      GuardStorageKeys.authToken,
+      dto.accessToken,
+    );
+    await storageService.writeString(
+      GuardStorageKeys.userRole,
+      role.toStorageValue(),
+    );
+    await storageService.writeString(
+      GuardStorageKeys.firstLaunchCompleted,
+      'true',
+    );
+    await storageService.writeString(_userIdKey, dto.user.id);
+    await storageService.writeString(_userNameKey, dto.user.name);
+    await storageService.writeString(_userEmailKey, dto.user.email);
+
+    await authEventPublisher.publishLoggedIn(
+      userId: dto.user.id,
+      email: dto.user.email,
+    );
+
+    return AuthSession(
+      user: UserEntity(
+        id: dto.user.id,
+        name: dto.user.name,
+        email: dto.user.email,
+      ),
+      role: role,
+    );
+  }
+
   dynamic _unwrapPayload(dynamic raw) {
     if (raw is Map<String, dynamic> && raw.containsKey('success')) {
       return ApiEnvelopeV1.fromJson(raw).data;
@@ -179,6 +358,15 @@ class AuthSessionController {
       final errors = responseData['errors'];
       if (errors is List && errors.isNotEmpty) {
         return errors.first.toString();
+      }
+      if (errors is Map<String, dynamic> && errors.isNotEmpty) {
+        final firstError = errors.values.first;
+        if (firstError is List && firstError.isNotEmpty) {
+          return firstError.first.toString();
+        }
+        if (firstError is String && firstError.trim().isNotEmpty) {
+          return firstError;
+        }
       }
     }
 

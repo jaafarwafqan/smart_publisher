@@ -92,6 +92,151 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginButton => 'Login';
 
   @override
+  String get loginForgotPasswordLink => 'Forgot password?';
+
+  @override
+  String get loginNoAccountPrompt => 'Don\'t have an account?';
+
+  @override
+  String get loginCreateAccountLink => 'Create one';
+
+  @override
+  String get registerTitle => 'Create your account';
+
+  @override
+  String get registerSubtitle => 'Set up your Smart Publisher workspace.';
+
+  @override
+  String get registerNameLabel => 'Full name';
+
+  @override
+  String get registerNameValidationError => 'Enter your name';
+
+  @override
+  String get registerEmailLabel => 'Email';
+
+  @override
+  String get registerEmailValidationError => 'Enter a valid email';
+
+  @override
+  String get registerPasswordLabel => 'Password';
+
+  @override
+  String get registerPasswordValidationError =>
+      'Password must be at least 8 characters';
+
+  @override
+  String get registerPasswordConfirmationLabel => 'Confirm password';
+
+  @override
+  String get registerPasswordConfirmationValidationError =>
+      'Passwords do not match';
+
+  @override
+  String get registerButton => 'Create account';
+
+  @override
+  String get registerHaveAccountPrompt => 'Already have an account?';
+
+  @override
+  String get registerLoginLink => 'Log in';
+
+  @override
+  String get forgotPasswordTitle => 'Reset your password';
+
+  @override
+  String get forgotPasswordSubtitle =>
+      'Enter your account email and we\'ll send a password reset link.';
+
+  @override
+  String get forgotPasswordEmailLabel => 'Email';
+
+  @override
+  String get forgotPasswordEmailValidationError => 'Enter a valid email';
+
+  @override
+  String get forgotPasswordSubmitButton => 'Send reset link';
+
+  @override
+  String get forgotPasswordSuccessMessage =>
+      'If an account exists for that email address, a password reset link has been sent.';
+
+  @override
+  String get forgotPasswordHaveTokenLink => 'Already have a reset code?';
+
+  @override
+  String get forgotPasswordBackToLoginLink => 'Back to login';
+
+  @override
+  String get resetPasswordTitle => 'Set a new password';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Enter the reset code from your email along with your new password.';
+
+  @override
+  String get resetPasswordEmailLabel => 'Email';
+
+  @override
+  String get resetPasswordTokenLabel => 'Reset code';
+
+  @override
+  String get resetPasswordNewPasswordLabel => 'New password';
+
+  @override
+  String get resetPasswordPasswordValidationError =>
+      'Password must be at least 8 characters';
+
+  @override
+  String get resetPasswordConfirmPasswordLabel => 'Confirm new password';
+
+  @override
+  String get resetPasswordConfirmPasswordValidationError =>
+      'Passwords do not match';
+
+  @override
+  String get resetPasswordSubmitButton => 'Reset password';
+
+  @override
+  String get resetPasswordSuccessMessage =>
+      'Your password has been reset successfully. You can now log in.';
+
+  @override
+  String get resetPasswordBackToLoginLink => 'Back to login';
+
+  @override
+  String get twoFactorChallengeTitle => 'Two-factor verification';
+
+  @override
+  String get twoFactorChallengeSubtitle =>
+      'Enter the 6-digit code from your authenticator app.';
+
+  @override
+  String get twoFactorChallengeCodeLabel => 'Authentication code';
+
+  @override
+  String get twoFactorChallengeCodeValidationError =>
+      'Enter your authentication code';
+
+  @override
+  String get twoFactorChallengeUseRecoveryCodeLink =>
+      'Use a recovery code instead';
+
+  @override
+  String get twoFactorChallengeRecoveryCodeLabel => 'Recovery code';
+
+  @override
+  String get twoFactorChallengeRecoveryCodeValidationError =>
+      'Enter a recovery code';
+
+  @override
+  String get twoFactorChallengeUseCodeLink =>
+      'Use an authenticator code instead';
+
+  @override
+  String get twoFactorChallengeSubmitButton => 'Verify';
+
+  @override
   String get logoutTooltip => 'Logout';
 
   @override
@@ -606,6 +751,151 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsOrganizationsSubtitle =>
       'Switch between organizations you belong to.';
+
+  @override
+  String get settingsMembersTitle => 'Team members';
+
+  @override
+  String get settingsMembersSubtitle =>
+      'Add or manage members of your organization.';
+
+  @override
+  String get settingsTwoFactorTitle => 'Two-factor authentication';
+
+  @override
+  String get settingsTwoFactorSubtitle =>
+      'Add an extra layer of security to your account.';
+
+  @override
+  String get organizationMembersAppBarTitle => 'Team members';
+
+  @override
+  String get organizationMembersEmptyMessage => 'No members yet.';
+
+  @override
+  String get organizationMembersLoadError => 'Failed to load members.';
+
+  @override
+  String get organizationMembersYouLabel => 'You';
+
+  @override
+  String get organizationMembersAddButton => 'Add member';
+
+  @override
+  String get organizationMembersAddDialogTitle => 'Add a team member';
+
+  @override
+  String get organizationMembersAddDialogSubtitle =>
+      'The email must already belong to a registered Smart Publisher account.';
+
+  @override
+  String get organizationMembersEmailLabel => 'Email';
+
+  @override
+  String get organizationMembersEmailValidationError => 'Enter a valid email';
+
+  @override
+  String get organizationMembersRoleLabel => 'Role';
+
+  @override
+  String get organizationMembersAddSubmitButton => 'Add';
+
+  @override
+  String get organizationMembersAddedSuccess => 'Member added.';
+
+  @override
+  String get organizationMembersRoleUpdatedSuccess => 'Role updated.';
+
+  @override
+  String get organizationMembersRemoveConfirmTitle => 'Remove member?';
+
+  @override
+  String organizationMembersRemoveConfirmMessage(String name) {
+    return '$name will lose access to this organization.';
+  }
+
+  @override
+  String get organizationMembersRemovedSuccess => 'Member removed.';
+
+  @override
+  String get organizationMembersRemoveButton => 'Remove';
+
+  @override
+  String get twoFactorSetupAppBarTitle => 'Two-factor authentication';
+
+  @override
+  String get twoFactorSetupEnabledStatus =>
+      'Two-factor authentication is enabled on your account.';
+
+  @override
+  String get twoFactorSetupDisabledStatus =>
+      'Two-factor authentication is not enabled.';
+
+  @override
+  String get twoFactorSetupIntro =>
+      'Protect your account with an authenticator app (Google Authenticator, Authy, 1Password, etc.).';
+
+  @override
+  String get twoFactorSetupEnableButton => 'Enable two-factor authentication';
+
+  @override
+  String get twoFactorSetupDisableButton => 'Disable two-factor authentication';
+
+  @override
+  String get twoFactorSetupSecretLabel => 'Secret key';
+
+  @override
+  String get twoFactorSetupSecretHint =>
+      'Enter this key manually in your authenticator app, or copy the setup link below.';
+
+  @override
+  String get twoFactorSetupOtpAuthUrlLabel => 'Setup link';
+
+  @override
+  String get twoFactorSetupCopyTooltip => 'Copy';
+
+  @override
+  String get twoFactorSetupCopiedMessage => 'Copied to clipboard.';
+
+  @override
+  String get twoFactorSetupCodeLabel => 'Enter the 6-digit code from your app';
+
+  @override
+  String get twoFactorSetupCodeValidationError => 'Enter the 6-digit code';
+
+  @override
+  String get twoFactorSetupConfirmButton => 'Confirm and enable';
+
+  @override
+  String get twoFactorSetupCancelButton => 'Cancel';
+
+  @override
+  String get twoFactorSetupRecoveryCodesTitle => 'Save your recovery codes';
+
+  @override
+  String get twoFactorSetupRecoveryCodesWarning =>
+      'Store these codes somewhere safe. Each one can be used once to sign in if you lose access to your authenticator app. They will not be shown again.';
+
+  @override
+  String get twoFactorSetupDoneButton => 'Done';
+
+  @override
+  String get twoFactorSetupDisablePasswordLabel => 'Current password';
+
+  @override
+  String get twoFactorSetupDisablePasswordValidationError =>
+      'Enter your current password';
+
+  @override
+  String get twoFactorSetupDisableConfirmButton => 'Disable';
+
+  @override
+  String get twoFactorSetupSuccessEnabled =>
+      'Two-factor authentication enabled.';
+
+  @override
+  String get twoFactorSetupSuccessDisabled =>
+      'Two-factor authentication disabled.';
 
   @override
   String get settingsPushNotificationsTitle => 'Push Notifications';

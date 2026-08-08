@@ -8,6 +8,7 @@ import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart'
 import 'package:smart_publisher/src/core/storage/storage_provider.dart';
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
+import 'package:smart_publisher/src/features/organizations/domain/entities/organization_member_entity.dart';
 import 'package:smart_publisher/src/features/organizations/domain/repositories/organization_repository.dart';
 
 class _FakeOrganizationRepository implements OrganizationRepository {
@@ -22,6 +23,42 @@ class _FakeOrganizationRepository implements OrganizationRepository {
   Future<AppResult<OrganizationEntity>> switchTo(int organizationId) {
     return Future<AppResult<OrganizationEntity>>.value(
       const Failure<OrganizationEntity>('Not implemented for this test.'),
+    );
+  }
+
+  @override
+  Future<AppResult<List<OrganizationMemberEntity>>> getMembers() {
+    return Future<AppResult<List<OrganizationMemberEntity>>>.value(
+      const Failure<List<OrganizationMemberEntity>>(
+        'Not implemented for this test.',
+      ),
+    );
+  }
+
+  @override
+  Future<AppResult<OrganizationMemberEntity>> addMember({
+    required String email,
+    required String role,
+  }) {
+    return Future<AppResult<OrganizationMemberEntity>>.value(
+      const Failure<OrganizationMemberEntity>('Not implemented for this test.'),
+    );
+  }
+
+  @override
+  Future<AppResult<OrganizationMemberEntity>> updateMemberRole({
+    required int userId,
+    required String role,
+  }) {
+    return Future<AppResult<OrganizationMemberEntity>>.value(
+      const Failure<OrganizationMemberEntity>('Not implemented for this test.'),
+    );
+  }
+
+  @override
+  Future<AppResult<void>> removeMember({required int userId}) {
+    return Future<AppResult<void>>.value(
+      const Failure<void>('Not implemented for this test.'),
     );
   }
 }

@@ -80,10 +80,12 @@ void main() {
         ),
       );
 
-      final session = await authController.login(
+      final outcome = await authController.login(
         email: smokeEmail,
         password: smokePassword,
       );
+      expect(outcome, isA<LoginSuccess>());
+      final session = (outcome as LoginSuccess).session;
       expect(session.user.email, isNotEmpty);
 
       // Mirrors what the real app's post-login flow does (organization

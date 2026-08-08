@@ -9,6 +9,61 @@ class LoginRequestDtoV1 {
   }
 }
 
+/// Sprint 4 (Commercial SaaS): public self-registration.
+class RegisterRequestDtoV1 {
+  const RegisterRequestDtoV1({
+    required this.name,
+    required this.email,
+    required this.password,
+    required this.passwordConfirmation,
+  });
+
+  final String name;
+  final String email;
+  final String password;
+  final String passwordConfirmation;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'name': name,
+      'email': email,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    };
+  }
+}
+
+class ForgotPasswordRequestDtoV1 {
+  const ForgotPasswordRequestDtoV1({required this.email});
+
+  final String email;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{'email': email};
+}
+
+class ResetPasswordRequestDtoV1 {
+  const ResetPasswordRequestDtoV1({
+    required this.email,
+    required this.token,
+    required this.password,
+    required this.passwordConfirmation,
+  });
+
+  final String email;
+  final String token;
+  final String password;
+  final String passwordConfirmation;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'email': email,
+      'token': token,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    };
+  }
+}
+
 String _stringValue(Object? value) {
   if (value == null) {
     return '';
@@ -45,6 +100,29 @@ class AuthUserDtoV1 {
       name: _stringValue(json['name']),
       email: _stringValue(json['email']),
       role: json['role']?.toString(),
+    );
+  }
+}
+
+/// Sprint 4 (Commercial SaaS): the subset of GET /me's `user` object the
+/// two-factor setup screen needs — whether 2FA is already confirmed for
+/// this account. There is no dedicated "my 2FA status" endpoint; this
+/// reuses the existing /me contract instead of adding one.
+class CurrentUserStatusDtoV1 {
+  const CurrentUserStatusDtoV1({
+    required this.twoFactorEnabled,
+    required this.emailVerified,
+  });
+
+  final bool twoFactorEnabled;
+  final bool emailVerified;
+
+  factory CurrentUserStatusDtoV1.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    final userMap = user is Map<String, dynamic> ? user : <String, dynamic>{};
+    return CurrentUserStatusDtoV1(
+      twoFactorEnabled: userMap['two_factor_enabled'] == true,
+      emailVerified: userMap['email_verified'] == true,
     );
   }
 }

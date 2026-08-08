@@ -260,6 +260,270 @@ abstract class AppLocalizations {
   /// **'تسجيل الدخول'**
   String get loginButton;
 
+  /// No description provided for @loginForgotPasswordLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت كلمة المرور؟'**
+  String get loginForgotPasswordLink;
+
+  /// No description provided for @loginNoAccountPrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس لديك حساب؟'**
+  String get loginNoAccountPrompt;
+
+  /// No description provided for @loginCreateAccountLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنشئ حسابًا'**
+  String get loginCreateAccountLink;
+
+  /// No description provided for @registerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء حسابك'**
+  String get registerTitle;
+
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعدّ مساحة عمل Smart Publisher الخاصة بك.'**
+  String get registerSubtitle;
+
+  /// No description provided for @registerNameLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الكامل'**
+  String get registerNameLabel;
+
+  /// No description provided for @registerNameValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل اسمك'**
+  String get registerNameValidationError;
+
+  /// No description provided for @registerEmailLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get registerEmailLabel;
+
+  /// No description provided for @registerEmailValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريدًا إلكترونيًا صحيحًا'**
+  String get registerEmailValidationError;
+
+  /// No description provided for @registerPasswordLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور'**
+  String get registerPasswordLabel;
+
+  /// No description provided for @registerPasswordValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل'**
+  String get registerPasswordValidationError;
+
+  /// No description provided for @registerPasswordConfirmationLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد كلمة المرور'**
+  String get registerPasswordConfirmationLabel;
+
+  /// No description provided for @registerPasswordConfirmationValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمتا المرور غير متطابقتين'**
+  String get registerPasswordConfirmationValidationError;
+
+  /// No description provided for @registerButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء الحساب'**
+  String get registerButton;
+
+  /// No description provided for @registerHaveAccountPrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك حساب بالفعل؟'**
+  String get registerHaveAccountPrompt;
+
+  /// No description provided for @registerLoginLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول'**
+  String get registerLoginLink;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة كلمة المرور'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل البريد الإلكتروني لحسابك وسنرسل لك رابط إعادة تعيين كلمة المرور.'**
+  String get forgotPasswordSubtitle;
+
+  /// No description provided for @forgotPasswordEmailLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get forgotPasswordEmailLabel;
+
+  /// No description provided for @forgotPasswordEmailValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريدًا إلكترونيًا صحيحًا'**
+  String get forgotPasswordEmailValidationError;
+
+  /// No description provided for @forgotPasswordSubmitButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال رابط إعادة التعيين'**
+  String get forgotPasswordSubmitButton;
+
+  /// No description provided for @forgotPasswordSuccessMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة تعيين كلمة المرور.'**
+  String get forgotPasswordSuccessMessage;
+
+  /// No description provided for @forgotPasswordHaveTokenLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك رمز إعادة تعيين بالفعل؟'**
+  String get forgotPasswordHaveTokenLink;
+
+  /// No description provided for @forgotPasswordBackToLoginLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة لتسجيل الدخول'**
+  String get forgotPasswordBackToLoginLink;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعيين كلمة مرور جديدة'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل رمز إعادة التعيين من بريدك الإلكتروني مع كلمة المرور الجديدة.'**
+  String get resetPasswordSubtitle;
+
+  /// No description provided for @resetPasswordEmailLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get resetPasswordEmailLabel;
+
+  /// No description provided for @resetPasswordTokenLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز إعادة التعيين'**
+  String get resetPasswordTokenLabel;
+
+  /// No description provided for @resetPasswordNewPasswordLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور الجديدة'**
+  String get resetPasswordNewPasswordLabel;
+
+  /// No description provided for @resetPasswordPasswordValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل'**
+  String get resetPasswordPasswordValidationError;
+
+  /// No description provided for @resetPasswordConfirmPasswordLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد كلمة المرور الجديدة'**
+  String get resetPasswordConfirmPasswordLabel;
+
+  /// No description provided for @resetPasswordConfirmPasswordValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمتا المرور غير متطابقتين'**
+  String get resetPasswordConfirmPasswordValidationError;
+
+  /// No description provided for @resetPasswordSubmitButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة تعيين كلمة المرور'**
+  String get resetPasswordSubmitButton;
+
+  /// No description provided for @resetPasswordSuccessMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.'**
+  String get resetPasswordSuccessMessage;
+
+  /// No description provided for @resetPasswordBackToLoginLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة لتسجيل الدخول'**
+  String get resetPasswordBackToLoginLink;
+
+  /// No description provided for @twoFactorChallengeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التحقق بخطوتين'**
+  String get twoFactorChallengeTitle;
+
+  /// No description provided for @twoFactorChallengeSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.'**
+  String get twoFactorChallengeSubtitle;
+
+  /// No description provided for @twoFactorChallengeCodeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز التحقق'**
+  String get twoFactorChallengeCodeLabel;
+
+  /// No description provided for @twoFactorChallengeCodeValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل رمز التحقق'**
+  String get twoFactorChallengeCodeValidationError;
+
+  /// No description provided for @twoFactorChallengeUseRecoveryCodeLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدام رمز استرداد بدلاً من ذلك'**
+  String get twoFactorChallengeUseRecoveryCodeLink;
+
+  /// No description provided for @twoFactorChallengeRecoveryCodeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز الاسترداد'**
+  String get twoFactorChallengeRecoveryCodeLabel;
+
+  /// No description provided for @twoFactorChallengeRecoveryCodeValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل رمز استرداد'**
+  String get twoFactorChallengeRecoveryCodeValidationError;
+
+  /// No description provided for @twoFactorChallengeUseCodeLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدام رمز تطبيق المصادقة بدلاً من ذلك'**
+  String get twoFactorChallengeUseCodeLink;
+
+  /// No description provided for @twoFactorChallengeSubmitButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقق'**
+  String get twoFactorChallengeSubmitButton;
+
   /// No description provided for @logoutTooltip.
   ///
   /// In ar, this message translates to:
@@ -1141,6 +1405,270 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'التبديل بين المؤسسات التي تنتمي إليها.'**
   String get settingsOrganizationsSubtitle;
+
+  /// No description provided for @settingsMembersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعضاء الفريق'**
+  String get settingsMembersTitle;
+
+  /// No description provided for @settingsMembersSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة أو إدارة أعضاء مؤسستك.'**
+  String get settingsMembersSubtitle;
+
+  /// No description provided for @settingsTwoFactorTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصادقة الثنائية'**
+  String get settingsTwoFactorTitle;
+
+  /// No description provided for @settingsTwoFactorSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف طبقة حماية إضافية لحسابك.'**
+  String get settingsTwoFactorSubtitle;
+
+  /// No description provided for @organizationMembersAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعضاء الفريق'**
+  String get organizationMembersAppBarTitle;
+
+  /// No description provided for @organizationMembersEmptyMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد أعضاء بعد.'**
+  String get organizationMembersEmptyMessage;
+
+  /// No description provided for @organizationMembersLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل الأعضاء.'**
+  String get organizationMembersLoadError;
+
+  /// No description provided for @organizationMembersYouLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت'**
+  String get organizationMembersYouLabel;
+
+  /// No description provided for @organizationMembersAddButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة عضو'**
+  String get organizationMembersAddButton;
+
+  /// No description provided for @organizationMembersAddDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة عضو للفريق'**
+  String get organizationMembersAddDialogTitle;
+
+  /// No description provided for @organizationMembersAddDialogSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب أن يكون البريد الإلكتروني مرتبطًا بحساب مسجّل بالفعل في Smart Publisher.'**
+  String get organizationMembersAddDialogSubtitle;
+
+  /// No description provided for @organizationMembersEmailLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get organizationMembersEmailLabel;
+
+  /// No description provided for @organizationMembersEmailValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريدًا إلكترونيًا صحيحًا'**
+  String get organizationMembersEmailValidationError;
+
+  /// No description provided for @organizationMembersRoleLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدور'**
+  String get organizationMembersRoleLabel;
+
+  /// No description provided for @organizationMembersAddSubmitButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة'**
+  String get organizationMembersAddSubmitButton;
+
+  /// No description provided for @organizationMembersAddedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إضافة العضو.'**
+  String get organizationMembersAddedSuccess;
+
+  /// No description provided for @organizationMembersRoleUpdatedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث الدور.'**
+  String get organizationMembersRoleUpdatedSuccess;
+
+  /// No description provided for @organizationMembersRemoveConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف العضو؟'**
+  String get organizationMembersRemoveConfirmTitle;
+
+  /// No description provided for @organizationMembersRemoveConfirmMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيفقد {name} إمكانية الوصول إلى هذه المؤسسة.'**
+  String organizationMembersRemoveConfirmMessage(String name);
+
+  /// No description provided for @organizationMembersRemovedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف العضو.'**
+  String get organizationMembersRemovedSuccess;
+
+  /// No description provided for @organizationMembersRemoveButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف'**
+  String get organizationMembersRemoveButton;
+
+  /// No description provided for @twoFactorSetupAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصادقة الثنائية'**
+  String get twoFactorSetupAppBarTitle;
+
+  /// No description provided for @twoFactorSetupEnabledStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصادقة الثنائية مفعّلة على حسابك.'**
+  String get twoFactorSetupEnabledStatus;
+
+  /// No description provided for @twoFactorSetupDisabledStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصادقة الثنائية غير مفعّلة.'**
+  String get twoFactorSetupDisabledStatus;
+
+  /// No description provided for @twoFactorSetupIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'احمِ حسابك باستخدام تطبيق مصادقة (Google Authenticator أو Authy أو 1Password وغيرها).'**
+  String get twoFactorSetupIntro;
+
+  /// No description provided for @twoFactorSetupEnableButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل المصادقة الثنائية'**
+  String get twoFactorSetupEnableButton;
+
+  /// No description provided for @twoFactorSetupDisableButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء تفعيل المصادقة الثنائية'**
+  String get twoFactorSetupDisableButton;
+
+  /// No description provided for @twoFactorSetupSecretLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'المفتاح السري'**
+  String get twoFactorSetupSecretLabel;
+
+  /// No description provided for @twoFactorSetupSecretHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل هذا المفتاح يدويًا في تطبيق المصادقة، أو انسخ رابط الإعداد أدناه.'**
+  String get twoFactorSetupSecretHint;
+
+  /// No description provided for @twoFactorSetupOtpAuthUrlLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رابط الإعداد'**
+  String get twoFactorSetupOtpAuthUrlLabel;
+
+  /// No description provided for @twoFactorSetupCopyTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ'**
+  String get twoFactorSetupCopyTooltip;
+
+  /// No description provided for @twoFactorSetupCopiedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم النسخ إلى الحافظة.'**
+  String get twoFactorSetupCopiedMessage;
+
+  /// No description provided for @twoFactorSetupCodeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل الرمز المكوّن من 6 أرقام من التطبيق'**
+  String get twoFactorSetupCodeLabel;
+
+  /// No description provided for @twoFactorSetupCodeValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل الرمز المكوّن من 6 أرقام'**
+  String get twoFactorSetupCodeValidationError;
+
+  /// No description provided for @twoFactorSetupConfirmButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد والتفعيل'**
+  String get twoFactorSetupConfirmButton;
+
+  /// No description provided for @twoFactorSetupCancelButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get twoFactorSetupCancelButton;
+
+  /// No description provided for @twoFactorSetupRecoveryCodesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ رموز الاسترداد'**
+  String get twoFactorSetupRecoveryCodesTitle;
+
+  /// No description provided for @twoFactorSetupRecoveryCodesWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ هذه الرموز في مكان آمن. يمكن استخدام كل رمز مرة واحدة فقط لتسجيل الدخول في حال فقدان الوصول إلى تطبيق المصادقة. لن تُعرض هذه الرموز مرة أخرى.'**
+  String get twoFactorSetupRecoveryCodesWarning;
+
+  /// No description provided for @twoFactorSetupDoneButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم'**
+  String get twoFactorSetupDoneButton;
+
+  /// No description provided for @twoFactorSetupDisablePasswordLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور الحالية'**
+  String get twoFactorSetupDisablePasswordLabel;
+
+  /// No description provided for @twoFactorSetupDisablePasswordValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل كلمة المرور الحالية'**
+  String get twoFactorSetupDisablePasswordValidationError;
+
+  /// No description provided for @twoFactorSetupDisableConfirmButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء التفعيل'**
+  String get twoFactorSetupDisableConfirmButton;
+
+  /// No description provided for @twoFactorSetupSuccessEnabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل المصادقة الثنائية.'**
+  String get twoFactorSetupSuccessEnabled;
+
+  /// No description provided for @twoFactorSetupSuccessDisabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إلغاء تفعيل المصادقة الثنائية.'**
+  String get twoFactorSetupSuccessDisabled;
 
   /// No description provided for @settingsPushNotificationsTitle.
   ///

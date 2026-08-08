@@ -97,6 +97,19 @@ final class RouteGuards {
     if (path.startsWith(RouteNames.analyticsPath)) {
       return const <String>{OrganizationPermissions.analyticsView};
     }
+    // Sprint 4 (Commercial SaaS): these two live under /settings/* but must
+    // NOT inherit the blanket settingsManage gate below — enabling your
+    // own 2FA is a personal security action available to every member
+    // regardless of role, and viewing the member list only needs
+    // members.view (editors/viewers already hold it), not settings
+    // management. Both checks must come before the settingsPath prefix
+    // match or they'd never be reached.
+    if (path.startsWith(RouteNames.twoFactorSetupPath)) {
+      return const <String>{};
+    }
+    if (path.startsWith(RouteNames.organizationMembersPath)) {
+      return const <String>{OrganizationPermissions.membersView};
+    }
     if (path.startsWith(RouteNames.settingsPath) ||
         path.startsWith(RouteNames.adminPath) ||
         path.startsWith(RouteNames.administrationPath) ||
@@ -111,6 +124,16 @@ final class RouteGuards {
   }
 
   static bool _isAuthenticationRoute(String path) {
-    return path == RouteNames.loginPath || path == RouteNames.welcomePath;
+    // Sprint 4 (Commercial SaaS): registration, forgot/reset-password, and
+    // the 2FA login challenge all happen before a real session token
+    // exists (authStateProvider is still false at that point) — they must
+    // stay reachable pre-auth, same as login/welcome, and still bounce an
+    // already-authenticated user straight to the dashboard.
+    return path == RouteNames.loginPath ||
+        path == RouteNames.welcomePath ||
+        path == RouteNames.registerPath ||
+        path == RouteNames.forgotPasswordPath ||
+        path == RouteNames.resetPasswordPath ||
+        path == RouteNames.twoFactorChallengePath;
   }
 }
