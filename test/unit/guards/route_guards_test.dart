@@ -278,5 +278,32 @@ void main() {
         }
       },
     );
+
+    test(
+      'account data export/deletion are reachable by every role, unlike the rest of /settings',
+      () async {
+        for (final role in <String>[
+          'owner',
+          'admin',
+          'manager',
+          'editor',
+          'viewer',
+        ]) {
+          final container = _containerFor(_accessFor(role));
+          addTearDown(container.dispose);
+
+          expect(
+            await _redirect(container, RouteNames.accountDataExportPath),
+            isNull,
+            reason: '$role (export)',
+          );
+          expect(
+            await _redirect(container, RouteNames.accountDataDeletionPath),
+            isNull,
+            reason: '$role (deletion)',
+          );
+        }
+      },
+    );
   });
 }

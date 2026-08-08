@@ -759,6 +759,99 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTwoFactorSubtitle => 'أضف طبقة حماية إضافية لحسابك.';
 
   @override
+  String get settingsDataExportTitle => 'تنزيل بياناتي';
+
+  @override
+  String get settingsDataExportSubtitle =>
+      'احصل على نسخة من حسابك ومنشوراتك وحساباتك المرتبطة.';
+
+  @override
+  String get settingsDataDeletionTitle => 'حذف حسابي';
+
+  @override
+  String get settingsDataDeletionSubtitle => 'طلب حذف دائم لحسابك وبياناتك.';
+
+  @override
+  String get emailVerificationBannerMessage =>
+      'يرجى توثيق بريدك الإلكتروني للحفاظ على الوصول الكامل لحسابك.';
+
+  @override
+  String get emailVerificationBannerResendButton => 'إعادة إرسال رابط التحقق';
+
+  @override
+  String get emailVerificationResendSuccess =>
+      'تم إرسال رابط التحقق. تحقق من بريدك الإلكتروني.';
+
+  @override
+  String get dataExportAppBarTitle => 'تنزيل بياناتي';
+
+  @override
+  String get dataExportIntro =>
+      'يشمل هذا تفاصيل حسابك وكل ما هو مرتبط به عبر جميع المؤسسات التي تنتمي إليها.';
+
+  @override
+  String get dataExportUserSectionTitle => 'الحساب';
+
+  @override
+  String get dataExportOrganizationsCount => 'المؤسسات';
+
+  @override
+  String get dataExportPostsCount => 'المنشورات';
+
+  @override
+  String get dataExportSocialAccountsCount =>
+      'حسابات التواصل الاجتماعي المتصلة';
+
+  @override
+  String get dataExportMediaAttachmentsCount => 'مرفقات الوسائط';
+
+  @override
+  String get dataExportExportedAtLabel => 'تم الإنشاء في';
+
+  @override
+  String get dataExportCopyJsonButton => 'نسخ كامل البيانات بصيغة JSON';
+
+  @override
+  String get dataExportCopiedMessage => 'تم النسخ إلى الحافظة.';
+
+  @override
+  String get dataExportLoadError => 'فشل إنشاء تصدير بياناتك.';
+
+  @override
+  String get dataExportRetryButton => 'إعادة المحاولة';
+
+  @override
+  String get dataDeletionAppBarTitle => 'حذف حسابي';
+
+  @override
+  String get dataDeletionWarningTitle => 'لا يمكن التراجع عن هذا الإجراء';
+
+  @override
+  String get dataDeletionWarningMessage =>
+      'سيُراجع أحد المشغّلين طلبك قبل حذف أي شيء — هذا ليس فوريًا. سيتم في النهاية حذف حسابات التواصل الاجتماعي المتصلة والمنشورات والوسائط المرتبطة بحسابك نهائيًا.';
+
+  @override
+  String get dataDeletionReasonLabel => 'السبب (اختياري)';
+
+  @override
+  String get dataDeletionConfirmCheckboxLabel =>
+      'أفهم أن هذا سيحذف حسابي وبياناتي نهائيًا.';
+
+  @override
+  String get dataDeletionConfirmValidationError => 'يجب التأكيد قبل الإرسال.';
+
+  @override
+  String get dataDeletionSubmitButton => 'طلب حذف الحساب';
+
+  @override
+  String get dataDeletionSuccessTitle => 'تم تسجيل طلب الحذف';
+
+  @override
+  String dataDeletionSuccessMessage(String status) {
+    return 'تم تسجيل طلبك وسيتم مراجعته. الحالة: $status.';
+  }
+
+  @override
   String get organizationMembersAppBarTitle => 'أعضاء الفريق';
 
   @override

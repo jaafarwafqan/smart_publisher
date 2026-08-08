@@ -1430,6 +1430,174 @@ abstract class AppLocalizations {
   /// **'أضف طبقة حماية إضافية لحسابك.'**
   String get settingsTwoFactorSubtitle;
 
+  /// No description provided for @settingsDataExportTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل بياناتي'**
+  String get settingsDataExportTitle;
+
+  /// No description provided for @settingsDataExportSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'احصل على نسخة من حسابك ومنشوراتك وحساباتك المرتبطة.'**
+  String get settingsDataExportSubtitle;
+
+  /// No description provided for @settingsDataDeletionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف حسابي'**
+  String get settingsDataDeletionTitle;
+
+  /// No description provided for @settingsDataDeletionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلب حذف دائم لحسابك وبياناتك.'**
+  String get settingsDataDeletionSubtitle;
+
+  /// No description provided for @emailVerificationBannerMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى توثيق بريدك الإلكتروني للحفاظ على الوصول الكامل لحسابك.'**
+  String get emailVerificationBannerMessage;
+
+  /// No description provided for @emailVerificationBannerResendButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة إرسال رابط التحقق'**
+  String get emailVerificationBannerResendButton;
+
+  /// No description provided for @emailVerificationResendSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال رابط التحقق. تحقق من بريدك الإلكتروني.'**
+  String get emailVerificationResendSuccess;
+
+  /// No description provided for @dataExportAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل بياناتي'**
+  String get dataExportAppBarTitle;
+
+  /// No description provided for @dataExportIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'يشمل هذا تفاصيل حسابك وكل ما هو مرتبط به عبر جميع المؤسسات التي تنتمي إليها.'**
+  String get dataExportIntro;
+
+  /// No description provided for @dataExportUserSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب'**
+  String get dataExportUserSectionTitle;
+
+  /// No description provided for @dataExportOrganizationsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المؤسسات'**
+  String get dataExportOrganizationsCount;
+
+  /// No description provided for @dataExportPostsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المنشورات'**
+  String get dataExportPostsCount;
+
+  /// No description provided for @dataExportSocialAccountsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسابات التواصل الاجتماعي المتصلة'**
+  String get dataExportSocialAccountsCount;
+
+  /// No description provided for @dataExportMediaAttachmentsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرفقات الوسائط'**
+  String get dataExportMediaAttachmentsCount;
+
+  /// No description provided for @dataExportExportedAtLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الإنشاء في'**
+  String get dataExportExportedAtLabel;
+
+  /// No description provided for @dataExportCopyJsonButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ كامل البيانات بصيغة JSON'**
+  String get dataExportCopyJsonButton;
+
+  /// No description provided for @dataExportCopiedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم النسخ إلى الحافظة.'**
+  String get dataExportCopiedMessage;
+
+  /// No description provided for @dataExportLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل إنشاء تصدير بياناتك.'**
+  String get dataExportLoadError;
+
+  /// No description provided for @dataExportRetryButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get dataExportRetryButton;
+
+  /// No description provided for @dataDeletionAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف حسابي'**
+  String get dataDeletionAppBarTitle;
+
+  /// No description provided for @dataDeletionWarningTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن التراجع عن هذا الإجراء'**
+  String get dataDeletionWarningTitle;
+
+  /// No description provided for @dataDeletionWarningMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيُراجع أحد المشغّلين طلبك قبل حذف أي شيء — هذا ليس فوريًا. سيتم في النهاية حذف حسابات التواصل الاجتماعي المتصلة والمنشورات والوسائط المرتبطة بحسابك نهائيًا.'**
+  String get dataDeletionWarningMessage;
+
+  /// No description provided for @dataDeletionReasonLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'السبب (اختياري)'**
+  String get dataDeletionReasonLabel;
+
+  /// No description provided for @dataDeletionConfirmCheckboxLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أفهم أن هذا سيحذف حسابي وبياناتي نهائيًا.'**
+  String get dataDeletionConfirmCheckboxLabel;
+
+  /// No description provided for @dataDeletionConfirmValidationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب التأكيد قبل الإرسال.'**
+  String get dataDeletionConfirmValidationError;
+
+  /// No description provided for @dataDeletionSubmitButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلب حذف الحساب'**
+  String get dataDeletionSubmitButton;
+
+  /// No description provided for @dataDeletionSuccessTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل طلب الحذف'**
+  String get dataDeletionSuccessTitle;
+
+  /// No description provided for @dataDeletionSuccessMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل طلبك وسيتم مراجعته. الحالة: {status}.'**
+  String dataDeletionSuccessMessage(String status);
+
   /// No description provided for @organizationMembersAppBarTitle.
   ///
   /// In ar, this message translates to:

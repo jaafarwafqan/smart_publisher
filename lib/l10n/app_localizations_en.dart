@@ -767,6 +767,100 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add an extra layer of security to your account.';
 
   @override
+  String get settingsDataExportTitle => 'Download my data';
+
+  @override
+  String get settingsDataExportSubtitle =>
+      'Get a copy of your account, posts, and connections.';
+
+  @override
+  String get settingsDataDeletionTitle => 'Delete my account';
+
+  @override
+  String get settingsDataDeletionSubtitle =>
+      'Request permanent deletion of your account and data.';
+
+  @override
+  String get emailVerificationBannerMessage =>
+      'Please verify your email address to keep full access to your account.';
+
+  @override
+  String get emailVerificationBannerResendButton => 'Resend verification email';
+
+  @override
+  String get emailVerificationResendSuccess =>
+      'Verification link sent. Check your email.';
+
+  @override
+  String get dataExportAppBarTitle => 'Download my data';
+
+  @override
+  String get dataExportIntro =>
+      'This includes your account details and everything linked to it across every organization you belong to.';
+
+  @override
+  String get dataExportUserSectionTitle => 'Account';
+
+  @override
+  String get dataExportOrganizationsCount => 'Organizations';
+
+  @override
+  String get dataExportPostsCount => 'Posts';
+
+  @override
+  String get dataExportSocialAccountsCount => 'Connected social accounts';
+
+  @override
+  String get dataExportMediaAttachmentsCount => 'Media attachments';
+
+  @override
+  String get dataExportExportedAtLabel => 'Generated at';
+
+  @override
+  String get dataExportCopyJsonButton => 'Copy full data as JSON';
+
+  @override
+  String get dataExportCopiedMessage => 'Copied to clipboard.';
+
+  @override
+  String get dataExportLoadError => 'Failed to generate your data export.';
+
+  @override
+  String get dataExportRetryButton => 'Retry';
+
+  @override
+  String get dataDeletionAppBarTitle => 'Delete my account';
+
+  @override
+  String get dataDeletionWarningTitle => 'This cannot be undone';
+
+  @override
+  String get dataDeletionWarningMessage =>
+      'Your request will be reviewed by an operator before anything is deleted — this is not instant. Connected social accounts, posts, and media tied to your account will eventually be permanently removed.';
+
+  @override
+  String get dataDeletionReasonLabel => 'Reason (optional)';
+
+  @override
+  String get dataDeletionConfirmCheckboxLabel =>
+      'I understand this will permanently delete my account and data.';
+
+  @override
+  String get dataDeletionConfirmValidationError =>
+      'You must confirm before submitting.';
+
+  @override
+  String get dataDeletionSubmitButton => 'Request account deletion';
+
+  @override
+  String get dataDeletionSuccessTitle => 'Deletion request recorded';
+
+  @override
+  String dataDeletionSuccessMessage(String status) {
+    return 'Your request has been recorded and will be reviewed. Status: $status.';
+  }
+
+  @override
   String get organizationMembersAppBarTitle => 'Team members';
 
   @override

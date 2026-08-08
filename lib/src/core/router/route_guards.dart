@@ -110,6 +110,15 @@ final class RouteGuards {
     if (path.startsWith(RouteNames.organizationMembersPath)) {
       return const <String>{OrganizationPermissions.membersView};
     }
+    // Downloading/deleting YOUR OWN account data is a personal-account
+    // action too, same reasoning as two-factor setup above — it isn't
+    // gated by any organization permission at all on the backend
+    // (AccountDataExportController / AccountDataDeletionController both
+    // deliberately skip the 'tenant' middleware).
+    if (path.startsWith(RouteNames.accountDataExportPath) ||
+        path.startsWith(RouteNames.accountDataDeletionPath)) {
+      return const <String>{};
+    }
     if (path.startsWith(RouteNames.settingsPath) ||
         path.startsWith(RouteNames.adminPath) ||
         path.startsWith(RouteNames.administrationPath) ||

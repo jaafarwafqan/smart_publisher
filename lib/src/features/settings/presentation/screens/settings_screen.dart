@@ -9,6 +9,7 @@ import '../../../../core/locale/locale_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/storage/storage_provider.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../auth/presentation/widgets/email_verification_banner.dart';
 
 ThemeMode _themeModeFromKey(String key) {
   switch (key) {
@@ -85,6 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: <Widget>[
+          const EmailVerificationBanner(),
           Card(
             child: ListTile(
               leading: const Icon(Icons.business_outlined),
@@ -122,6 +124,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : Icons.chevron_right,
               ),
               onTap: () => context.push(RouteNames.twoFactorSetupPath),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: Text(l10n.settingsDataExportTitle),
+              subtitle: Text(l10n.settingsDataExportSubtitle),
+              trailing: Icon(
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left
+                    : Icons.chevron_right,
+              ),
+              onTap: () => context.push(RouteNames.accountDataExportPath),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.delete_forever_outlined,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                l10n.settingsDataDeletionTitle,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              subtitle: Text(l10n.settingsDataDeletionSubtitle),
+              trailing: Icon(
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left
+                    : Icons.chevron_right,
+              ),
+              onTap: () => context.push(RouteNames.accountDataDeletionPath),
             ),
           ),
           Card(

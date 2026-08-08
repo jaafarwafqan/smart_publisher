@@ -240,5 +240,105 @@ void main() {
         expect(status.emailVerified, isFalse);
       },
     );
+
+    test(
+      'exportMyData reads GET /account/data-export and counts each section',
+      () async {
+        final client = FakeNetworkClient(
+          getHandler: (path) async {
+            expect(path, '/account/data-export');
+            return _envelope(path, <String, dynamic>{
+              'success': true,
+              'data': <String, dynamic>{
+                'user': <String, dynamic>{
+                  'name': 'Ada Lovelace',
+                  'email': 'ada@example.com',
+                  'two_factor_enabled': true,
+                  'email_verified_at': '2026-08-01T00:00:00+00:00',
+                },
+                'organizations': <Map<String, dynamic>>[
+                  <String, dynamic>{'id': 1},
+                ],
+                'posts': <Map<String, dynamic>>[
+                  <String, dynamic>{'id': 1},
+                  <String, dynamic>{'id': 2},
+                ],
+                'social_accounts': <Map<String, dynamic>>[],
+                'media_attachments': <Map<String, dynamic>>[
+                  <String, dynamic>{'id': 1},
+                ],
+                'exported_at': '2026-08-08T12:00:00+00:00',
+              },
+            });
+          },
+        );
+
+        final controller = _controllerWith(client);
+        final export = await controller.exportMyData();
+
+        expect(export.userEmail, 'ada@example.com');
+        expect(export.organizationsCount, 1);
+        expect(export.postsCount, 2);
+        expect(export.socialAccountsCount, 0);
+        expect(export.mediaAttachmentsCount, 1);
+        expect(export.exportedAt, '2026-08-08T12:00:00+00:00');
+        // The raw payload must be preserved unmodified for "copy as JSON".
+        expect(export.rawJson['user'], isA<Map<String, dynamic>>());
+      },
+    );
+
+    test(
+      'requestAccountDeletion posts confirm=true and an optional reason',
+      () async {
+        final client = FakeNetworkClient(
+          postHandler: (path, data) async {
+            expect(path, '/account/data-deletion-requests');
+            expect(data, <String, dynamic>{
+              'confirm': true,
+              'reason': 'No longer needed',
+            });
+            return _envelope(path, <String, dynamic>{
+              'success': true,
+              'message': 'Data deletion request recorded.',
+              'data': <String, dynamic>{
+                'id': '42',
+                'status': 'pending',
+                'requested_at': '2026-08-08T12:00:00+00:00',
+              },
+            }, statusCode: 202);
+          },
+        );
+
+        final controller = _controllerWith(client);
+        final result = await controller.requestAccountDeletion(
+          reason: 'No longer needed',
+        );
+
+        expect(result.id, '42');
+        expect(result.status, 'pending');
+      },
+    );
+
+    test(
+      'requestAccountDeletion omits reason entirely when not provided',
+      () async {
+        final client = FakeNetworkClient(
+          postHandler: (path, data) async {
+            expect(data, <String, dynamic>{'confirm': true});
+            return _envelope(path, <String, dynamic>{
+              'success': true,
+              'data': <String, dynamic>{
+                'id': '43',
+                'status': 'pending',
+                'requested_at': '2026-08-08T12:00:00+00:00',
+              },
+            });
+          },
+        );
+
+        final controller = _controllerWith(client);
+        await controller.requestAccountDeletion();
+      },
+    );
   });
 }

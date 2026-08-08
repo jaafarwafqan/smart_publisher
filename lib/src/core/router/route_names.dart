@@ -28,6 +28,12 @@ final class RouteNames {
   static const organizationMembers = 'organization_members';
   static const organizationMembersPath = '/settings/members';
 
+  static const accountDataExport = 'account_data_export';
+  static const accountDataExportPath = '/settings/data-export';
+
+  static const accountDataDeletion = 'account_data_deletion';
+  static const accountDataDeletionPath = '/settings/data-deletion';
+
   static const dashboard = 'dashboard';
   static const dashboardPath = '/dashboard';
 

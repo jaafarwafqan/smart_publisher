@@ -10,6 +10,8 @@ import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/two_factor_challenge_screen.dart';
 import '../../features/auth/presentation/screens/two_factor_setup_screen.dart';
 import '../../features/organizations/presentation/screens/organization_members_screen.dart';
+import '../../features/settings/presentation/screens/account_data_export_screen.dart';
+import '../../features/settings/presentation/screens/account_data_deletion_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/administration/presentation/screens/administration_screen.dart';
 import '../../features/administration/presentation/screens/oauth_provider_settings_screen.dart';
@@ -245,6 +247,16 @@ final List<GoRoute> appRoutes = [
     path: RouteNames.organizationMembersPath,
     name: RouteNames.organizationMembers,
     builder: (context, state) => const OrganizationMembersScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.accountDataExportPath,
+    name: RouteNames.accountDataExport,
+    builder: (context, state) => const AccountDataExportScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.accountDataDeletionPath,
+    name: RouteNames.accountDataDeletion,
+    builder: (context, state) => const AccountDataDeletionScreen(),
   ),
   GoRoute(
     path: RouteNames.dashboardPath,

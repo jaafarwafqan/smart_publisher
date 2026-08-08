@@ -236,6 +236,13 @@ final class LaravelEndpoints {
     '/auth/two-factor/challenge',
   );
 
+  static final String accountDataExport = LaravelApi.versioned(
+    '/account/data-export',
+  );
+  static final String accountDataDeletionRequests = LaravelApi.versioned(
+    '/account/data-deletion-requests',
+  );
+
   static final String analyticsDashboard = LaravelApi.versioned(
     '/analytics/dashboard',
   );

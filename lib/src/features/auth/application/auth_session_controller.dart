@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../backend_contracts/v1/account_contract_v1.dart';
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../../backend_contracts/v1/auth_contract_v1.dart';
 import '../../../core/network/laravel_api.dart';
@@ -237,6 +238,53 @@ class AuthSessionController {
         );
       }
       return CurrentUserStatusDtoV1.fromJson(payload);
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    }
+  }
+
+  /// GET /account/data-export — spans every organization the account has
+  /// ever belonged to, not just the currently active one (matches the
+  /// backend's own scope for this endpoint).
+  Future<DataExportDtoV1> exportMyData() async {
+    try {
+      final response = await networkClient.get(
+        LaravelEndpoints.accountDataExport,
+      );
+      final payload = _unwrapPayload(response.data);
+      if (payload is! Map<String, dynamic>) {
+        throw const AuthSessionException(
+          'Invalid data export response from server.',
+        );
+      }
+      return DataExportDtoV1.fromJson(payload);
+    } on DioException catch (error) {
+      throw AuthSessionException(_messageFromDio(error));
+    }
+  }
+
+  /// POST /account/data-deletion-requests — records a request for an
+  /// operator to review; does not delete anything immediately (see the
+  /// backend controller's own docblock for why).
+  Future<DataDeletionRequestDtoV1> requestAccountDeletion({
+    String? reason,
+  }) async {
+    try {
+      final response = await networkClient.post(
+        LaravelEndpoints.accountDataDeletionRequests,
+        data: <String, dynamic>{
+          'confirm': true,
+          if (reason != null && reason.trim().isNotEmpty)
+            'reason': reason.trim(),
+        },
+      );
+      final payload = _unwrapPayload(response.data);
+      if (payload is! Map<String, dynamic>) {
+        throw const AuthSessionException(
+          'Invalid deletion request response from server.',
+        );
+      }
+      return DataDeletionRequestDtoV1.fromJson(payload);
     } on DioException catch (error) {
       throw AuthSessionException(_messageFromDio(error));
     }
