@@ -1,11 +1,11 @@
 {
-    "name": "smart_publisher",
-    "short_name": "smart_publisher",
+    "name": "الناشر الذكي",
+    "short_name": "الناشر الذكي",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "الناشر الذكي — إدارة النشر والجدولة عبر منصات التواصل الاجتماعي من مكان واحد.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

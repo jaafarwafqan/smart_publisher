@@ -274,6 +274,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardGuestRole => 'Guest';
 
   @override
+  String get dashboardRoleOwner => 'Organization Owner';
+
+  @override
+  String get dashboardRoleAdmin => 'Admin';
+
+  @override
+  String get dashboardRoleManager => 'Manager';
+
+  @override
+  String get dashboardRoleEditor => 'Editor';
+
+  @override
+  String get dashboardRoleViewer => 'Viewer';
+
+  @override
+  String get dashboardChooseOrganizationRole => 'Choose an organization';
+
+  @override
+  String get dashboardNoActiveMembershipRole => 'No active membership';
+
+  @override
   String get dashboardCreatePostButton => 'Create Post';
 
   @override

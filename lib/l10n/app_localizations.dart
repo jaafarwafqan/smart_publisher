@@ -596,6 +596,48 @@ abstract class AppLocalizations {
   /// **'زائر'**
   String get dashboardGuestRole;
 
+  /// No description provided for @dashboardRoleOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك المؤسسة'**
+  String get dashboardRoleOwner;
+
+  /// No description provided for @dashboardRoleAdmin.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدير'**
+  String get dashboardRoleAdmin;
+
+  /// No description provided for @dashboardRoleManager.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشرف'**
+  String get dashboardRoleManager;
+
+  /// No description provided for @dashboardRoleEditor.
+  ///
+  /// In ar, this message translates to:
+  /// **'محرر'**
+  String get dashboardRoleEditor;
+
+  /// No description provided for @dashboardRoleViewer.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاهد'**
+  String get dashboardRoleViewer;
+
+  /// No description provided for @dashboardChooseOrganizationRole.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مؤسسة'**
+  String get dashboardChooseOrganizationRole;
+
+  /// No description provided for @dashboardNoActiveMembershipRole.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد عضوية نشطة'**
+  String get dashboardNoActiveMembershipRole;
+
   /// No description provided for @dashboardCreatePostButton.
   ///
   /// In ar, this message translates to:

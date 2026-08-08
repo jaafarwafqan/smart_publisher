@@ -274,6 +274,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboardGuestRole => 'زائر';
 
   @override
+  String get dashboardRoleOwner => 'مالك المؤسسة';
+
+  @override
+  String get dashboardRoleAdmin => 'مدير';
+
+  @override
+  String get dashboardRoleManager => 'مشرف';
+
+  @override
+  String get dashboardRoleEditor => 'محرر';
+
+  @override
+  String get dashboardRoleViewer => 'مشاهد';
+
+  @override
+  String get dashboardChooseOrganizationRole => 'اختر مؤسسة';
+
+  @override
+  String get dashboardNoActiveMembershipRole => 'لا توجد عضوية نشطة';
+
+  @override
   String get dashboardCreatePostButton => 'إنشاء منشور';
 
   @override
