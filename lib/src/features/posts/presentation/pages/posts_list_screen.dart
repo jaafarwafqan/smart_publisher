@@ -137,7 +137,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         actions: <Widget>[
           IconButton(
             tooltip: l10n.postsListCreateTooltip,
-            onPressed: () => context.go(RouteNames.postsCreatePath),
+            onPressed: () => context.push(RouteNames.postsCreatePath),
             icon: const Icon(Icons.add_circle_outline),
           ),
         ],
@@ -238,7 +238,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go(RouteNames.postsCreatePath),
+        onPressed: () => context.push(RouteNames.postsCreatePath),
         icon: const Icon(Icons.add),
         label: Text(l10n.postsListNewPostButton),
       ),
@@ -315,8 +315,10 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
                 trailing: _canEditPosts
                     ? IconButton(
                         tooltip: l10n.postsListEditTooltip,
-                        onPressed: () =>
-                            context.go(RouteNames.postsCreatePath, extra: post),
+                        onPressed: () => context.push(
+                          RouteNames.postsCreatePath,
+                          extra: post,
+                        ),
                         icon: const Icon(Icons.edit_outlined),
                       )
                     : null,

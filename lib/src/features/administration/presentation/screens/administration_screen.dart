@@ -129,7 +129,8 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                         ),
                         trailing: Icon(chevron),
                         onTap: canViewReleaseOps
-                            ? () => context.go(RouteNames.productionReleasePath)
+                            ? () =>
+                                  context.push(RouteNames.productionReleasePath)
                             : null,
                       ),
                       const Divider(height: 1),
@@ -143,7 +144,8 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                         ),
                         trailing: Icon(chevron),
                         onTap: canViewReleaseOps
-                            ? () => context.go(RouteNames.productionReleasePath)
+                            ? () =>
+                                  context.push(RouteNames.productionReleasePath)
                             : null,
                       ),
                     ],
