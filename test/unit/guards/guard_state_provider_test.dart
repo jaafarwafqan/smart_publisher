@@ -50,5 +50,25 @@ void main() {
       final role = await container.read(currentUserRoleProvider.future);
       expect(role, UserRole.publisher);
     });
+
+    test(
+      'currentPlatformAdmin reads the independent platform capability',
+      () async {
+        final storage = InMemoryStorageService();
+        await storage.writeString(GuardStorageKeys.platformAdmin, 'true');
+
+        final container = ProviderContainer(
+          overrides: <Override>[
+            storageServiceProvider.overrideWithValue(storage),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        expect(
+          await container.read(currentPlatformAdminProvider.future),
+          isTrue,
+        );
+      },
+    );
   });
 }

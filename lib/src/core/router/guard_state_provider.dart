@@ -11,6 +11,7 @@ final class GuardStorageKeys {
 
   static const authToken = 'auth.token';
   static const userRole = 'auth.user.role';
+  static const platformAdmin = 'auth.user.is_platform_admin';
   static const firstLaunchCompleted = 'app.first_launch_completed';
 }
 
@@ -63,3 +64,9 @@ Future<UserRole> currentUserRole(CurrentUserRoleRef ref) async {
   final storedRole = await storage.readString(GuardStorageKeys.userRole);
   return UserRoleStorage.fromStorageValue(storedRole);
 }
+
+final currentPlatformAdminProvider = FutureProvider<bool>((ref) async {
+  final storage = ref.read(storageServiceProvider);
+  final value = await storage.readString(GuardStorageKeys.platformAdmin);
+  return value?.toLowerCase() == 'true';
+});

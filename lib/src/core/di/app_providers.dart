@@ -48,6 +48,7 @@ import '../../features/posts/domain/usecases/create_post.dart';
 import '../../features/posts/domain/usecases/publish_post.dart';
 import '../../features/posts/domain/usecases/schedule_post.dart';
 import '../../features/posts/domain/usecases/upload_media.dart';
+import '../../features/platform_administration/data/platform_admin_repository.dart';
 import '../../features/schedule/data/schedule_repository_impl.dart';
 import '../../features/schedule/domain/repositories/schedule_repository.dart';
 import '../../offline/cache/draft_storage.dart';
@@ -199,6 +200,7 @@ TokenLifecycleManager tokenLifecycleManager(TokenLifecycleManagerRef ref) {
       final storage = ref.read(storageServiceProvider);
       await storage.delete(GuardStorageKeys.authToken);
       await storage.delete(GuardStorageKeys.userRole);
+      await storage.delete(GuardStorageKeys.platformAdmin);
     },
     refreshExecutor: (refreshToken) async {
       try {
@@ -291,6 +293,14 @@ final organizationRepositoryProvider = Provider<OrganizationRepository>((ref) {
   return OrganizationRepositoryImpl(
     networkClient: ref.read(networkClientProvider),
     store: ref.read(activeOrganizationStoreProvider),
+  );
+});
+
+final platformAdminRepositoryProvider = Provider<PlatformAdminRepository>((
+  ref,
+) {
+  return PlatformAdminRepository(
+    networkClient: ref.read(networkClientProvider),
   );
 });
 

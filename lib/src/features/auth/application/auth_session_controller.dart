@@ -13,10 +13,15 @@ import '../domain/entities/user_entity.dart';
 import 'auth_event_publisher.dart';
 
 class AuthSession {
-  const AuthSession({required this.user, required this.role});
+  const AuthSession({
+    required this.user,
+    required this.role,
+    this.isPlatformAdmin = false,
+  });
 
   final UserEntity user;
   final UserRole role;
+  final bool isPlatformAdmin;
 }
 
 /// The result of [AuthSessionController.login] — a password match alone is
@@ -303,6 +308,7 @@ class AuthSessionController {
     await tokenLifecycleManager.clearTokens();
     await storageService.delete(GuardStorageKeys.authToken);
     await storageService.delete(GuardStorageKeys.userRole);
+    await storageService.delete(GuardStorageKeys.platformAdmin);
     await storageService.delete(_userIdKey);
     await storageService.delete(_userNameKey);
     await storageService.delete(_userEmailKey);
@@ -322,6 +328,9 @@ class AuthSessionController {
     final userName = await storageService.readString(_userNameKey);
     final userEmail = await storageService.readString(_userEmailKey);
     final roleRaw = await storageService.readString(GuardStorageKeys.userRole);
+    final isPlatformAdmin = await storageService.readString(
+      GuardStorageKeys.platformAdmin,
+    );
 
     if (userId == null || userName == null || userEmail == null) {
       return null;
@@ -330,6 +339,7 @@ class AuthSessionController {
     return AuthSession(
       user: UserEntity(id: userId, name: userName, email: userEmail),
       role: UserRoleStorage.fromStorageValue(roleRaw),
+      isPlatformAdmin: isPlatformAdmin?.toLowerCase() == 'true',
     );
   }
 
@@ -367,6 +377,10 @@ class AuthSessionController {
       role.toStorageValue(),
     );
     await storageService.writeString(
+      GuardStorageKeys.platformAdmin,
+      dto.user.isSuperAdmin.toString(),
+    );
+    await storageService.writeString(
       GuardStorageKeys.firstLaunchCompleted,
       'true',
     );
@@ -386,6 +400,7 @@ class AuthSessionController {
         email: dto.user.email,
       ),
       role: role,
+      isPlatformAdmin: dto.user.isSuperAdmin,
     );
   }
 

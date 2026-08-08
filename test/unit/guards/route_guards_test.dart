@@ -30,6 +30,7 @@ ProviderContainer _containerFor(
   OrganizationAccessState access, {
   bool authenticated = true,
   String? persistedAccountRole,
+  bool platformAdmin = false,
 }) {
   final storage = InMemoryStorageService();
   return ProviderContainer(
@@ -37,6 +38,7 @@ ProviderContainer _containerFor(
       storageServiceProvider.overrideWithValue(storage),
       authStateProvider.overrideWith((_) async => authenticated),
       currentOrganizationAccessProvider.overrideWith((_) async => access),
+      currentPlatformAdminProvider.overrideWith((_) async => platformAdmin),
       if (persistedAccountRole != null)
         currentUserRoleProvider.overrideWith(
           (_) async => UserRoleStorage.fromStorageValue(persistedAccountRole),
@@ -117,6 +119,58 @@ void main() {
           await _redirect(container, RouteNames.postsCreatePath),
           RouteNames.dashboardPath,
         );
+      },
+    );
+
+    test(
+      'platform administration is independent from organization access',
+      () async {
+        final noOrganization = OrganizationAccessState.noActiveOrganization(
+          memberships: const <OrganizationEntity>[],
+        );
+        final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+        final regularUser = _containerFor(
+          _accessFor('owner'),
+          platformAdmin: false,
+        );
+        addTearDown(superAdmin.dispose);
+        addTearDown(regularUser.dispose);
+
+        expect(
+          await _redirect(superAdmin, RouteNames.platformAdministrationPath),
+          isNull,
+        );
+        expect(
+          await _redirect(superAdmin, RouteNames.platformUsersPath),
+          isNull,
+        );
+        expect(
+          await _redirect(superAdmin, RouteNames.dashboardPath),
+          RouteNames.platformAdministrationPath,
+        );
+        expect(
+          await _redirect(regularUser, RouteNames.platformUsersPath),
+          RouteNames.dashboardPath,
+        );
+
+        // The gap this guards against: a pure platform-admin account has
+        // zero organization memberships (noOrganization above), so any
+        // route other than /dashboard and /platform/* must still land back
+        // in the platform workspace instead of falling through to the
+        // organization-access checks below and dead-ending in the
+        // organization switcher.
+        for (final path in <String>[
+          RouteNames.settingsPath,
+          RouteNames.postsListPath,
+          RouteNames.calendarPath,
+          RouteNames.organizationsPath,
+        ]) {
+          expect(
+            await _redirect(superAdmin, path),
+            RouteNames.platformAdministrationPath,
+            reason: path,
+          );
+        }
       },
     );
 

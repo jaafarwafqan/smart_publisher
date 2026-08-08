@@ -22,6 +22,7 @@ import '../../features/media/presentation/pages/media_library_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/posts/domain/entities/post_entity.dart';
 import '../../features/posts/presentation/pages/posts_list_screen.dart';
+import '../../features/platform_administration/presentation/screens/platform_admin_screens.dart';
 import '../../features/schedule/presentation/pages/calendar_screen.dart';
 import '../../features/organizations/presentation/screens/organization_switcher_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
@@ -332,6 +333,28 @@ final List<GoRoute> appRoutes = [
     path: RouteNames.administrationPath,
     name: RouteNames.administration,
     builder: (context, state) => const AdministrationScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.platformAdministrationPath,
+    name: RouteNames.platformAdministration,
+    builder: (context, state) => const PlatformAdministrationScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.platformOrganizationsPath,
+    name: RouteNames.platformOrganizations,
+    builder: (context, state) => const PlatformOrganizationsScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.platformOrganizationDetailPath,
+    name: RouteNames.platformOrganizationDetail,
+    builder: (context, state) => PlatformOrganizationDetailScreen(
+      organizationId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+    ),
+  ),
+  GoRoute(
+    path: RouteNames.platformUsersPath,
+    name: RouteNames.platformUsers,
+    builder: (context, state) => const PlatformUsersScreen(),
   ),
   GoRoute(
     path: RouteNames.oauthProviderSettingsPath,

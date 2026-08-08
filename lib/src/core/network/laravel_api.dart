@@ -181,6 +181,26 @@ final class LaravelEndpoints {
   static String organizationSwitch(String organizationId) =>
       LaravelApi.versioned('/organizations/$organizationId/switch');
 
+  static final String platformAdminDashboard = LaravelApi.versioned(
+    '/admin/dashboard',
+  );
+  static final String platformAdminOrganizations = LaravelApi.versioned(
+    '/admin/organizations',
+  );
+  static String platformAdminOrganizationById(String id) =>
+      LaravelApi.versioned('/admin/organizations/$id');
+  static String platformAdminOrganizationStatus(String id) =>
+      LaravelApi.versioned('/admin/organizations/$id/status');
+  static final String platformAdminUsers = LaravelApi.versioned('/admin/users');
+  static String platformAdminUserById(String id) =>
+      LaravelApi.versioned('/admin/users/$id');
+  static String platformAdminUserMemberships(String id) =>
+      LaravelApi.versioned('/admin/users/$id/memberships');
+  static String platformAdminUserRole(String id) =>
+      LaravelApi.versioned('/admin/users/$id/platform-role');
+  static String platformAdminUserStatus(String id) =>
+      LaravelApi.versioned('/admin/users/$id/status');
+
   static final String organizationMembers = LaravelApi.versioned(
     '/organization/members',
   );

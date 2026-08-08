@@ -73,6 +73,18 @@ final class RouteNames {
   static const administration = 'administration';
   static const administrationPath = '/administration';
 
+  static const platformAdministration = 'platform_administration';
+  static const platformAdministrationPath = '/platform';
+
+  static const platformOrganizations = 'platform_organizations';
+  static const platformOrganizationsPath = '/platform/organizations';
+
+  static const platformOrganizationDetail = 'platform_organization_detail';
+  static const platformOrganizationDetailPath = '/platform/organizations/:id';
+
+  static const platformUsers = 'platform_users';
+  static const platformUsersPath = '/platform/users';
+
   static const oauthProviderSettings = 'oauth_provider_settings';
   static const oauthProviderSettingsPath = '/administration/oauth-providers';
 

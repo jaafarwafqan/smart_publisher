@@ -87,12 +87,14 @@ class AuthUserDtoV1 {
     required this.name,
     required this.email,
     this.role,
+    this.isSuperAdmin = false,
   });
 
   final String id;
   final String name;
   final String email;
   final String? role;
+  final bool isSuperAdmin;
 
   factory AuthUserDtoV1.fromJson(Map<String, dynamic> json) {
     return AuthUserDtoV1(
@@ -100,6 +102,7 @@ class AuthUserDtoV1 {
       name: _stringValue(json['name']),
       email: _stringValue(json['email']),
       role: json['role']?.toString(),
+      isSuperAdmin: json['is_super_admin'] == true,
     );
   }
 }

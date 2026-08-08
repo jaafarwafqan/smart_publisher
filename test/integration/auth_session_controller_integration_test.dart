@@ -34,6 +34,7 @@ void main() {
                   'name': 'Jane Doe',
                   'email': 'jane@example.com',
                   'role': 'publisher',
+                  'is_super_admin': true,
                 },
               },
             },
@@ -65,8 +66,10 @@ void main() {
       final session = (outcome as LoginSuccess).session;
       expect(session.user.email, 'jane@example.com');
       expect(session.role, UserRole.publisher);
+      expect(session.isPlatformAdmin, isTrue);
       expect(await storage.readString(GuardStorageKeys.authToken), 'access-1');
       expect(await storage.readString(GuardStorageKeys.userRole), 'publisher');
+      expect(await storage.readString(GuardStorageKeys.platformAdmin), 'true');
       expect(await controller.currentSession(), isNotNull);
 
       await controller.logout();
@@ -74,6 +77,7 @@ void main() {
       expect(await controller.currentSession(), isNull);
       expect(await storage.readString(GuardStorageKeys.authToken), isNull);
       expect(await storage.readString(GuardStorageKeys.userRole), isNull);
+      expect(await storage.readString(GuardStorageKeys.platformAdmin), isNull);
     });
   });
 }

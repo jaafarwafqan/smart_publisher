@@ -21,15 +21,55 @@ final class RouteGuards {
     final isAuthenticated = await ref.read(authStateProvider.future);
 
     if (path == RouteNames.splashPath) {
-      return isAuthenticated ? RouteNames.dashboardPath : RouteNames.loginPath;
+      if (!isAuthenticated) {
+        return RouteNames.loginPath;
+      }
+      final isPlatformAdmin = await ref.read(
+        currentPlatformAdminProvider.future,
+      );
+      return isPlatformAdmin
+          ? RouteNames.platformAdministrationPath
+          : RouteNames.dashboardPath;
     }
 
     if (_isAuthenticationRoute(path)) {
-      return isAuthenticated ? RouteNames.dashboardPath : null;
+      if (!isAuthenticated) {
+        return null;
+      }
+      final isPlatformAdmin = await ref.read(
+        currentPlatformAdminProvider.future,
+      );
+      return isPlatformAdmin
+          ? RouteNames.platformAdministrationPath
+          : RouteNames.dashboardPath;
     }
 
     if (!isAuthenticated) {
       return RouteNames.loginPath;
+    }
+
+    // A platform administrator has an intentionally separate workspace and
+    // never falls through to the organization-scoped app below — not just
+    // from /dashboard, but from ANY organization-scoped URL (a stale
+    // bookmark, deep link, or a route reached before this account was
+    // promoted to platform admin). Checking this before the
+    // organization-access lookup further down also matters in practice: a
+    // pure platform-admin account typically has zero organization
+    // memberships, so without this early return every route except
+    // /dashboard and /platform/* would fall through to the "no active
+    // organization" branch and dead-end the admin in the organization
+    // switcher instead of their own workspace.
+    final isPlatformAdmin = await ref.refresh(
+      currentPlatformAdminProvider.future,
+    );
+    if (isPlatformAdmin) {
+      return _isPlatformAdministrationRoute(path)
+          ? null
+          : RouteNames.platformAdministrationPath;
+    }
+
+    if (_isPlatformAdministrationRoute(path)) {
+      return RouteNames.dashboardPath;
     }
 
     // Keep this route reachable for users whose active membership expired,
@@ -144,5 +184,9 @@ final class RouteGuards {
         path == RouteNames.forgotPasswordPath ||
         path == RouteNames.resetPasswordPath ||
         path == RouteNames.twoFactorChallengePath;
+  }
+
+  static bool _isPlatformAdministrationRoute(String path) {
+    return path.startsWith(RouteNames.platformAdministrationPath);
   }
 }
