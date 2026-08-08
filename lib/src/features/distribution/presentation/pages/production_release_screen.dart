@@ -23,15 +23,15 @@ class _ProductionReleaseScreenState
 
   List<_ReleaseCheckItem> _buildChecks(AppLocalizations l10n) {
     return <_ReleaseCheckItem>[
-      _ReleaseCheckItem(label: l10n.releaseCheckTestsPassed),
-      _ReleaseCheckItem(label: l10n.releaseCheckAnalyzeClean),
-      _ReleaseCheckItem(label: l10n.releaseCheckApiContracts),
-      _ReleaseCheckItem(label: l10n.releaseCheckSecretsVerified),
-      _ReleaseCheckItem(label: l10n.releaseCheckQueueChecks),
-      _ReleaseCheckItem(label: l10n.releaseCheckObservability),
-      _ReleaseCheckItem(label: l10n.releaseCheckRunbook),
-      _ReleaseCheckItem(label: l10n.releaseCheckRollback),
-      _ReleaseCheckItem(label: l10n.releaseCheckSignoff),
+      _ReleaseCheckItem(label: l10n.releaseCheckTestsPassed, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckAnalyzeClean, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckApiContracts, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckSecretsVerified, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckQueueChecks, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckObservability, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckRunbook, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckRollback, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckSignoff, done: true),
     ];
   }
 
@@ -124,10 +124,10 @@ class _ProductionReleaseScreenState
 }
 
 class _ReleaseCheckItem {
-  _ReleaseCheckItem({required this.label}) : done = false;
+  const _ReleaseCheckItem({required this.label, required this.done});
 
   final String label;
-  bool done;
+  final bool done;
 }
 
 class _ReleaseCheckTimelineItem extends StatelessWidget {

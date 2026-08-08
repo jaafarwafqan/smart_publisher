@@ -21,6 +21,11 @@ a canary rollout, or an automated rollback.
   or embedded in the produced APK/AAB.
 - [ ] Staging uses HTTPS, a separate `APP_KEY`, and a production-shaped
   MySQL/InnoDB + queue worker configuration.
+- [ ] Staging rejects plain HTTP at the edge, returns no `X-Powered-By`, and
+  exposes HSTS/CSP/nosniff/frame/referrer/permissions headers over HTTPS.
+- [ ] Debug is disabled, `APP_URL` is the real HTTPS API URL, and password
+  reset plus email verification were delivered through a real mail provider
+  to an isolated test mailbox.
 
 ## 2. Required staging smoke test
 

@@ -72,6 +72,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                       ),
                     ),
                   ),
+                if (!canManagePolicies) const SizedBox(height: AppSpacing.sm),
                 AnimatedContainer(
                   duration: AppDuration.slow,
                   curve: AppCurves.standard,
@@ -99,6 +100,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
                 Card(
                   child: SwitchListTile(
                     title: Text(l10n.administrationMaintenanceModeTitle),
@@ -110,6 +112,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                     onChanged: null,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
                 Card(
                   child: SwitchListTile(
                     title: Text(l10n.administrationFreezePublishingTitle),
@@ -118,6 +121,7 @@ class _AdministrationScreenState extends ConsumerState<AdministrationScreen> {
                     onChanged: null,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
                 Card(
                   child: Column(
                     children: <Widget>[

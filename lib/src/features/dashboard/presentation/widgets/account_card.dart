@@ -315,7 +315,11 @@ class _ActionRow extends StatelessWidget {
         if (actions.isEmpty) {
           return const SizedBox.shrink();
         }
-        return Wrap(spacing: 8, runSpacing: 8, children: actions);
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: actions,
+        );
       case AccountStatus.expired:
         final actions = <Widget>[
           if (operationAccess.canConnect)
@@ -348,8 +352,8 @@ class _ActionRow extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
           children: actions /*
             // dead end — the only way forward is a full re-authentication,
             // not a silent token refresh that can't succeed.

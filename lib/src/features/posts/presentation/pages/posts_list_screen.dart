@@ -172,8 +172,8 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
                 children: <Widget>[
                   _StatusChip(
                     label: l10n.postsListFilterAll,
@@ -273,8 +273,8 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.xs,
                       children: <Widget>[
                         StatusPill(
                           label: _statusLabel(post.status, l10n),

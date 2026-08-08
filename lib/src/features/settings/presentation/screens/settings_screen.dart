@@ -8,6 +8,7 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 import '../../../../core/locale/locale_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/storage/storage_provider.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/widgets/email_verification_banner.dart';
 
@@ -80,13 +81,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.watch(localeProvider);
+    const sectionGap = SizedBox(height: AppSpacing.sm);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsScreenTitle)),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
         children: <Widget>[
           const EmailVerificationBanner(),
+          sectionGap,
           Card(
             child: ListTile(
               leading: const Icon(Icons.business_outlined),
@@ -100,6 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => context.push(RouteNames.organizationsPath),
             ),
           ),
+          sectionGap,
           Card(
             child: ListTile(
               leading: const Icon(Icons.group_outlined),
@@ -113,6 +122,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => context.push(RouteNames.organizationMembersPath),
             ),
           ),
+          sectionGap,
           Card(
             child: ListTile(
               leading: const Icon(Icons.security_outlined),
@@ -126,6 +136,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => context.push(RouteNames.twoFactorSetupPath),
             ),
           ),
+          sectionGap,
           Card(
             child: ListTile(
               leading: const Icon(Icons.download_outlined),
@@ -139,6 +150,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => context.push(RouteNames.accountDataExportPath),
             ),
           ),
+          sectionGap,
           Card(
             child: ListTile(
               leading: Icon(
@@ -158,14 +170,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => context.push(RouteNames.accountDataDeletionPath),
             ),
           ),
+          sectionGap,
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(l10n.settingsLanguageTitle),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<String>(
                     segments: <ButtonSegment<String>>[
                       ButtonSegment<String>(
@@ -190,6 +203,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ),
+          sectionGap,
           // These three are deliberately fixed off and non-interactive:
           // none of push notifications, auto-schedule, or canary releases
           // have any real backend/behavioral integration in this build yet
@@ -206,6 +220,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onChanged: null,
             ),
           ),
+          sectionGap,
           Card(
             child: SwitchListTile(
               title: Text(l10n.settingsAutoScheduleTitle),
@@ -214,6 +229,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onChanged: null,
             ),
           ),
+          sectionGap,
           Card(
             child: SwitchListTile(
               title: Text(l10n.settingsCanaryReleaseTitle),
@@ -222,14 +238,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onChanged: null,
             ),
           ),
+          sectionGap,
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(l10n.settingsPreferredTheme),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<String>(
                     segments: <ButtonSegment<String>>[
                       ButtonSegment<String>(
@@ -262,7 +279,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           FilledButton.icon(
             onPressed: _persist,
             icon: const Icon(Icons.save_outlined),

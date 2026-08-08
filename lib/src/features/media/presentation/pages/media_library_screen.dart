@@ -266,6 +266,19 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
     return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
   }
 
+  /// Signed media URLs can include short-lived credentials in their query
+  /// string. Only the path's final segment belongs in a visible or
+  /// accessibility-facing label.
+  static String _displayName(String value) {
+    final path = Uri.tryParse(value)?.path ?? value.split('?').first;
+    final segments = path
+        .split('/')
+        .where((segment) => segment.trim().isNotEmpty)
+        .toList(growable: false);
+
+    return segments.isEmpty ? 'media' : Uri.decodeComponent(segments.last);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -299,7 +312,7 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               Wrap(
-                spacing: 8,
+                spacing: AppSpacing.sm,
                 children: <Widget>[
                   _TypeChip(
                     label: l10n.mediaFilterAll,
@@ -408,12 +421,15 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                                   children: <Widget>[
                                     if (isImage && item.thumbnailUrl != null)
                                       ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                          AppRadius.sm,
+                                        ),
                                         child: Image.network(
                                           item.thumbnailUrl!,
                                           width: 64,
                                           height: 64,
                                           fit: BoxFit.cover,
+                                          excludeFromSemantics: true,
                                           errorBuilder:
                                               (context, error, stackTrace) =>
                                                   CircleAvatar(
@@ -434,7 +450,7 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                                             CrossAxisAlignment.start,
                                         children: <Widget>[
                                           Text(
-                                            item.url.split('/').last,
+                                            _displayName(item.url),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(
@@ -453,8 +469,8 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                                               height: AppSpacing.sm,
                                             ),
                                             Wrap(
-                                              spacing: 6,
-                                              runSpacing: 4,
+                                              spacing: AppSpacing.xs,
+                                              runSpacing: AppSpacing.xs,
                                               children: item.tags
                                                   .map(
                                                     (tag) => Chip(
@@ -476,8 +492,8 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
+                                  spacing: AppSpacing.sm,
+                                  runSpacing: AppSpacing.sm,
                                   alignment: WrapAlignment.end,
                                   children: <Widget>[
                                     if (_canCompressMedia)

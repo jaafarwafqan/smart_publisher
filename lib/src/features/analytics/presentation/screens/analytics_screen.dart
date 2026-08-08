@@ -144,8 +144,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
                 children: <Widget>[
                   _MetricCard(
                     label: l10n.analyticsMetricReach,
@@ -242,8 +242,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Wrap(
-                            spacing: 12,
-                            runSpacing: 10,
+                            spacing: AppSpacing.md,
+                            runSpacing: AppSpacing.sm,
                             children: <Widget>[
                               _MiniStat(
                                 label: l10n.analyticsMetricReach,

@@ -11,12 +11,20 @@ final class AppTextTheme {
     final primaryColor = isDark ? Colors.white : AppColors.textPrimary;
     final secondaryColor = isDark ? Colors.white70 : AppColors.textSecondary;
 
-    final materialTextTheme = Typography.material2021().black;
+    final materialTextTheme = isDark
+        ? Typography.material2021().white
+        : Typography.material2021().black;
     final baseTextTheme = GoogleFonts.tajawalTextTheme(materialTextTheme);
 
     return baseTextTheme.copyWith(
       displayLarge: baseTextTheme.displayLarge?.copyWith(color: primaryColor),
       displayMedium: baseTextTheme.displayMedium?.copyWith(color: primaryColor),
+      displaySmall: baseTextTheme.displaySmall?.copyWith(color: primaryColor),
+      headlineLarge: baseTextTheme.headlineLarge?.copyWith(color: primaryColor),
+      headlineMedium: baseTextTheme.headlineMedium?.copyWith(
+        color: primaryColor,
+      ),
+      headlineSmall: baseTextTheme.headlineSmall?.copyWith(color: primaryColor),
       titleLarge: baseTextTheme.titleLarge?.copyWith(color: primaryColor),
       titleMedium: baseTextTheme.titleMedium?.copyWith(color: primaryColor),
       titleSmall: baseTextTheme.titleSmall?.copyWith(color: primaryColor),

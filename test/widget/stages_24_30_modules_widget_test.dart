@@ -148,5 +148,6 @@ void main() {
   testWidgets('Production release screen renders', (tester) async {
     await pumpModule(tester, const ProductionReleaseScreen());
     expect(find.text('Production Release'), findsOneWidget);
+    expect(find.text('Readiness: 100%'), findsOneWidget);
   });
 }

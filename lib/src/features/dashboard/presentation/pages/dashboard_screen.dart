@@ -946,8 +946,8 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
             children: <Widget>[
               StatusPill(
                 icon: Icons.person_outline,
@@ -1067,8 +1067,8 @@ class _StatTileRow extends StatelessWidget {
             ? (constraints.maxWidth - 18) / 2
             : constraints.maxWidth;
         return Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
           children: stats
               .map(
                 (stat) => SizedBox(
@@ -1137,7 +1137,7 @@ class _PostStatusRow extends StatelessWidget {
             : constraints.maxWidth >= 700
             ? 2
             : 1;
-        final spacing = 12.0;
+        const spacing = AppSpacing.md;
         final cardWidth =
             (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
