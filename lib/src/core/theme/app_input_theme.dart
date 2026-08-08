@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
+import 'app_text_theme.dart';
 
 final class AppInputTheme {
   AppInputTheme._();
@@ -21,6 +23,7 @@ final class AppInputTheme {
         ? Colors.white38
         : AppColors.textSecondary.withValues(alpha: 0.5);
     final helperColor = isDark ? Colors.white54 : AppColors.textSecondary;
+    final textTheme = AppTextTheme.textTheme(colorScheme.brightness);
 
     return InputDecorationTheme(
       filled: true,
@@ -44,8 +47,8 @@ final class AppInputTheme {
       floatingLabelStyle: TextStyle(color: AppColors.brandPrimary),
       labelStyle: TextStyle(color: labelColor),
       hintStyle: TextStyle(color: hintColor),
-      errorStyle: TextStyle(color: AppColors.error, fontSize: 12),
-      helperStyle: TextStyle(color: helperColor, fontSize: 12),
+      errorStyle: textTheme.bodySmall?.copyWith(color: AppColors.error),
+      helperStyle: textTheme.bodySmall?.copyWith(color: helperColor),
       prefixIconColor: isDark ? Colors.white70 : AppColors.textSecondary,
       suffixIconColor: isDark ? Colors.white70 : AppColors.textSecondary,
     );

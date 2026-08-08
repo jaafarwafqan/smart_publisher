@@ -3,7 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../core/router/route_names.dart';
 import '../../application/current_organization_access.dart';
 import '../../domain/entities/organization_entity.dart';
@@ -92,20 +99,22 @@ class _OrganizationSwitcherScreenState
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.orgSwitcherAppBarTitle)),
-      body: access.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _OrganizationLoadError(
-          message: error is OrganizationAccessException
-              ? error.message
-              : l10n.orgSwitcherFailedToLoad,
-          onRetry: () => ref.invalidate(currentOrganizationAccessProvider),
-        ),
-        data: (state) => _OrganizationList(
-          organizations: state.memberships,
-          activeOrganizationId: state.currentOrganization?.id,
-          switchingId: _switchingId,
-          l10n: l10n,
-          onSwitch: _switchTo,
+      body: AdaptiveContentWidth(
+        child: access.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => _OrganizationLoadError(
+            message: error is OrganizationAccessException
+                ? error.message
+                : l10n.orgSwitcherFailedToLoad,
+            onRetry: () => ref.invalidate(currentOrganizationAccessProvider),
+          ),
+          data: (state) => _OrganizationList(
+            organizations: state.memberships,
+            activeOrganizationId: state.currentOrganization?.id,
+            switchingId: _switchingId,
+            l10n: l10n,
+            onSwitch: _switchTo,
+          ),
         ),
       ),
     );
@@ -130,19 +139,25 @@ class _OrganizationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (organizations.isEmpty) {
-      return Center(child: Text(l10n.orgSwitcherEmpty));
+      return Center(
+        child: AppEmptyState(
+          message: l10n.orgSwitcherEmpty,
+          icon: Icons.business_outlined,
+          showCard: false,
+        ),
+      );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: organizations.length + (activeOrganizationId == null ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         if (activeOrganizationId == null && index == 0) {
           return Card(
             color: Theme.of(context).colorScheme.secondaryContainer,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(l10n.orgSwitcherSelectActive),
             ),
           );
@@ -153,29 +168,57 @@ class _OrganizationList extends StatelessWidget {
         final isActive = activeOrganizationId == organization.id;
         final isSwitching = switchingId == organization.id;
 
-        return Card(
-          child: ListTile(
-            leading: CircleAvatar(
-              child: Text(
-                organization.name.isEmpty
-                    ? '?'
-                    : organization.name[0].toUpperCase(),
+        return Semantics(
+          selected: isActive,
+          child: AnimatedContainer(
+            duration: AppDuration.slow,
+            curve: AppCurves.standard,
+            padding: EdgeInsetsDirectional.only(
+              start: isActive ? AppSpacing.xs : 0,
+            ),
+            decoration: BoxDecoration(
+              color: isActive ? Theme.of(context).colorScheme.primary : null,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
+            child: Card(
+              color: isActive
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : null,
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Text(
+                    organization.name.isEmpty
+                        ? '?'
+                        : organization.name[0].toUpperCase(),
+                  ),
+                ),
+                title: Text(organization.name),
+                subtitle: Text(_organizationRoleLabel(organization.role, l10n)),
+                trailing: AnimatedSwitcher(
+                  duration: AppDuration.normal,
+                  switchInCurve: AppCurves.standard,
+                  switchOutCurve: AppCurves.standard,
+                  child: isActive
+                      ? Chip(
+                          key: const ValueKey<String>('active'),
+                          avatar: const Icon(Icons.check_circle_outline),
+                          label: Text(l10n.orgSwitcherActiveChip),
+                        )
+                      : isSwitching
+                      ? const SizedBox(
+                          key: ValueKey<String>('switching'),
+                          width: AppSizes.iconMd,
+                          height: AppSizes.iconMd,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : OutlinedButton(
+                          key: const ValueKey<String>('available'),
+                          onPressed: () => onSwitch(organization),
+                          child: Text(l10n.orgSwitcherSwitchButton),
+                        ),
+                ),
               ),
             ),
-            title: Text(organization.name),
-            subtitle: Text(_organizationRoleLabel(organization.role, l10n)),
-            trailing: isActive
-                ? Chip(label: Text(l10n.orgSwitcherActiveChip))
-                : isSwitching
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : OutlinedButton(
-                    onPressed: () => onSwitch(organization),
-                    child: Text(l10n.orgSwitcherSwitchButton),
-                  ),
           ),
         );
       },
@@ -193,14 +236,14 @@ class _OrganizationLoadError extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             const Icon(Icons.error_outline, size: 40),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),

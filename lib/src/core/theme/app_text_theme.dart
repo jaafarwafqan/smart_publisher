@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'app_colors.dart';
 
 final class AppTextTheme {
@@ -9,7 +11,8 @@ final class AppTextTheme {
     final primaryColor = isDark ? Colors.white : AppColors.textPrimary;
     final secondaryColor = isDark ? Colors.white70 : AppColors.textSecondary;
 
-    final baseTextTheme = Typography.material2021().black;
+    final materialTextTheme = Typography.material2021().black;
+    final baseTextTheme = GoogleFonts.tajawalTextTheme(materialTextTheme);
 
     return baseTextTheme.copyWith(
       displayLarge: baseTextTheme.displayLarge?.copyWith(color: primaryColor),

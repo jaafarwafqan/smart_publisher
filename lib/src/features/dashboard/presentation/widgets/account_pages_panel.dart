@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../auth/domain/entities/social_page_entity.dart';
 import '../utils/platform_label.dart';
 
@@ -88,6 +92,12 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
     final isAuto = widget.discoveryMode == 'auto';
 
     return ExpansionTile(
+      expansionAnimationStyle: const AnimationStyle(
+        duration: AppDuration.normal,
+        reverseDuration: AppDuration.fast,
+        curve: AppCurves.standard,
+        reverseCurve: AppCurves.standard,
+      ),
       tilePadding: EdgeInsets.zero,
       title: Text(
         widget.pages.isEmpty
@@ -95,7 +105,7 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
             : l10n.pagesPanelCount(widget.pages.length),
         style: theme.textTheme.labelLarge,
       ),
-      childrenPadding: const EdgeInsets.only(bottom: 8),
+      childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
       children: <Widget>[
         if (widget.canManagePages)
           Align(
@@ -109,9 +119,12 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
             ),
           ),
         if (widget.pages.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Text(l10n.pagesPanelNothingAdded),
+          AppEmptyState(
+            message: l10n.pagesPanelNothingAdded,
+            icon: Icons.add_link_outlined,
+            compact: true,
+            showCard: false,
+            alignment: CrossAxisAlignment.start,
           )
         else
           ...widget.pages.map((page) {
@@ -138,7 +151,7 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Icon(_kindIcon(page.kind), size: 16),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.sm),
                   Flexible(
                     child: Text(
                       canSelect

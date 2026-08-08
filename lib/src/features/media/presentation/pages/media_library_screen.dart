@@ -4,7 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../../posts/domain/entities/media_entity.dart';
 import '../../../posts/domain/entities/post_entity.dart';
@@ -25,6 +32,7 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
   bool _hasMorePages = false;
   String? _error;
   String _typeFilter = 'all';
+  String? _selectedMediaId;
   Timer? _searchDebounce;
 
   @override
@@ -263,216 +271,271 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.mediaAppBarTitle)),
-      body: RefreshIndicator(
-        onRefresh: _loadMedia,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: <Widget>[
-            Text(
-              l10n.mediaSubtitle,
-              style: Theme.of(context).textTheme.bodyLarge,
+      body: AdaptiveContentWidth(
+        child: RefreshIndicator(
+          onRefresh: _loadMedia,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xl,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                labelText: l10n.mediaSearchLabel,
-                hintText: l10n.mediaSearchHint,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
+            children: <Widget>[
+              Text(
+                l10n.mediaSubtitle,
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: <Widget>[
-                _TypeChip(
-                  label: l10n.mediaFilterAll,
-                  selected: _typeFilter == 'all',
-                  onTap: () {
-                    setState(() => _typeFilter = 'all');
-                    _loadMedia();
-                  },
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  labelText: l10n.mediaSearchLabel,
+                  hintText: l10n.mediaSearchHint,
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
                 ),
-                _TypeChip(
-                  label: l10n.mediaFilterImages,
-                  selected: _typeFilter == 'image',
-                  onTap: () {
-                    setState(() => _typeFilter = 'image');
-                    _loadMedia();
-                  },
-                ),
-                _TypeChip(
-                  label: l10n.mediaFilterVideos,
-                  selected: _typeFilter == 'video',
-                  onTap: () {
-                    setState(() => _typeFilter = 'video');
-                    _loadMedia();
-                  },
-                ),
-                _TypeChip(
-                  label: l10n.mediaFilterDocuments,
-                  selected: _typeFilter == 'document',
-                  onTap: () {
-                    setState(() => _typeFilter = 'document');
-                    _loadMedia();
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (_error != null)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(_error!),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _loadMedia,
-                        icon: const Icon(Icons.refresh),
-                        label: Text(l10n.commonRetry),
-                      ),
-                    ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: 8,
+                children: <Widget>[
+                  _TypeChip(
+                    label: l10n.mediaFilterAll,
+                    selected: _typeFilter == 'all',
+                    onTap: () {
+                      setState(() => _typeFilter = 'all');
+                      _loadMedia();
+                    },
                   ),
-                ),
-              )
-            else if (_items.isEmpty)
-              const _EmptyMediaLibrary()
-            else
-              ..._items.map((item) {
-                final type = _typeOf(item);
-                final isImage = type == 'image';
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
+                  _TypeChip(
+                    label: l10n.mediaFilterImages,
+                    selected: _typeFilter == 'image',
+                    onTap: () {
+                      setState(() => _typeFilter = 'image');
+                      _loadMedia();
+                    },
+                  ),
+                  _TypeChip(
+                    label: l10n.mediaFilterVideos,
+                    selected: _typeFilter == 'video',
+                    onTap: () {
+                      setState(() => _typeFilter = 'video');
+                      _loadMedia();
+                    },
+                  ),
+                  _TypeChip(
+                    label: l10n.mediaFilterDocuments,
+                    selected: _typeFilter == 'document',
+                    onTap: () {
+                      setState(() => _typeFilter = 'document');
+                      _loadMedia();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (_loading)
+                const Center(child: CircularProgressIndicator())
+              else if (_error != null)
+                Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            if (isImage && item.thumbnailUrl != null)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  item.thumbnailUrl!,
-                                  width: 64,
-                                  height: 64,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      CircleAvatar(
-                                        child: Icon(_iconForType(type)),
-                                      ),
-                                ),
-                              )
-                            else
-                              CircleAvatar(child: Icon(_iconForType(type))),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    item.url.split('/').last,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleSmall,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${item.collection} • ${_formatDate(item.createdAt, l10n)}',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                  ),
-                                  if (item.tags.isNotEmpty) ...<Widget>[
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 6,
-                                      runSpacing: 4,
-                                      children: item.tags
-                                          .map(
-                                            (tag) => Chip(
-                                              label: Text(tag),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              materialTapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                            ),
-                                          )
-                                          .toList(growable: false),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.end,
-                          children: <Widget>[
-                            if (_canCompressMedia)
-                              Tooltip(
-                                message: isImage
-                                    ? l10n.mediaCompressTooltipImage
-                                    : l10n.mediaCompressTooltipOther,
-                                child: OutlinedButton.icon(
-                                  onPressed: isImage
-                                      ? () => _compressAsset(item)
-                                      : null,
-                                  icon: const Icon(Icons.compress, size: 18),
-                                  label: Text(l10n.mediaCompressButton),
-                                ),
-                              ),
-                            OutlinedButton.icon(
-                              onPressed: () => _reuseInPost(item),
-                              icon: const Icon(Icons.repeat, size: 18),
-                              label: Text(l10n.mediaReuseInPostButton),
-                            ),
-                            if (_canDeleteMedia)
-                              IconButton(
-                                tooltip: l10n.mediaDeleteTooltip,
-                                onPressed: () => _deleteAsset(item),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                          ],
+                        Text(_error!),
+                        const SizedBox(height: AppSpacing.md),
+                        OutlinedButton.icon(
+                          onPressed: _loadMedia,
+                          icon: const Icon(Icons.refresh),
+                          label: Text(l10n.commonRetry),
                         ),
                       ],
                     ),
                   ),
-                );
-              }),
-            if (!_loading && _error == null && _hasMorePages)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Center(
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingMore ? null : _loadMoreMedia,
-                    icon: _loadingMore
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.expand_more),
-                    label: Text(l10n.mediaLoadMore),
+                )
+              else if (_items.isEmpty)
+                AppEmptyState(
+                  title: l10n.mediaEmptyTitle,
+                  message: l10n.mediaEmptySubtitle,
+                  icon: Icons.perm_media_outlined,
+                )
+              else
+                ..._items.map((item) {
+                  final type = _typeOf(item);
+                  final isImage = type == 'image';
+                  final isSelected = _selectedMediaId == item.id;
+                  return AnimatedScale(
+                    scale: isSelected ? 1.01 : 1,
+                    duration: AppDuration.normal,
+                    curve: AppCurves.standard,
+                    child: AnimatedContainer(
+                      duration: AppDuration.normal,
+                      curve: AppCurves.standard,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        boxShadow: isSelected
+                            ? <BoxShadow>[
+                                BoxShadow(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.16),
+                                  blurRadius: AppSpacing.md,
+                                  offset: const Offset(0, AppSpacing.xs),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Card(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: InkWell(
+                          onTap: () => setState(() {
+                            _selectedMediaId = isSelected ? null : item.id;
+                          }),
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    if (isImage && item.thumbnailUrl != null)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          item.thumbnailUrl!,
+                                          width: 64,
+                                          height: 64,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  CircleAvatar(
+                                                    child: Icon(
+                                                      _iconForType(type),
+                                                    ),
+                                                  ),
+                                        ),
+                                      )
+                                    else
+                                      CircleAvatar(
+                                        child: Icon(_iconForType(type)),
+                                      ),
+                                    const SizedBox(width: AppSpacing.md),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            item.url.split('/').last,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleSmall,
+                                          ),
+                                          const SizedBox(height: AppSpacing.xs),
+                                          Text(
+                                            '${item.collection} • ${_formatDate(item.createdAt, l10n)}',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                          ),
+                                          if (item.tags.isNotEmpty) ...<Widget>[
+                                            const SizedBox(
+                                              height: AppSpacing.sm,
+                                            ),
+                                            Wrap(
+                                              spacing: 6,
+                                              runSpacing: 4,
+                                              children: item.tags
+                                                  .map(
+                                                    (tag) => Chip(
+                                                      label: Text(tag),
+                                                      visualDensity:
+                                                          VisualDensity.compact,
+                                                      materialTapTargetSize:
+                                                          MaterialTapTargetSize
+                                                              .shrinkWrap,
+                                                    ),
+                                                  )
+                                                  .toList(growable: false),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  alignment: WrapAlignment.end,
+                                  children: <Widget>[
+                                    if (_canCompressMedia)
+                                      Tooltip(
+                                        message: isImage
+                                            ? l10n.mediaCompressTooltipImage
+                                            : l10n.mediaCompressTooltipOther,
+                                        child: OutlinedButton.icon(
+                                          onPressed: isImage
+                                              ? () => _compressAsset(item)
+                                              : null,
+                                          icon: const Icon(
+                                            Icons.compress,
+                                            size: 18,
+                                          ),
+                                          label: Text(l10n.mediaCompressButton),
+                                        ),
+                                      ),
+                                    OutlinedButton.icon(
+                                      onPressed: () => _reuseInPost(item),
+                                      icon: const Icon(Icons.repeat, size: 18),
+                                      label: Text(l10n.mediaReuseInPostButton),
+                                    ),
+                                    if (_canDeleteMedia)
+                                      IconButton(
+                                        tooltip: l10n.mediaDeleteTooltip,
+                                        onPressed: () => _deleteAsset(item),
+                                        icon: const Icon(Icons.delete_outline),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              if (!_loading && _error == null && _hasMorePages)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
+                  child: Center(
+                    child: OutlinedButton.icon(
+                      onPressed: _loadingMore ? null : _loadMoreMedia,
+                      icon: _loadingMore
+                          ? const SizedBox(
+                              width: AppSizes.iconSm,
+                              height: AppSizes.iconSm,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.expand_more),
+                      label: Text(l10n.mediaLoadMore),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -496,29 +559,6 @@ class _TypeChip extends StatelessWidget {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onTap(),
-    );
-  }
-}
-
-class _EmptyMediaLibrary extends StatelessWidget {
-  const _EmptyMediaLibrary();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: <Widget>[
-            const Icon(Icons.perm_media_outlined, size: 40),
-            const SizedBox(height: 10),
-            Text(l10n.mediaEmptyTitle),
-            const SizedBox(height: 4),
-            Text(l10n.mediaEmptySubtitle),
-          ],
-        ),
-      ),
     );
   }
 }

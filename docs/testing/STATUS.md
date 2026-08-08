@@ -6,7 +6,7 @@ counts.
 ## Release-hardening results
 
 | Check | Result |
-|---|---|
+||
 | Flutter `flutter analyze` | Passed - 0 issues |
 | Flutter `flutter test` | Passed - 210 tests |
 | Flutter `dart format --set-exit-if-changed lib test scripts/ci` | Passed - 0 files changed |

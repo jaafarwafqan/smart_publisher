@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/status_pill.dart';
 import '../../application/account_operation_access.dart';
 import '../../../auth/domain/entities/account_entity.dart';
 import '../utils/platform_label.dart';
@@ -58,7 +60,7 @@ class AccountCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -75,7 +77,7 @@ class AccountCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,11 +94,10 @@ class AccountCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           if (isBetaLaunchPlatform(account.platform)) ...[
-                            const SizedBox(width: 6),
-                            _InlineTag(
+                            const SizedBox(width: AppSpacing.sm),
+                            StatusPill(
                               label: l10n.betaTag,
-                              background: colorScheme.tertiaryContainer,
-                              foreground: colorScheme.onTertiaryContainer,
+                              tone: PillTone.warning,
                             ),
                           ],
                         ],
@@ -106,9 +107,12 @@ class AccountCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            _StatusPill(status: account.status),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.md),
+            StatusPill(
+              label: _accountStatusLabel(account.status, l10n),
+              tone: _accountStatusTone(account.status),
+            ),
+            const SizedBox(height: AppSpacing.md),
             Text(
               permissions,
               maxLines: 2,
@@ -119,7 +123,7 @@ class AccountCard extends StatelessWidget {
                 (account.tokenExpiresAt != null ||
                     account.lastSyncedAt != null ||
                     account.lastPublishedAt != null)) ...<Widget>[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 <String>[
                   if (account.tokenExpiresAt != null)
@@ -140,7 +144,7 @@ class AccountCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Only Facebook and Telegram are approved for this closed beta.
             // A connected legacy/non-launch account may remain visible for
             // diagnosis, but it must never expose connect, publish-related,
@@ -160,7 +164,7 @@ class AccountCard extends StatelessWidget {
             ],
             if (account.isConnected &&
                 isBetaLaunchPlatform(account.platform)) ...<Widget>[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               AccountPagesPanel(
                 pages: account.pages,
                 discoveryMode: account.discoveryMode,
@@ -172,37 +176,6 @@ class AccountCard extends StatelessWidget {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InlineTag extends StatelessWidget {
-  const _InlineTag({
-    required this.label,
-    required this.background,
-    required this.foreground,
-  });
-
-  final String label;
-  final Color background;
-  final Color foreground;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
-          fontSize: 10,
         ),
       ),
     );
@@ -223,7 +196,10 @@ class _ComingSoonRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
@@ -236,7 +212,7 @@ class _ComingSoonRow extends StatelessWidget {
             size: 16,
             color: colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.sm),
           Flexible(
             child: Text(
               l10n.comingSoonSuffix(platformLabel(platform)),
@@ -254,66 +230,37 @@ class _ComingSoonRow extends StatelessWidget {
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final Color background;
-    final Color foreground;
-    switch (status) {
-      case AccountStatus.connected:
-        background = colorScheme.primaryContainer;
-        foreground = colorScheme.onPrimaryContainer;
-      case AccountStatus.pending:
-        background = colorScheme.tertiaryContainer;
-        foreground = colorScheme.onTertiaryContainer;
-      case AccountStatus.expired:
-      case AccountStatus.revoked:
-      case AccountStatus.failed:
-        background = colorScheme.errorContainer;
-        foreground = colorScheme.onErrorContainer;
-      case AccountStatus.disconnected:
-      default:
-        background = colorScheme.surfaceContainerHighest;
-        foreground = colorScheme.onSurfaceVariant;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        _statusLabel(status, AppLocalizations.of(context)!),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+PillTone _accountStatusTone(String status) {
+  switch (status) {
+    case AccountStatus.connected:
+      return PillTone.success;
+    case AccountStatus.pending:
+      return PillTone.warning;
+    case AccountStatus.expired:
+    case AccountStatus.revoked:
+    case AccountStatus.failed:
+      return PillTone.danger;
+    case AccountStatus.disconnected:
+    default:
+      return PillTone.neutral;
   }
+}
 
-  String _statusLabel(String status, AppLocalizations l10n) {
-    switch (status) {
-      case AccountStatus.connected:
-        return l10n.accountStatusConnected;
-      case AccountStatus.expired:
-        return l10n.accountStatusExpired;
-      case AccountStatus.revoked:
-        return l10n.accountStatusRevoked;
-      case AccountStatus.failed:
-        return l10n.accountStatusFailed;
-      case AccountStatus.pending:
-        return l10n.accountStatusPending;
-      case AccountStatus.disconnected:
-      default:
-        return l10n.accountStatusDisconnected;
-    }
+String _accountStatusLabel(String status, AppLocalizations l10n) {
+  switch (status) {
+    case AccountStatus.connected:
+      return l10n.accountStatusConnected;
+    case AccountStatus.expired:
+      return l10n.accountStatusExpired;
+    case AccountStatus.revoked:
+      return l10n.accountStatusRevoked;
+    case AccountStatus.failed:
+      return l10n.accountStatusFailed;
+    case AccountStatus.pending:
+      return l10n.accountStatusPending;
+    case AccountStatus.disconnected:
+    default:
+      return l10n.accountStatusDisconnected;
   }
 }
 

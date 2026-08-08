@@ -13,8 +13,14 @@ import '../../../../core/result/app_result.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/storage/storage_provider.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/web/current_uri.dart';
 import '../../../../core/web/facebook_oauth_callback.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
+import '../../../../shared/widgets/status_pill.dart';
 import '../../../analytics/domain/entities/analytics_summary_entity.dart';
 import '../../../auth/application/auth_session_controller.dart';
 import '../../../auth/domain/entities/account_entity.dart';
@@ -27,7 +33,6 @@ import '../utils/platform_label.dart';
 import '../widgets/accounts_grid.dart';
 import '../widgets/add_telegram_channel_dialog.dart';
 import '../widgets/connect_telegram_bot_dialog.dart';
-import '../widgets/dashboard_pill_info.dart';
 import '../widgets/dashboard_stat_card.dart';
 import '../widgets/post_status_section.dart';
 import '../widgets/publishing_health_card.dart';
@@ -38,13 +43,15 @@ import '../widgets/workspace_modules_grid.dart';
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
-  // Facebook/Meta only allows http://localhost:<port>/ as a web-development
-  // redirect URI. Android must use the registered custom scheme declared in
-  // AndroidManifest; a release build must never send its users to localhost.
+  // Web development can use localhost. Meta requires a valid HTTPS redirect
+  // URI for the mobile browser flow, so test/production builds may supply a
+  // public callback that relays back to the registered Android deep link.
   static const String _webDevelopmentOAuthRedirectUri =
       'http://localhost:5055/';
-  static const String _mobileOAuthRedirectUri =
-      'smartpublisher://oauth/callback';
+  static const String _mobileOAuthRedirectUri = String.fromEnvironment(
+    'SP_SOCIAL_OAUTH_REDIRECT_URI',
+    defaultValue: 'smartpublisher://oauth/callback',
+  );
 
   @visibleForTesting
   static String oauthRedirectUriFor({required bool isWeb}) {
@@ -369,6 +376,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
+      animationStyle: const AnimationStyle(
+        duration: AppDuration.normal,
+        reverseDuration: AppDuration.fast,
+        curve: AppCurves.standard,
+        reverseCurve: AppCurves.standard,
+      ),
       builder: (context) => AlertDialog(
         title: Text(l10n.instagramDialogTitle),
         content: Text(l10n.instagramDialogBody),
@@ -546,6 +559,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         );
     final accountOperationAccess =
         AccountOperationAccess.fromOrganizationAccess(organizationAccess);
+    final dashboard = _dashboard.valueOrNull;
+    final dashboardState = _dashboard.isLoading
+        ? AppAsyncState.loading
+        : _dashboard.hasError
+        ? AppAsyncState.error
+        : AppAsyncState.content;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appName),
@@ -575,41 +594,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
         ],
       ),
-      body: _dashboard.when(
-        loading: () => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const CircularProgressIndicator(),
-              const SizedBox(height: 12),
-              Text(l10n.commonLoading),
-            ],
-          ),
-        ),
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
+      body: AdaptiveContentWidth(
+        maxWidth: 1200,
+        child: AppAsyncSwitcher(
+          state: dashboardState,
+          duration: AppDuration.slow,
+          reverseDuration: AppDuration.fast,
+          loading: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const Icon(Icons.cloud_off_outlined, size: 40),
-                const SizedBox(height: 12),
-                Text(l10n.dashboardLoadFailed, textAlign: TextAlign.center),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _refreshDashboard,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l10n.commonRetry),
-                ),
+                const CircularProgressIndicator(),
+                const SizedBox(height: AppSpacing.md),
+                Text(l10n.commonLoading),
               ],
             ),
           ),
-        ),
-        data: (dashboard) => _buildDashboardContent(
-          context,
-          dashboard,
-          accountOperationAccess,
-          organizationAccess,
+          empty: const SizedBox.shrink(),
+          error: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Icon(Icons.cloud_off_outlined, size: 40),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(l10n.dashboardLoadFailed, textAlign: TextAlign.center),
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: _refreshDashboard,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(l10n.commonRetry),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          content: dashboard == null
+              ? const SizedBox.shrink()
+              : _buildDashboardContent(
+                  context,
+                  dashboard,
+                  accountOperationAccess,
+                  organizationAccess,
+                ),
         ),
       ),
     );
@@ -665,7 +693,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return RefreshIndicator(
       onRefresh: _refreshDashboard,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.xl,
+          AppSpacing.xl,
+          AppSpacing.xxl,
+        ),
         children: <Widget>[
           _Header(
             session: dashboard.session,
@@ -680,12 +713,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   OrganizationPermissions.postsViewAll,
                 }) ??
                 false,
+            organizationAccess: organizationAccess,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           _StatTileRow(stats: stats),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           _PostStatusRow(posts: dashboard.posts, now: now),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           LayoutBuilder(
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 860;
@@ -713,7 +747,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 return Column(
                   children: <Widget>[
                     accountsGrid,
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     healthCard,
                   ],
                 );
@@ -723,13 +757,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Expanded(flex: 3, child: accountsGrid),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.lg),
                   Expanded(flex: 2, child: healthCard),
                 ],
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           WorkspaceModulesGrid(
             modules: _buildModules(
               context,
@@ -739,7 +773,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               organizationAccess,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           RecentActivityList(posts: recent.take(8).toList(growable: false)),
         ],
       ),
@@ -826,16 +860,58 @@ class _DashboardData {
   final List<NotificationEntity> notifications;
 }
 
+/// The badge previously showed [AuthSession.role] — a legacy, account-wide
+/// role (guest/publisher/admin) that has no bearing on what the user can
+/// actually do; every real permission check in this app goes through the
+/// CURRENT organization's membership role instead (owner/admin/manager/
+/// editor/viewer), which wasn't shown anywhere. A user could be the full
+/// owner of their own organization and still see "Guest" here. Mirrors
+/// [OrganizationAccessState]'s own three states: an active membership (show
+/// its role, switches immediately with the organization), memberships that
+/// exist but none is currently selected ("choose an organization"), and no
+/// memberships at all ("no active membership") — never "Guest" for any of
+/// these, since that implied a real, if limited, access level.
+String _organizationRoleBadgeLabel(
+  OrganizationAccessState? organizationAccess,
+  AppLocalizations l10n,
+) {
+  final access = organizationAccess;
+  if (access == null) {
+    return l10n.dashboardGuestRole;
+  }
+  if (!access.hasActiveOrganization) {
+    return access.hasMemberships
+        ? l10n.dashboardChooseOrganizationRole
+        : l10n.dashboardNoActiveMembershipRole;
+  }
+  switch (access.currentOrganization!.role.trim().toLowerCase()) {
+    case 'owner':
+      return l10n.dashboardRoleOwner;
+    case 'admin':
+      return l10n.dashboardRoleAdmin;
+    case 'manager':
+      return l10n.dashboardRoleManager;
+    case 'editor':
+      return l10n.dashboardRoleEditor;
+    case 'viewer':
+      return l10n.dashboardRoleViewer;
+    default:
+      return access.currentOrganization!.role;
+  }
+}
+
 class _Header extends StatelessWidget {
   const _Header({
     required this.session,
     required this.canCreatePost,
     required this.canViewPosts,
+    required this.organizationAccess,
   });
 
   final AuthSession? session;
   final bool canCreatePost;
   final bool canViewPosts;
+  final OrganizationAccessState? organizationAccess;
 
   @override
   Widget build(BuildContext context) {
@@ -843,12 +919,12 @@ class _Header extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[colorScheme.primary, colorScheme.primaryContainer],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
         borderRadius: BorderRadius.circular(24),
       ),
@@ -861,45 +937,61 @@ class _Header extends StatelessWidget {
               context,
             ).textTheme.headlineMedium?.copyWith(color: colorScheme.onPrimary),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.dashboardSubtitle,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: colorScheme.onPrimary.withValues(alpha: 0.9),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           Wrap(
             spacing: 12,
             runSpacing: 12,
             children: <Widget>[
-              DashboardPillInfo(
+              StatusPill(
                 icon: Icons.person_outline,
                 label:
                     session?.user.name ??
                     l10n.dashboardAuthenticatedUserFallback,
-                foreground: colorScheme.onPrimary,
+                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: colorScheme.onPrimary.withValues(alpha: 0.14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
               ),
-              DashboardPillInfo(
+              StatusPill(
                 icon: Icons.mail_outline,
                 label: session?.user.email ?? l10n.dashboardNoEmailFallback,
-                foreground: colorScheme.onPrimary,
+                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: colorScheme.onPrimary.withValues(alpha: 0.14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
               ),
-              DashboardPillInfo(
+              StatusPill(
                 icon: Icons.verified_user_outlined,
-                label:
-                    session?.role.name.toUpperCase() ?? l10n.dashboardGuestRole,
-                foreground: colorScheme.onPrimary,
+                label: _organizationRoleBadgeLabel(organizationAccess, l10n),
+                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: colorScheme.onPrimary.withValues(alpha: 0.14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
               ),
               if (canCreatePost)
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.onPrimary,
-                    foregroundColor: colorScheme.primary,
+                _PressScale(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colorScheme.onPrimary,
+                      foregroundColor: colorScheme.primary,
+                    ),
+                    onPressed: () => context.go(RouteNames.postsCreatePath),
+                    icon: const Icon(Icons.edit_note_outlined),
+                    label: Text(l10n.dashboardCreatePostButton),
                   ),
-                  onPressed: () => context.go(RouteNames.postsCreatePath),
-                  icon: const Icon(Icons.edit_note_outlined),
-                  label: Text(l10n.dashboardCreatePostButton),
                 ),
               if (canViewPosts)
                 OutlinedButton.icon(
@@ -916,6 +1008,45 @@ class _Header extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PressScale extends StatefulWidget {
+  const _PressScale({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PressScale> createState() => _PressScaleState();
+}
+
+class _PressScaleState extends State<_PressScale> {
+  bool _isPressed = false;
+
+  void _setPressed(bool value) {
+    if (_isPressed != value) {
+      setState(() => _isPressed = value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _setPressed(true),
+      onPointerUp: (_) => _setPressed(false),
+      onPointerCancel: (_) => _setPressed(false),
+      child: AnimatedContainer(
+        duration: AppDuration.fast,
+        curve: AppCurves.standard,
+        transform: Matrix4.diagonal3Values(
+          _isPressed ? 0.97 : 1,
+          _isPressed ? 0.97 : 1,
+          1,
+        ),
+        transformAlignment: Alignment.center,
+        child: widget.child,
       ),
     );
   }

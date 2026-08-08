@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../domain/entities/notification_entity.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -107,73 +112,111 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadNotifications,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: <Widget>[
-            Card(
-              child: ListTile(
-                title: Text(l10n.notificationsInboxSummaryTitle),
-                subtitle: Text(
-                  l10n.notificationsInboxSummarySubtitle(
-                    unreadCount,
-                    notifications.length,
-                  ),
-                ),
-                leading: const Icon(Icons.notifications_active_outlined),
-              ),
+      body: AdaptiveContentWidth(
+        child: RefreshIndicator(
+          onRefresh: _loadNotifications,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xl,
             ),
-            const SizedBox(height: 12),
-            if (_notifications.isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (_notifications.hasError)
+            children: <Widget>[
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(l10n.notificationsLoadFailed),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _loadNotifications,
-                        icon: const Icon(Icons.refresh),
-                        label: Text(l10n.commonRetry),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else if (notifications.isEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(l10n.notificationsEmpty),
-                ),
-              )
-            else
-              ...notifications.map(
-                (notification) => Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    leading: Icon(
-                      notification.isRead
-                          ? Icons.mark_email_read_outlined
-                          : Icons.mark_email_unread_outlined,
+                child: ListTile(
+                  title: Text(l10n.notificationsInboxSummaryTitle),
+                  subtitle: Text(
+                    l10n.notificationsInboxSummarySubtitle(
+                      unreadCount,
+                      notifications.length,
                     ),
-                    title: Text(notification.title),
-                    subtitle: Text(notification.body),
-                    trailing: notification.isRead
-                        ? const Icon(Icons.check, size: 18)
-                        : TextButton(
-                            onPressed: () async => _markRead(notification.id),
-                            child: Text(l10n.notificationsMarkReadButton),
-                          ),
                   ),
+                  leading: const Icon(Icons.notifications_active_outlined),
                 ),
               ),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              if (_notifications.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (_notifications.hasError)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(l10n.notificationsLoadFailed),
+                        const SizedBox(height: AppSpacing.md),
+                        OutlinedButton.icon(
+                          onPressed: _loadNotifications,
+                          icon: const Icon(Icons.refresh),
+                          label: Text(l10n.commonRetry),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (notifications.isEmpty)
+                AppEmptyState(
+                  message: l10n.notificationsEmpty,
+                  icon: Icons.notifications_none_outlined,
+                )
+              else
+                ...notifications.map((notification) {
+                  final isUnread = !notification.isRead;
+                  return AnimatedScale(
+                    scale: isUnread ? 1 : 0.99,
+                    duration: AppDuration.fast,
+                    curve: AppCurves.standard,
+                    child: AnimatedContainer(
+                      duration: AppDuration.normal,
+                      curve: AppCurves.standard,
+                      child: Card(
+                        color: isUnread
+                            ? Theme.of(context).colorScheme.secondaryContainer
+                                  .withValues(alpha: 0.42)
+                            : null,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: ListTile(
+                          leading: AnimatedSwitcher(
+                            duration: AppDuration.fast,
+                            switchInCurve: AppCurves.standard,
+                            switchOutCurve: AppCurves.standard,
+                            child: Icon(
+                              notification.isRead
+                                  ? Icons.mark_email_read_outlined
+                                  : Icons.mark_email_unread_outlined,
+                              key: ValueKey<bool>(notification.isRead),
+                            ),
+                          ),
+                          title: Text(notification.title),
+                          subtitle: Text(notification.body),
+                          trailing: AnimatedSwitcher(
+                            duration: AppDuration.normal,
+                            switchInCurve: AppCurves.standard,
+                            switchOutCurve: AppCurves.standard,
+                            child: notification.isRead
+                                ? const Icon(
+                                    Icons.check,
+                                    key: ValueKey<String>('read'),
+                                    size: 18,
+                                  )
+                                : TextButton(
+                                    key: const ValueKey<String>('unread'),
+                                    onPressed: () async =>
+                                        _markRead(notification.id),
+                                    child: Text(
+                                      l10n.notificationsMarkReadButton,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          ),
         ),
       ),
     );

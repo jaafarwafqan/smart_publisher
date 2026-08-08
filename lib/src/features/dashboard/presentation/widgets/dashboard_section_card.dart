@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+
 class DashboardSectionCard extends StatelessWidget {
   const DashboardSectionCard({
     super.key,
@@ -16,14 +18,14 @@ class DashboardSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(title, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 18),
+            const SizedBox(height: AppSpacing.lg),
             child,
           ],
         ),

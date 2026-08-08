@@ -3,8 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
+import '../../../../shared/widgets/status_pill.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../domain/entities/post_entity.dart';
 
@@ -133,152 +142,99 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadPosts,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: <Widget>[
-            Text(l10n.postsListHeadline, style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(l10n.postsListSubtitle, style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: l10n.postsListSearchLabel,
-                hintText: l10n.postsListSearchHint,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
+      body: AdaptiveContentWidth(
+        child: RefreshIndicator(
+          onRefresh: _loadPosts,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xl,
+            ),
+            children: <Widget>[
+              Text(
+                l10n.postsListHeadline,
+                style: theme.textTheme.headlineSmall,
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                _StatusChip(
-                  label: l10n.postsListFilterAll,
-                  selected: _statusFilter == 'all',
-                  onSelected: () => setState(() => _statusFilter = 'all'),
+              const SizedBox(height: AppSpacing.sm),
+              Text(l10n.postsListSubtitle, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: AppSpacing.lg),
+              TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText: l10n.postsListSearchLabel,
+                  hintText: l10n.postsListSearchHint,
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
                 ),
-                _StatusChip(
-                  label: l10n.postsListFilterDraft,
-                  selected: _statusFilter == 'draft',
-                  onSelected: () => setState(() => _statusFilter = 'draft'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  _StatusChip(
+                    label: l10n.postsListFilterAll,
+                    selected: _statusFilter == 'all',
+                    onSelected: () => setState(() => _statusFilter = 'all'),
+                  ),
+                  _StatusChip(
+                    label: l10n.postsListFilterDraft,
+                    selected: _statusFilter == 'draft',
+                    onSelected: () => setState(() => _statusFilter = 'draft'),
+                  ),
+                  _StatusChip(
+                    label: l10n.postsListFilterScheduled,
+                    selected: _statusFilter == 'scheduled',
+                    onSelected: () =>
+                        setState(() => _statusFilter = 'scheduled'),
+                  ),
+                  _StatusChip(
+                    label: l10n.postsListFilterPublished,
+                    selected: _statusFilter == 'published',
+                    onSelected: () =>
+                        setState(() => _statusFilter = 'published'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AppAsyncSwitcher(
+                state: _loading
+                    ? AppAsyncState.loading
+                    : _error != null
+                    ? AppAsyncState.error
+                    : posts.isEmpty
+                    ? AppAsyncState.empty
+                    : AppAsyncState.content,
+                loading: const Center(child: CircularProgressIndicator()),
+                error: Text(
+                  _error ?? '',
+                  style: TextStyle(color: theme.colorScheme.error),
                 ),
-                _StatusChip(
-                  label: l10n.postsListFilterScheduled,
-                  selected: _statusFilter == 'scheduled',
-                  onSelected: () => setState(() => _statusFilter = 'scheduled'),
-                ),
-                _StatusChip(
-                  label: l10n.postsListFilterPublished,
-                  selected: _statusFilter == 'published',
-                  onSelected: () => setState(() => _statusFilter = 'published'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (_error != null)
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error))
-            else if (posts.isEmpty)
-              _EmptyPostsState(message: l10n.postsListEmpty)
-            else
-              ...posts.map(
-                (post) => Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      child: Text(
-                        post.title.isEmpty ? '?' : post.title[0].toUpperCase(),
-                      ),
+                empty: AppEmptyState(message: l10n.postsListEmpty),
+                content: _buildPostsContent(posts, l10n),
+              ),
+              if (!_loading && _error == null && _hasMorePages)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
+                  child: Center(
+                    child: OutlinedButton.icon(
+                      onPressed: _loadingMore ? null : _loadMorePosts,
+                      icon: _loadingMore
+                          ? const SizedBox(
+                              width: AppSizes.iconSm,
+                              height: AppSizes.iconSm,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.expand_more),
+                      label: Text(l10n.postsListLoadMore),
                     ),
-                    title: Text(
-                      post.title.isEmpty ? l10n.postUntitled : post.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        const SizedBox(height: 4),
-                        Text(
-                          post.body,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 6,
-                          children: <Widget>[
-                            _StatusBadge(status: post.status),
-                            if (post.status == 'published' &&
-                                post.publishedAt != null)
-                              _MetaBadge(
-                                text: l10n.postsListPublishedMeta(
-                                  _formatDateTime(post.publishedAt!),
-                                ),
-                                icon: Icons.check_circle_outline,
-                              )
-                            else if (post.status == 'scheduled' &&
-                                post.scheduledAt != null)
-                              _MetaBadge(
-                                text: l10n.postsListScheduledMeta(
-                                  _formatDateTime(post.scheduledAt!),
-                                ),
-                                icon: Icons.schedule,
-                              ),
-                            _MetaBadge(
-                              text: l10n.postsListMediaCountMeta(
-                                post.attachments.length,
-                              ),
-                              icon: Icons.attach_file,
-                            ),
-                            _MetaBadge(
-                              text: l10n.postsListPlatformsCountMeta(
-                                post.platforms.length,
-                              ),
-                              icon: Icons.public,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: _canEditPosts
-                        ? IconButton(
-                            tooltip: l10n.postsListEditTooltip,
-                            onPressed: () => context.go(
-                              RouteNames.postsCreatePath,
-                              extra: post,
-                            ),
-                            icon: const Icon(Icons.edit_outlined),
-                          )
-                        : null,
                   ),
                 ),
-              ),
-            if (!_loading && _error == null && _hasMorePages)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Center(
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingMore ? null : _loadMorePosts,
-                    icon: _loadingMore
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.expand_more),
-                    label: Text(l10n.postsListLoadMore),
-                  ),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -286,6 +242,88 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         icon: const Icon(Icons.add),
         label: Text(l10n.postsListNewPostButton),
       ),
+    );
+  }
+
+  Widget _buildPostsContent(List<PostEntity> posts, AppLocalizations l10n) {
+    return Column(
+      children: posts
+          .map(
+            (post) => Card(
+              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Text(
+                    post.title.isEmpty ? '?' : post.title[0].toUpperCase(),
+                  ),
+                ),
+                title: Text(
+                  post.title.isEmpty ? l10n.postUntitled : post.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      post.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: <Widget>[
+                        StatusPill(
+                          label: _statusLabel(post.status, l10n),
+                          tone: _toneForStatus(post.status),
+                        ),
+                        if (post.status == 'published' &&
+                            post.publishedAt != null)
+                          StatusPill(
+                            label: l10n.postsListPublishedMeta(
+                              _formatDateTime(post.publishedAt!),
+                            ),
+                            icon: Icons.check_circle_outline,
+                          )
+                        else if (post.status == 'scheduled' &&
+                            post.scheduledAt != null)
+                          StatusPill(
+                            label: l10n.postsListScheduledMeta(
+                              _formatDateTime(post.scheduledAt!),
+                            ),
+                            icon: Icons.schedule,
+                          ),
+                        StatusPill(
+                          label: l10n.postsListMediaCountMeta(
+                            post.attachments.length,
+                          ),
+                          icon: Icons.attach_file,
+                        ),
+                        StatusPill(
+                          label: l10n.postsListPlatformsCountMeta(
+                            post.platforms.length,
+                          ),
+                          icon: Icons.public,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                trailing: _canEditPosts
+                    ? IconButton(
+                        tooltip: l10n.postsListEditTooltip,
+                        onPressed: () =>
+                            context.go(RouteNames.postsCreatePath, extra: post),
+                        icon: const Icon(Icons.edit_outlined),
+                      )
+                    : null,
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 
@@ -297,75 +335,25 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
     final minute = local.minute.toString().padLeft(2, '0');
     return '${local.year}-$month-$day $hour:$minute';
   }
-}
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => onSelected(),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
-    final bool warning =
-        status == 'scheduled' ||
-        status == 'publishing' ||
-        status == 'partial_success';
-    final bool success = status == 'published';
-    final bool danger = status == 'failed';
-
-    Color bg = colorScheme.secondaryContainer;
-    Color fg = colorScheme.onSecondaryContainer;
-
-    if (warning) {
-      bg = colorScheme.tertiaryContainer;
-      fg = colorScheme.onTertiaryContainer;
+  static PillTone _toneForStatus(String status) {
+    switch (status) {
+      case 'scheduled':
+      case 'publishing':
+      case 'partial_success':
+        return PillTone.warning;
+      case 'published':
+        return PillTone.success;
+      case 'failed':
+        return PillTone.danger;
+      case 'draft':
+      case 'cancelled':
+      default:
+        return PillTone.neutral;
     }
-    if (success) {
-      bg = colorScheme.primaryContainer;
-      fg = colorScheme.onPrimaryContainer;
-    }
-    if (danger) {
-      bg = colorScheme.errorContainer;
-      fg = colorScheme.onErrorContainer;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        _statusLabel(status, l10n),
-        style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: 11),
-      ),
-    );
   }
 
-  String _statusLabel(String status, AppLocalizations l10n) {
+  static String _statusLabel(String status, AppLocalizations l10n) {
     switch (status) {
       case 'scheduled':
         return l10n.postsListFilterScheduled;
@@ -386,48 +374,69 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-class _MetaBadge extends StatelessWidget {
-  const _MetaBadge({required this.text, required this.icon});
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
 
-  final String text;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: 14),
-          const SizedBox(width: 4),
-          Text(text, style: const TextStyle(fontSize: 12)),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyPostsState extends StatelessWidget {
-  const _EmptyPostsState({required this.message});
-
-  final String message;
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: <Widget>[
-            const Icon(Icons.inbox_outlined, size: 40),
-            const SizedBox(height: 10),
-            Text(message),
-          ],
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: InkWell(
+          onTap: onSelected,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: AnimatedContainer(
+            duration: AppDuration.normal,
+            curve: AppCurves.standard,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: selected
+                  ? colorScheme.secondaryContainer
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: selected
+                        ? colorScheme.onSecondaryContainer
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                AnimatedContainer(
+                  duration: AppDuration.fast,
+                  curve: AppCurves.standard,
+                  width: selected ? AppSpacing.xl : 0,
+                  height: AppSpacing.xs,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

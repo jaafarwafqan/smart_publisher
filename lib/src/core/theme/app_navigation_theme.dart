@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'app_text_theme.dart';
 import 'app_radius.dart';
 
 final class AppNavigationTheme {
@@ -8,6 +10,7 @@ final class AppNavigationTheme {
   static NavigationBarThemeData navigationBarTheme({
     required ColorScheme colorScheme,
   }) {
+    final textTheme = AppTextTheme.textTheme(colorScheme.brightness);
     return NavigationBarThemeData(
       backgroundColor: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
@@ -20,8 +23,7 @@ final class AppNavigationTheme {
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
         final selected = states.contains(WidgetState.selected);
 
-        return TextStyle(
-          fontSize: 12,
+        return textTheme.labelMedium?.copyWith(
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
         );
@@ -42,6 +44,7 @@ final class AppNavigationTheme {
   static NavigationDrawerThemeData navigationDrawerTheme({
     required ColorScheme colorScheme,
   }) {
+    final textTheme = AppTextTheme.textTheme(colorScheme.brightness);
     return NavigationDrawerThemeData(
       backgroundColor: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
@@ -61,8 +64,7 @@ final class AppNavigationTheme {
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
         final selected = states.contains(WidgetState.selected);
 
-        return TextStyle(
-          fontSize: 14,
+        return textTheme.bodyMedium?.copyWith(
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
           color: selected ? colorScheme.primary : colorScheme.onSurface,
         );

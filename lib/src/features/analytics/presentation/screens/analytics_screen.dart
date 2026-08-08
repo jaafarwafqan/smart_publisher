@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/animated_count_text.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../dashboard/presentation/utils/platform_label.dart';
 import '../../domain/entities/analytics_dashboard_entity.dart';
 import '../../domain/entities/analytics_metric_entity.dart';
@@ -123,151 +127,158 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.analyticsAppBarTitle)),
-      body: RefreshIndicator(
-        onRefresh: _loadAnalytics,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: <Widget>[
-            Text(
-              l10n.analyticsSubtitle,
-              style: Theme.of(context).textTheme.bodyLarge,
+      body: AdaptiveContentWidth(
+        child: RefreshIndicator(
+          onRefresh: _loadAnalytics,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xl,
             ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                _MetricCard(
-                  label: l10n.analyticsMetricReach,
-                  value: '$totalReach',
-                ),
-                _MetricCard(
-                  label: l10n.analyticsMetricImpressions,
-                  value: '$totalImpressions',
-                ),
-                _MetricCard(
-                  label: l10n.analyticsMetricEngagement,
-                  value: '$totalEngagement',
-                ),
-                _MetricCard(
-                  label: l10n.analyticsMetricAvgEngagementRate,
-                  value: '${(averageRate * 100).toStringAsFixed(2)}%',
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: _RecommendationTile(
-                        icon: Icons.schedule_outlined,
-                        label: l10n.analyticsBestTimeToPost,
-                        value: _dashboard?.bestPublishHour == null
-                            ? l10n.analyticsNotEnoughData
-                            : _formatHour(
-                                _dashboard!.bestPublishHour!,
-                                l10n.localeName,
-                              ),
-                      ),
-                    ),
-                    const VerticalDivider(width: 24),
-                    Expanded(
-                      child: _RecommendationTile(
-                        icon: Icons.trending_up_outlined,
-                        label: l10n.analyticsBestPlatform,
-                        value: _dashboard?.bestPlatform == null
-                            ? l10n.analyticsNotEnoughData
-                            : platformLabel(_dashboard!.bestPlatform!),
-                      ),
-                    ),
-                  ],
-                ),
+            children: <Widget>[
+              Text(
+                l10n.analyticsSubtitle,
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-            ),
-            const SizedBox(height: 16),
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (_error != null)
+              const SizedBox(height: AppSpacing.lg),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: <Widget>[
+                  _MetricCard(
+                    label: l10n.analyticsMetricReach,
+                    value: totalReach,
+                  ),
+                  _MetricCard(
+                    label: l10n.analyticsMetricImpressions,
+                    value: totalImpressions,
+                  ),
+                  _MetricCard(
+                    label: l10n.analyticsMetricEngagement,
+                    value: totalEngagement,
+                  ),
+                  _MetricCard(
+                    label: l10n.analyticsMetricAvgEngagementRate,
+                    value: averageRate * 100,
+                    suffix: '%',
+                    fractionDigits: 2,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
                     children: <Widget>[
-                      Text(_error!),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _loadAnalytics,
-                        icon: const Icon(Icons.refresh),
-                        label: Text(l10n.commonRetry),
+                      Expanded(
+                        child: _RecommendationTile(
+                          icon: Icons.schedule_outlined,
+                          label: l10n.analyticsBestTimeToPost,
+                          value: _dashboard?.bestPublishHour == null
+                              ? l10n.analyticsNotEnoughData
+                              : _formatHour(
+                                  _dashboard!.bestPublishHour!,
+                                  l10n.localeName,
+                                ),
+                        ),
+                      ),
+                      const VerticalDivider(width: 24),
+                      Expanded(
+                        child: _RecommendationTile(
+                          icon: Icons.trending_up_outlined,
+                          label: l10n.analyticsBestPlatform,
+                          value: _dashboard?.bestPlatform == null
+                              ? l10n.analyticsNotEnoughData
+                              : platformLabel(_dashboard!.bestPlatform!),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              )
-            else if (_rows.isEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(l10n.analyticsNoPostsYet),
-                ),
-              )
-            else
-              ..._rows.map(
-                (row) => Card(
-                  margin: const EdgeInsets.only(bottom: 10),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (_loading)
+                const Center(child: CircularProgressIndicator())
+              else if (_error != null)
+                Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
-                          row.post.title.isEmpty
-                              ? l10n.postUntitled
-                              : row.post.title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 10,
-                          children: <Widget>[
-                            _MiniStat(
-                              label: l10n.analyticsMetricReach,
-                              value: '${row.metric.reach}',
-                            ),
-                            _MiniStat(
-                              label: l10n.analyticsMetricImpressions,
-                              value: '${row.metric.impressions}',
-                            ),
-                            _MiniStat(
-                              label: l10n.analyticsMetricClicks,
-                              value: '${row.metric.clicks}',
-                            ),
-                            _MiniStat(
-                              label: l10n.analyticsMetricShares,
-                              value: '${row.metric.shares}',
-                            ),
-                            _MiniStat(
-                              label: l10n.analyticsMetricReactions,
-                              value: '${row.metric.reactions}',
-                            ),
-                            _MiniStat(
-                              label: l10n.analyticsMetricEngagementRate,
-                              value:
-                                  '${(row.metric.engagementRate * 100).toStringAsFixed(2)}%',
-                            ),
-                          ],
+                        Text(_error!),
+                        const SizedBox(height: AppSpacing.md),
+                        OutlinedButton.icon(
+                          onPressed: _loadAnalytics,
+                          icon: const Icon(Icons.refresh),
+                          label: Text(l10n.commonRetry),
                         ),
                       ],
                     ),
                   ),
+                )
+              else if (_rows.isEmpty)
+                AppEmptyState(
+                  message: l10n.analyticsNoPostsYet,
+                  icon: Icons.insights_outlined,
+                )
+              else
+                ..._rows.map(
+                  (row) => Card(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            row.post.title.isEmpty
+                                ? l10n.postUntitled
+                                : row.post.title,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 10,
+                            children: <Widget>[
+                              _MiniStat(
+                                label: l10n.analyticsMetricReach,
+                                value: '${row.metric.reach}',
+                              ),
+                              _MiniStat(
+                                label: l10n.analyticsMetricImpressions,
+                                value: '${row.metric.impressions}',
+                              ),
+                              _MiniStat(
+                                label: l10n.analyticsMetricClicks,
+                                value: '${row.metric.clicks}',
+                              ),
+                              _MiniStat(
+                                label: l10n.analyticsMetricShares,
+                                value: '${row.metric.shares}',
+                              ),
+                              _MiniStat(
+                                label: l10n.analyticsMetricReactions,
+                                value: '${row.metric.reactions}',
+                              ),
+                              _MiniStat(
+                                label: l10n.analyticsMetricEngagementRate,
+                                value:
+                                    '${(row.metric.engagementRate * 100).toStringAsFixed(2)}%',
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -295,7 +306,7 @@ class _RecommendationTile extends StatelessWidget {
     return Row(
       children: <Widget>[
         Icon(icon, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,10 +334,17 @@ class _PostAnalyticsViewModel {
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value});
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    this.suffix = '',
+    this.fractionDigits = 0,
+  });
 
   final String label;
-  final String value;
+  final num value;
+  final String suffix;
+  final int fractionDigits;
 
   @override
   Widget build(BuildContext context) {
@@ -334,14 +352,16 @@ class _MetricCard extends StatelessWidget {
       width: 165,
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(label, style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 6),
-              Text(
-                value,
+              const SizedBox(height: AppSpacing.sm),
+              AnimatedCountText(
+                value: value,
+                suffix: suffix,
+                fractionDigits: fractionDigits,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -363,7 +383,10 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(10),

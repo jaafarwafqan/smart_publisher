@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../analytics/domain/entities/analytics_summary_entity.dart';
 import '../utils/platform_label.dart';
 import 'dashboard_section_card.dart';
@@ -37,7 +39,7 @@ class PublishingHealthCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               _SuccessRateGauge(rate: successRate),
-              const SizedBox(width: 24),
+              const SizedBox(width: AppSpacing.xl),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,17 +67,26 @@ class PublishingHealthCard extends StatelessWidget {
             ],
           ),
           if (platformDistribution.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               l10n.publishingHealthDistributionByPlatform,
               style: Theme.of(context).textTheme.labelLarge,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             SizedBox(
               height: 160,
               child: _PlatformDistributionChart(
                 distribution: platformDistribution,
               ),
+            ),
+          ] else ...<Widget>[
+            const SizedBox(height: AppSpacing.lg),
+            AppEmptyState(
+              message: l10n.analyticsNotEnoughData,
+              icon: Icons.bar_chart_outlined,
+              compact: true,
+              showCard: false,
+              alignment: CrossAxisAlignment.start,
             ),
           ],
         ],
@@ -185,7 +196,7 @@ class _PlatformDistributionChart extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
                   child: Text(
                     platformLabel(topEntries[index].key),
                     style: Theme.of(context).textTheme.labelSmall,
@@ -231,7 +242,7 @@ class _StatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
         children: <Widget>[
           Expanded(child: Text(label)),

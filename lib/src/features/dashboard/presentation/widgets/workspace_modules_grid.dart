@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/status_pill.dart';
 import 'dashboard_section_card.dart';
 
 class WorkspaceModule {
@@ -76,7 +78,7 @@ class _ModuleTile extends StatelessWidget {
       child: InkWell(
         onTap: module.onTap,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -86,28 +88,12 @@ class _ModuleTile extends StatelessWidget {
                 children: <Widget>[
                   Icon(module.icon, color: colorScheme.primary),
                   if (module.badge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        module.badge!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
+                    StatusPill(label: module.badge!, tone: PillTone.success),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.md),
               Text(module.title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 module.description,
                 maxLines: 2,

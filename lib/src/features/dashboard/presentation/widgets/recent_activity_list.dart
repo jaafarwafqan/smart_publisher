@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../posts/domain/entities/post_entity.dart';
 import '../utils/activity_text.dart';
 import 'dashboard_section_card.dart';
@@ -19,12 +20,12 @@ class RecentActivityList extends StatelessWidget {
       title: l10n.recentActivityTitle,
       subtitle: l10n.recentActivitySubtitle,
       child: posts.isEmpty
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                l10n.recentActivityEmpty,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+          ? AppEmptyState(
+              message: l10n.recentActivityEmpty,
+              icon: Icons.history_toggle_off_outlined,
+              compact: true,
+              showCard: false,
+              alignment: CrossAxisAlignment.start,
             )
           : Column(
               children: <Widget>[

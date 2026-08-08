@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../posts/domain/entities/post_entity.dart';
 
 /// A compact tile for one post-status view (Scheduled Today, Publishing
@@ -29,7 +31,7 @@ class PostStatusSection extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -37,7 +39,7 @@ class PostStatusSection extends StatelessWidget {
             Row(
               children: <Widget>[
                 Icon(icon, color: colorScheme.primary, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     title,
@@ -53,16 +55,19 @@ class PostStatusSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.md),
             if (posts.isEmpty)
-              Text(
-                emptyMessage ?? l10n.postStatusSectionDefaultEmpty,
-                style: Theme.of(context).textTheme.bodySmall,
+              AppEmptyState(
+                message: emptyMessage ?? l10n.postStatusSectionDefaultEmpty,
+                icon: Icons.inbox_outlined,
+                compact: true,
+                showCard: false,
+                alignment: CrossAxisAlignment.start,
               )
             else
               for (final post in posts.take(3))
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                   child: Text(
                     post.title.isEmpty ? l10n.postUntitled : post.title,
                     maxLines: 1,

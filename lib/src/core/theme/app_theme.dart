@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
-import 'app_extensions.dart';
 import 'app_text_theme.dart';
 import 'app_button_theme.dart';
 import 'app_input_theme.dart';
@@ -61,8 +60,6 @@ final class AppTheme {
       colorScheme: colorScheme,
 
       scaffoldBackgroundColor: colorScheme.surface,
-
-      extensions: const [brandColorsExtension],
 
       textTheme: AppTextTheme.textTheme(brightness),
       inputDecorationTheme: AppInputTheme.theme(colorScheme: colorScheme),

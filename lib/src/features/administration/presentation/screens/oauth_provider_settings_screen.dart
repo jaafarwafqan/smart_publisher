@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../core/theme/app_curves.dart';
+import '../../../../core/theme/app_duration.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
+import '../../../../shared/widgets/status_pill.dart';
 import '../../../dashboard/presentation/utils/platform_label.dart';
 import '../../domain/entities/oauth_provider_setting_entity.dart';
 
@@ -168,16 +174,16 @@ class _OAuthProviderSettingsScreenState
 
             if (snapshot.hasError) {
               return ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 children: <Widget>[
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(l10n.oauthSettingsFailedToLoad),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.md),
                           OutlinedButton.icon(
                             onPressed: _refresh,
                             icon: const Icon(Icons.refresh),
@@ -195,13 +201,13 @@ class _OAuthProviderSettingsScreenState
                 snapshot.data ?? const <OAuthProviderSettingEntity>[];
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               children: <Widget>[
                 Text(
                   l10n.oauthSettingsIntro,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 ...providers.map(
                   (provider) => _ProviderCard(
                     provider: provider,
@@ -241,9 +247,9 @@ class _ProviderCard extends StatelessWidget {
     final label = platformLabel(provider.provider);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -263,9 +269,12 @@ class _ProviderCard extends StatelessWidget {
               ],
             ),
             if (provider.isMockIntegration) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(6),
@@ -279,7 +288,7 @@ class _ProviderCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               provider.clientId?.isNotEmpty == true
                   ? l10n.oauthSettingsClientIdSet(provider.clientId!)
@@ -288,7 +297,7 @@ class _ProviderCard extends StatelessWidget {
             ),
             if (provider.updatedByName != null &&
                 provider.updatedAt != null) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 l10n.oauthSettingsUpdatedBy(
                   provider.updatedByName!,
@@ -299,9 +308,9 @@ class _ProviderCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            _StatusBlock(provider: provider),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
+            _StatusBlock(provider: provider, isTesting: isTesting),
+            const SizedBox(height: AppSpacing.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
@@ -310,8 +319,8 @@ class _ProviderCard extends StatelessWidget {
                     onPressed: isTesting ? null : onTestConnection,
                     icon: isTesting
                         ? const SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: AppSizes.iconSm,
+                            height: AppSizes.iconSm,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.wifi_tethering, size: 18),
@@ -321,7 +330,7 @@ class _ProviderCard extends StatelessWidget {
                           : l10n.oauthSettingsTestConnection,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                 ],
                 OutlinedButton.icon(
                   onPressed: onEdit,
@@ -338,36 +347,50 @@ class _ProviderCard extends StatelessWidget {
 }
 
 class _StatusBlock extends StatelessWidget {
-  const _StatusBlock({required this.provider});
+  const _StatusBlock({required this.provider, required this.isTesting});
 
   final OAuthProviderSettingEntity provider;
+  final bool isTesting;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
-    if (!provider.isConfigured) {
-      return _pill(
-        context,
+    final Widget status;
+    final String statusKey;
+    if (isTesting) {
+      statusKey = 'testing';
+      status = Row(
+        children: <Widget>[
+          const SizedBox(
+            width: AppSizes.iconSm,
+            height: AppSizes.iconSm,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(l10n.oauthSettingsTestConnection),
+        ],
+      );
+    } else if (!provider.isConfigured) {
+      statusKey = 'not-configured';
+      status = _pill(
         label: l10n.oauthSettingsNotConfigured,
         background: colorScheme.surfaceContainerHighest,
         foreground: colorScheme.onSurfaceVariant,
       );
-    }
-
-    if (provider.lastTestSuccess == true) {
-      return Column(
+    } else if (provider.lastTestSuccess == true) {
+      statusKey = 'verified';
+      status = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           _pill(
-            context,
             label: l10n.oauthSettingsConfigured,
             background: colorScheme.primaryContainer,
             foreground: colorScheme.onPrimaryContainer,
           ),
           if (provider.lastTestedAt != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               l10n.oauthSettingsLastVerified(
                 _formatTimestamp(provider.lastTestedAt!, l10n),
@@ -377,55 +400,49 @@ class _StatusBlock extends StatelessWidget {
           ],
         ],
       );
-    }
-
-    if (provider.lastTestSuccess == false) {
-      return Column(
+    } else if (provider.lastTestSuccess == false) {
+      statusKey = 'failed';
+      status = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           _pill(
-            context,
             label: l10n.oauthSettingsInvalidConfig,
             background: colorScheme.errorContainer,
             foreground: colorScheme.onErrorContainer,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             l10n.oauthSettingsAuthFailed,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       );
+    } else {
+      statusKey = 'not-tested';
+      status = _pill(
+        label: l10n.oauthSettingsConfiguredNotTested,
+        background: colorScheme.secondaryContainer,
+        foreground: colorScheme.onSecondaryContainer,
+      );
     }
 
-    // Configured but never tested.
-    return _pill(
-      context,
-      label: l10n.oauthSettingsConfiguredNotTested,
-      background: colorScheme.secondaryContainer,
-      foreground: colorScheme.onSecondaryContainer,
+    return AnimatedSwitcher(
+      duration: AppDuration.normal,
+      switchInCurve: AppCurves.standard,
+      switchOutCurve: AppCurves.standard,
+      child: KeyedSubtree(key: ValueKey<String>(statusKey), child: status),
     );
   }
 
-  Widget _pill(
-    BuildContext context, {
+  Widget _pill({
     required String label,
     required Color background,
     required Color foreground,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return StatusPill(
+      label: label,
+      backgroundColor: background,
+      foregroundColor: foreground,
     );
   }
 }
@@ -441,7 +458,7 @@ class _AuditLogSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,11 +467,14 @@ class _AuditLogSheet extends StatelessWidget {
               l10n.oauthSettingsHistorySheetTitle(label),
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             if (entries.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(l10n.oauthSettingsNoHistory),
+              AppEmptyState(
+                message: l10n.oauthSettingsNoHistory,
+                icon: Icons.history_toggle_off_outlined,
+                compact: true,
+                showCard: false,
+                alignment: CrossAxisAlignment.start,
               )
             else
               Flexible(
@@ -558,7 +578,7 @@ class _ProviderEditDialogState extends State<_ProviderEditDialog> {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _clientSecretController,
             obscureText: true,
@@ -570,7 +590,7 @@ class _ProviderEditDialogState extends State<_ProviderEditDialog> {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.oauthSettingsEnabledLabel),

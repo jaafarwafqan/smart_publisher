@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'app_elevation.dart';
 import 'app_radius.dart';
+import 'app_text_theme.dart';
 
 final class AppDialogTheme {
   AppDialogTheme._();
 
   static DialogThemeData theme({required ColorScheme colorScheme}) {
+    final textTheme = AppTextTheme.textTheme(colorScheme.brightness);
     return DialogThemeData(
       backgroundColor: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
@@ -14,14 +16,12 @@ final class AppDialogTheme {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
-      titleTextStyle: TextStyle(
+      titleTextStyle: textTheme.titleLarge?.copyWith(
         color: colorScheme.onSurface,
-        fontSize: 20,
         fontWeight: FontWeight.w600,
       ),
-      contentTextStyle: TextStyle(
+      contentTextStyle: textTheme.bodyMedium?.copyWith(
         color: colorScheme.onSurfaceVariant,
-        fontSize: 14,
       ),
     );
   }

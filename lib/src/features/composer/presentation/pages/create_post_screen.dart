@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../auth/domain/entities/account_entity.dart';
 import '../../../auth/domain/entities/social_page_entity.dart';
 import '../../../dashboard/presentation/utils/platform_label.dart';
@@ -13,6 +17,7 @@ import '../../../posts/domain/entities/media_entity.dart';
 import '../../../posts/domain/entities/post_entity.dart';
 import '../../domain/lite_markdown.dart';
 import '../widgets/composer_formatting_toolbar.dart';
+import '../widgets/composer_readiness.dart';
 import '../widgets/highlighting_text_editing_controller.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
@@ -562,7 +567,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       builder: (context) {
         final theme = Theme.of(context);
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.sm,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,14 +581,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 l10n.composerPreviewSheetTitle,
                 style: theme.textTheme.titleLarge,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 title.isEmpty ? l10n.postUntitled : title,
                 style: theme.textTheme.titleMedium,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(content.isEmpty ? l10n.composerNoContentYet : content),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               _PreviewRow(
                 label: l10n.composerPreviewMediaLabel,
                 value: _mediaUrls.isEmpty
@@ -619,569 +629,613 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final accessUnavailable =
         organizationAccess.hasError ||
         (access != null && !access.hasActiveOrganization);
+    final readiness =
+        <bool>[
+          _titleController.text.trim().isNotEmpty,
+          _contentController.text.trim().isNotEmpty,
+          _selectedEligiblePageIds().isNotEmpty,
+        ].where((isReady) => isReady).length /
+        3;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.composerAppBarTitle)),
-      body: RefreshIndicator(
-        onRefresh: _refreshConnectedAccounts,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: <Widget>[
-            Text(l10n.composerHeading, style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(l10n.composerSubheading, style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 8),
-            if (_draftId != null)
-              Wrap(
-                spacing: 8,
-                children: <Widget>[
-                  Chip(
-                    avatar: const Icon(Icons.edit_note_outlined),
-                    label: Text(l10n.composerEditingDraftChip),
-                  ),
-                  Chip(label: Text(l10n.composerDraftIdChip(_draftId!))),
-                ],
-              ),
-            const SizedBox(height: 20),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: AdaptiveContentWidth(
+        maxWidth: 960,
+        child: RefreshIndicator(
+          onRefresh: _refreshConnectedAccounts,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.xxl,
+            ),
+            children: <Widget>[
+              Text(l10n.composerHeading, style: theme.textTheme.headlineSmall),
+              const SizedBox(height: AppSpacing.sm),
+              Text(l10n.composerSubheading, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: AppSpacing.sm),
+              ComposerReadiness(progress: readiness),
+              const SizedBox(height: AppSpacing.lg),
+              if (_draftId != null)
+                Wrap(
+                  spacing: 8,
                   children: <Widget>[
-                    Text(
-                      l10n.composerTitleLabel,
-                      style: theme.textTheme.labelLarge,
+                    Chip(
+                      avatar: const Icon(Icons.edit_note_outlined),
+                      label: Text(l10n.composerEditingDraftChip),
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _titleController,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        hintText: l10n.composerTitleHint,
-                        border: const OutlineInputBorder(),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text(
-                          l10n.composerContentLabel,
-                          style: theme.textTheme.labelLarge,
-                        ),
-                        ComposerFormattingToolbar(
-                          controller: _contentController,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _contentController,
-                      minLines: 5,
-                      maxLines: 9,
-                      decoration: InputDecoration(
-                        hintText: l10n.composerContentHint,
-                        border: const OutlineInputBorder(),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
+                    Chip(label: Text(l10n.composerDraftIdChip(_draftId!))),
                   ],
                 ),
+              const SizedBox(height: AppSpacing.xl),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.composerTitleLabel,
+                        style: theme.textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _titleController,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          hintText: l10n.composerTitleHint,
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            l10n.composerContentLabel,
+                            style: theme.textTheme.labelLarge,
+                          ),
+                          ComposerFormattingToolbar(
+                            controller: _contentController,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _contentController,
+                        minLines: 5,
+                        maxLines: 9,
+                        decoration: InputDecoration(
+                          hintText: l10n.composerContentHint,
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      l10n.composerMediaTitle,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.composerMediaSubtitle,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: TextField(
-                            controller: _mediaController,
-                            decoration: InputDecoration(
-                              hintText: l10n.composerMediaUrlHint,
-                              border: const OutlineInputBorder(),
+              const SizedBox(height: AppSpacing.lg),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.composerMediaTitle,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.composerMediaSubtitle,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: TextField(
+                              controller: _mediaController,
+                              decoration: InputDecoration(
+                                hintText: l10n.composerMediaUrlHint,
+                                border: const OutlineInputBorder(),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        FilledButton.icon(
-                          onPressed: _submitting ? null : _addMediaUrl,
-                          icon: const Icon(Icons.add_photo_alternate_outlined),
-                          label: Text(l10n.composerAddUrl),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: _submitting ? null : _pickAndUploadMediaFile,
-                      icon: const Icon(Icons.upload_file_outlined),
-                      label: Text(l10n.composerUploadFile),
-                    ),
-                    const SizedBox(height: 10),
-                    if (_mediaUrls.isEmpty)
-                      Text(l10n.composerNoMediaYet)
-                    else
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _mediaUrls
-                            .map(
-                              (url) => InputChip(
-                                label: SizedBox(
-                                  width: 220,
-                                  child: Text(
-                                    url,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                onDeleted: _submitting
-                                    ? null
-                                    : () => _removeMediaUrl(url),
-                              ),
-                            )
-                            .toList(growable: false),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      l10n.composerPagesTitle,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.composerPagesSubtitle,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 10),
-                    FutureBuilder<List<AccountEntity>>(
-                      future: _connectedAccountsFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-
-                        if (snapshot.hasError) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(l10n.composerFailedToLoadAccounts),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => setState(() {
-                                    _connectedAccountsFuture =
-                                        _loadConnectedAccounts();
-                                  }),
-                                  icon: const Icon(Icons.refresh),
-                                  label: Text(l10n.commonRetry),
-                                ),
-                              ],
+                          const SizedBox(width: AppSpacing.md),
+                          FilledButton.icon(
+                            onPressed: _submitting ? null : _addMediaUrl,
+                            icon: const Icon(
+                              Icons.add_photo_alternate_outlined,
                             ),
-                          );
-                        }
-
-                        final accounts =
-                            snapshot.data ?? const <AccountEntity>[];
-                        final accountsWithPages = accounts
-                            .where(
-                              (account) =>
-                                  account.pages.any((page) => page.isUsable),
-                            )
-                            .toList(growable: false);
-
-                        if (accountsWithPages.isEmpty) {
-                          return Text(l10n.composerNoUsablePages);
-                        }
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: accountsWithPages
+                            label: Text(l10n.composerAddUrl),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      OutlinedButton.icon(
+                        onPressed: _submitting ? null : _pickAndUploadMediaFile,
+                        icon: const Icon(Icons.upload_file_outlined),
+                        label: Text(l10n.composerUploadFile),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      if (_mediaUrls.isEmpty)
+                        AppEmptyState(
+                          message: l10n.composerNoMediaYet,
+                          icon: Icons.perm_media_outlined,
+                          compact: true,
+                          showCard: false,
+                          alignment: CrossAxisAlignment.start,
+                        )
+                      else
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _mediaUrls
                               .map(
-                                (account) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        platformLabel(account.platform),
-                                        style: theme.textTheme.labelLarge,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Wrap(
-                                        spacing: 10,
-                                        runSpacing: 10,
-                                        children: account.pages
-                                            .where((page) => page.isUsable)
-                                            .map((page) {
-                                              final isSelectable =
-                                                  _isSelectableTarget(
-                                                    account,
-                                                    page,
-                                                  );
-                                              final kindLabel = _pageKindLabel(
-                                                page.kind,
-                                                l10n,
-                                              );
-
-                                              return FilterChip(
-                                                key: ValueKey<String>(
-                                                  'publish-target-${page.id}',
-                                                ),
-                                                avatar: isSelectable
-                                                    ? null
-                                                    : const Icon(
-                                                        Icons.hourglass_top,
-                                                        size: 16,
-                                                      ),
-                                                label: Text(
-                                                  isSelectable
-                                                      ? page.name
-                                                      : <String>[
-                                                          page.name,
-                                                          l10n.comingSoonSuffix(
-                                                            kindLabel,
-                                                          ),
-                                                        ].join(' — '),
-                                                ),
-                                                selected:
-                                                    isSelectable &&
-                                                    _selectedPageIds.contains(
-                                                      page.id,
-                                                    ),
-                                                onSelected:
-                                                    _submitting || !isSelectable
-                                                    ? null
-                                                    : (selected) {
-                                                        setState(() {
-                                                          if (selected) {
-                                                            _selectedPageIds
-                                                                .add(page.id);
-                                                          } else {
-                                                            _selectedPageIds
-                                                                .remove(
-                                                                  page.id,
-                                                                );
-                                                          }
-                                                        });
-                                                      },
-                                              );
-                                            })
-                                            .toList(growable: false),
-                                      ),
-                                    ],
+                                (url) => InputChip(
+                                  label: SizedBox(
+                                    width: 220,
+                                    child: Text(
+                                      url,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
+                                  onDeleted: _submitting
+                                      ? null
+                                      : () => _removeMediaUrl(url),
                                 ),
                               )
                               .toList(growable: false),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
-            if (_derivedPlatforms().isNotEmpty)
+              const SizedBox(height: AppSpacing.lg),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        l10n.composerPerPlatformContentTitle,
+                        l10n.composerPagesTitle,
                         style: theme.textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
-                        l10n.composerPerPlatformContentSubtitle,
+                        l10n.composerPagesSubtitle,
                         style: theme.textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 10),
-                      ..._derivedPlatforms().map(
-                        (platform) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: TextField(
-                            controller: _platformContentController(platform),
-                            minLines: 1,
-                            maxLines: 4,
-                            decoration: InputDecoration(
-                              labelText: l10n.composerPlatformOverrideLabel(
-                                platformLabel(platform),
+                      const SizedBox(height: AppSpacing.md),
+                      FutureBuilder<List<AccountEntity>>(
+                        future: _connectedAccountsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(AppSpacing.md),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.md,
                               ),
-                              hintText: l10n.composerPlatformOverrideHint,
-                              border: const OutlineInputBorder(),
-                            ),
-                            onChanged: (_) => setState(() {}),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            if (_derivedPlatforms().isNotEmpty) const SizedBox(height: 14),
-            if (_derivedPlatforms().isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        l10n.composerPerPlatformPreviewTitle,
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.composerPerPlatformPreviewSubtitle,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 10),
-                      ..._derivedPlatforms().map(
-                        (platform) => _PlatformPreviewCard(
-                          platform: platform,
-                          label: platformLabel(platform),
-                          text:
-                              _platformContentController(
-                                platform,
-                              ).text.trim().isNotEmpty
-                              ? _platformContentController(platform).text.trim()
-                              : _contentController.text.trim(),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      l10n.composerSchedulingTitle,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Text(
-                            _scheduledAt == null
-                                ? l10n.composerNoScheduleSelected
-                                : l10n.composerScheduledFor(
-                                    _formatDateTime(_scheduledAt!),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(l10n.composerFailedToLoadAccounts),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  OutlinedButton.icon(
+                                    onPressed: () => setState(() {
+                                      _connectedAccountsFuture =
+                                          _loadConnectedAccounts();
+                                    }),
+                                    icon: const Icon(Icons.refresh),
+                                    label: Text(l10n.commonRetry),
                                   ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          final accounts =
+                              snapshot.data ?? const <AccountEntity>[];
+                          final accountsWithPages = accounts
+                              .where(
+                                (account) =>
+                                    account.pages.any((page) => page.isUsable),
+                              )
+                              .toList(growable: false);
+
+                          if (accountsWithPages.isEmpty) {
+                            return AppEmptyState(
+                              message: l10n.composerNoUsablePages,
+                              icon: Icons.account_tree_outlined,
+                              compact: true,
+                              showCard: false,
+                              alignment: CrossAxisAlignment.start,
+                            );
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: accountsWithPages
+                                .map(
+                                  (account) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.md,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          platformLabel(account.platform),
+                                          style: theme.textTheme.labelLarge,
+                                        ),
+                                        const SizedBox(height: AppSpacing.sm),
+                                        Wrap(
+                                          spacing: 10,
+                                          runSpacing: 10,
+                                          children: account.pages
+                                              .where((page) => page.isUsable)
+                                              .map((page) {
+                                                final isSelectable =
+                                                    _isSelectableTarget(
+                                                      account,
+                                                      page,
+                                                    );
+                                                final kindLabel =
+                                                    _pageKindLabel(
+                                                      page.kind,
+                                                      l10n,
+                                                    );
+
+                                                return FilterChip(
+                                                  key: ValueKey<String>(
+                                                    'publish-target-${page.id}',
+                                                  ),
+                                                  avatar: isSelectable
+                                                      ? null
+                                                      : const Icon(
+                                                          Icons.hourglass_top,
+                                                          size: 16,
+                                                        ),
+                                                  label: Text(
+                                                    isSelectable
+                                                        ? page.name
+                                                        : <String>[
+                                                            page.name,
+                                                            l10n.comingSoonSuffix(
+                                                              kindLabel,
+                                                            ),
+                                                          ].join(' — '),
+                                                  ),
+                                                  selected:
+                                                      isSelectable &&
+                                                      _selectedPageIds.contains(
+                                                        page.id,
+                                                      ),
+                                                  onSelected:
+                                                      _submitting ||
+                                                          !isSelectable
+                                                      ? null
+                                                      : (selected) {
+                                                          setState(() {
+                                                            if (selected) {
+                                                              _selectedPageIds
+                                                                  .add(page.id);
+                                                            } else {
+                                                              _selectedPageIds
+                                                                  .remove(
+                                                                    page.id,
+                                                                  );
+                                                            }
+                                                          });
+                                                        },
+                                                );
+                                              })
+                                              .toList(growable: false),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                .toList(growable: false),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (_derivedPlatforms().isNotEmpty)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          l10n.composerPerPlatformContentTitle,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          l10n.composerPerPlatformContentSubtitle,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        ..._derivedPlatforms().map(
+                          (platform) => Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
+                            child: TextField(
+                              controller: _platformContentController(platform),
+                              minLines: 1,
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                labelText: l10n.composerPlatformOverrideLabel(
+                                  platformLabel(platform),
+                                ),
+                                hintText: l10n.composerPlatformOverrideHint,
+                                border: const OutlineInputBorder(),
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
                           ),
-                        ),
-                        TextButton.icon(
-                          onPressed: _submitting ? null : _pickScheduleDateTime,
-                          icon: const Icon(Icons.schedule),
-                          label: Text(l10n.composerPickTime),
-                        ),
-                        IconButton(
-                          tooltip: l10n.composerClearScheduleTooltip,
-                          onPressed: _submitting || _scheduledAt == null
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _scheduledAt = null;
-                                  });
-                                },
-                          icon: const Icon(Icons.clear),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      l10n.composerPreviewTitle,
-                      style: theme.textTheme.titleMedium,
+              if (_derivedPlatforms().isNotEmpty)
+                const SizedBox(height: AppSpacing.lg),
+              if (_derivedPlatforms().isNotEmpty)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          l10n.composerPerPlatformPreviewTitle,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          l10n.composerPerPlatformPreviewSubtitle,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        ..._derivedPlatforms().map(
+                          (platform) => _PlatformPreviewCard(
+                            platform: platform,
+                            label: platformLabel(platform),
+                            text:
+                                _platformContentController(
+                                  platform,
+                                ).text.trim().isNotEmpty
+                                ? _platformContentController(
+                                    platform,
+                                  ).text.trim()
+                                : _contentController.text.trim(),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    _PreviewRow(
-                      label: l10n.composerTitleLabel,
-                      value: _titleController.text.trim().isEmpty
-                          ? l10n.postUntitled
-                          : _titleController.text.trim(),
-                    ),
-                    _PreviewRow(
-                      label: l10n.composerContentLabel,
-                      value: _contentController.text.trim().isEmpty
-                          ? l10n.composerNoContentYet
-                          : _contentController.text.trim(),
-                    ),
-                    _PreviewRow(
-                      label: l10n.composerPreviewMediaLabel,
-                      value: _mediaUrls.isEmpty
-                          ? l10n.composerMediaNone
-                          : l10n.composerMediaItemCount(_mediaUrls.length),
-                    ),
-                    _PreviewRow(
-                      label: l10n.composerPreviewTargetsLabel,
-                      value: _selectedEligiblePageIds().isEmpty
-                          ? l10n.composerNoneSelected
-                          : _selectedEligiblePageIds()
-                                .map(_pageLabel)
-                                .join(', '),
-                    ),
-                    _PreviewRow(
-                      label: l10n.composerPreviewScheduleLabel,
-                      value: _scheduledAt == null
-                          ? requiresApproval
-                                ? l10n.composerSubmitPublishForApprovalButton
-                                : l10n.composerPublishNow
-                          : _formatDateTime(_scheduledAt!),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: _openPreviewSheet,
-                      icon: const Icon(Icons.visibility_outlined),
-                      label: Text(l10n.composerOpenPreview),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            if (_feedback != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  _feedback!,
-                  style: TextStyle(
-                    color: _isError
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+              const SizedBox(height: AppSpacing.lg),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.composerSchedulingTitle,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(
+                              _scheduledAt == null
+                                  ? l10n.composerNoScheduleSelected
+                                  : l10n.composerScheduledFor(
+                                      _formatDateTime(_scheduledAt!),
+                                    ),
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _submitting
+                                ? null
+                                : _pickScheduleDateTime,
+                            icon: const Icon(Icons.schedule),
+                            label: Text(l10n.composerPickTime),
+                          ),
+                          IconButton(
+                            tooltip: l10n.composerClearScheduleTooltip,
+                            onPressed: _submitting || _scheduledAt == null
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _scheduledAt = null;
+                                    });
+                                  },
+                            icon: const Icon(Icons.clear),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-            if (organizationAccess.isLoading && access == null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: <Widget>[
-                    const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(l10n.composerOrganizationAccessLoading),
-                  ],
+              const SizedBox(height: AppSpacing.lg),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.composerPreviewTitle,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      _PreviewRow(
+                        label: l10n.composerTitleLabel,
+                        value: _titleController.text.trim().isEmpty
+                            ? l10n.postUntitled
+                            : _titleController.text.trim(),
+                      ),
+                      _PreviewRow(
+                        label: l10n.composerContentLabel,
+                        value: _contentController.text.trim().isEmpty
+                            ? l10n.composerNoContentYet
+                            : _contentController.text.trim(),
+                      ),
+                      _PreviewRow(
+                        label: l10n.composerPreviewMediaLabel,
+                        value: _mediaUrls.isEmpty
+                            ? l10n.composerMediaNone
+                            : l10n.composerMediaItemCount(_mediaUrls.length),
+                      ),
+                      _PreviewRow(
+                        label: l10n.composerPreviewTargetsLabel,
+                        value: _selectedEligiblePageIds().isEmpty
+                            ? l10n.composerNoneSelected
+                            : _selectedEligiblePageIds()
+                                  .map(_pageLabel)
+                                  .join(', '),
+                      ),
+                      _PreviewRow(
+                        label: l10n.composerPreviewScheduleLabel,
+                        value: _scheduledAt == null
+                            ? requiresApproval
+                                  ? l10n.composerSubmitPublishForApprovalButton
+                                  : l10n.composerPublishNow
+                            : _formatDateTime(_scheduledAt!),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        onPressed: _openPreviewSheet,
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: Text(l10n.composerOpenPreview),
+                      ),
+                    ],
+                  ),
                 ),
-              )
-            else if (accessUnavailable)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Card(
-                  color: theme.colorScheme.errorContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      l10n.composerOrganizationAccessUnavailable,
-                      style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (_feedback != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Text(
+                    _feedback!,
+                    style: TextStyle(
+                      color: _isError
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              if (organizationAccess.isLoading && access == null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Row(
+                    children: <Widget>[
+                      const SizedBox(
+                        width: AppSizes.iconMd,
+                        height: AppSizes.iconMd,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text(l10n.composerOrganizationAccessLoading),
+                    ],
+                  ),
+                )
+              else if (accessUnavailable)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Card(
+                    color: theme.colorScheme.errorContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Text(
+                        l10n.composerOrganizationAccessUnavailable,
+                        style: TextStyle(
+                          color: theme.colorScheme.onErrorContainer,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              )
-            else if (requiresApproval)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Card(
-                  color: theme.colorScheme.secondaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(l10n.composerApprovalRequiredNotice),
+                )
+              else if (requiresApproval)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Card(
+                    color: theme.colorScheme.secondaryContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Text(l10n.composerApprovalRequiredNotice),
+                    ),
                   ),
                 ),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: <Widget>[
+                  OutlinedButton.icon(
+                    onPressed: _submitting || !canSaveDraft ? null : _saveDraft,
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(l10n.composerSaveDraftButton),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: _submitting || !canSubmitPostAction
+                        ? null
+                        : _schedulePost,
+                    icon: const Icon(Icons.event_available_outlined),
+                    label: Text(
+                      requiresApproval
+                          ? l10n.composerSubmitScheduleForApprovalButton
+                          : l10n.composerScheduleButton,
+                    ),
+                  ),
+                  FilledButton.icon(
+                    onPressed: _submitting || !canSubmitPostAction
+                        ? null
+                        : _publishNow,
+                    icon: _submitting
+                        ? const SizedBox(
+                            width: AppSizes.iconSm,
+                            height: AppSizes.iconSm,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send_outlined),
+                    label: Text(
+                      requiresApproval
+                          ? l10n.composerSubmitPublishForApprovalButton
+                          : l10n.composerPublishButton,
+                    ),
+                  ),
+                ],
               ),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                OutlinedButton.icon(
-                  onPressed: _submitting || !canSaveDraft ? null : _saveDraft,
-                  icon: const Icon(Icons.save_outlined),
-                  label: Text(l10n.composerSaveDraftButton),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: _submitting || !canSubmitPostAction
-                      ? null
-                      : _schedulePost,
-                  icon: const Icon(Icons.event_available_outlined),
-                  label: Text(
-                    requiresApproval
-                        ? l10n.composerSubmitScheduleForApprovalButton
-                        : l10n.composerScheduleButton,
-                  ),
-                ),
-                FilledButton.icon(
-                  onPressed: _submitting || !canSubmitPostAction
-                      ? null
-                      : _publishNow,
-                  icon: _submitting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send_outlined),
-                  label: Text(
-                    requiresApproval
-                        ? l10n.composerSubmitPublishForApprovalButton
-                        : l10n.composerPublishButton,
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1263,7 +1317,7 @@ class _PreviewRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -1306,8 +1360,8 @@ class _PlatformPreviewCard extends StatelessWidget {
     final supportsFormatting = platform == 'telegram';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(10),
@@ -1318,11 +1372,11 @@ class _PlatformPreviewCard extends StatelessWidget {
           Row(
             children: <Widget>[
               Icon(Icons.circle, size: 10, color: theme.colorScheme.primary),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.sm),
               Text(label, style: theme.textTheme.labelLarge),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.sm),
           if (supportsFormatting)
             Text.rich(
               key: ValueKey<String>('platform-preview-text-$platform'),
