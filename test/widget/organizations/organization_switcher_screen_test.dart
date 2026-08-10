@@ -37,10 +37,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('You are not a member of any organization yet.'),
-      findsOneWidget,
-    );
+    expect(find.text('No organization yet'), findsOneWidget);
+    expect(find.text('Account security'), findsOneWidget);
+    // A user parked here (no organization yet) must still be able to leave
+    // the session — see Sprint A's docblock on _logout().
+    expect(find.byIcon(Icons.logout), findsOneWidget);
   });
 
   testWidgets('shows the membership error and a retry action', (tester) async {
@@ -69,9 +70,7 @@ void main() {
       OrganizationAccessState.noActiveOrganization(memberships: const []),
     );
     await tester.pumpAndSettle();
-    expect(
-      find.text('You are not a member of any organization yet.'),
-      findsOneWidget,
-    );
+    expect(find.text('No organization yet'), findsOneWidget);
+    expect(find.text('Account security'), findsOneWidget);
   });
 }

@@ -135,10 +135,37 @@ class PostRepositoryImpl extends PostRepository {
       );
     }
 
-    try {
-      final response = await networkClient!.get(
-        '${LaravelEndpoints.posts}?page=$page',
+    return _getPostsPageViaNetwork(
+      '${LaravelEndpoints.posts}?page=$page',
+      page: page,
+      fallbackMessage: 'Failed to list posts',
+    );
+  }
+
+  @override
+  Future<AppResult<PaginatedResult<PostEntity>>> getPendingApprovalsPage({
+    int page = 1,
+  }) async {
+    if (networkClient == null) {
+      return const Failure<PaginatedResult<PostEntity>>(
+        'Loading the approvals queue requires a connection.',
       );
+    }
+
+    return _getPostsPageViaNetwork(
+      '${LaravelEndpoints.posts}?approval_status=pending&page=$page',
+      page: page,
+      fallbackMessage: 'Failed to load the approvals queue',
+    );
+  }
+
+  Future<AppResult<PaginatedResult<PostEntity>>> _getPostsPageViaNetwork(
+    String url, {
+    required int page,
+    required String fallbackMessage,
+  }) async {
+    try {
+      final response = await networkClient!.get(url);
       final raw = response.data;
       final payload = _unwrapPayload(raw);
       final rawItems = payload is List<dynamic>
@@ -175,7 +202,7 @@ class PostRepositoryImpl extends PostRepository {
       );
     } catch (error, stackTrace) {
       return Failure<PaginatedResult<PostEntity>>.fromFailure(
-        mapFailure(error, stackTrace, fallbackMessage: 'Failed to list posts'),
+        mapFailure(error, stackTrace, fallbackMessage: fallbackMessage),
       );
     }
   }
@@ -217,6 +244,62 @@ class PostRepositoryImpl extends PostRepository {
         fallbackMessage: 'Failed to publish post',
       );
       return Failure<void>.fromFailure(failure);
+    }
+  }
+
+  @override
+  Future<AppResult<PostEntity>> approvePost(String postId) async {
+    if (networkClient == null) {
+      return const Failure<PostEntity>(
+        'Approving a post requires a connection.',
+      );
+    }
+
+    try {
+      final response = await networkClient!.post(
+        LaravelEndpoints.postApprove(postId),
+      );
+      return Success<PostEntity>(
+        _parsePostResponse(response.data),
+        message: 'Post approved.',
+      );
+    } catch (error, stackTrace) {
+      return Failure<PostEntity>.fromFailure(
+        mapFailure(
+          error,
+          stackTrace,
+          fallbackMessage: 'Failed to approve post',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<AppResult<PostEntity>> rejectPost(
+    String postId, {
+    String? note,
+  }) async {
+    if (networkClient == null) {
+      return const Failure<PostEntity>(
+        'Rejecting a post requires a connection.',
+      );
+    }
+
+    try {
+      final response = await networkClient!.post(
+        LaravelEndpoints.postReject(postId),
+        data: <String, dynamic>{
+          if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        },
+      );
+      return Success<PostEntity>(
+        _parsePostResponse(response.data),
+        message: 'Post rejected.',
+      );
+    } catch (error, stackTrace) {
+      return Failure<PostEntity>.fromFailure(
+        mapFailure(error, stackTrace, fallbackMessage: 'Failed to reject post'),
+      );
     }
   }
 

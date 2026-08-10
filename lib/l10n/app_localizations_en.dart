@@ -301,6 +301,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardPostsButton => 'Posts';
 
   @override
+  String get dashboardApprovalsButton => 'Approvals';
+
+  @override
   String get dashboardLoadFailed =>
       'Dashboard could not be loaded. Check your connection and try again.';
 
@@ -781,6 +784,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add or manage members of your organization.';
 
   @override
+  String get settingsAuditLogTitle => 'Audit log';
+
+  @override
+  String get settingsAuditLogSubtitle =>
+      'Review who did what across this organization.';
+
+  @override
   String get settingsTwoFactorTitle => 'Two-factor authentication';
 
   @override
@@ -934,6 +944,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get organizationMembersRemoveButton => 'Remove';
+
+  @override
+  String get auditLogAppBarTitle => 'Audit log';
+
+  @override
+  String get auditLogEmptyMessage => 'No matching audit events.';
+
+  @override
+  String get auditLogLoadError => 'Failed to load the audit log.';
+
+  @override
+  String get auditLogRetryButton => 'Retry';
+
+  @override
+  String get auditLogForbiddenTitle => 'Not authorized';
+
+  @override
+  String get auditLogForbiddenMessage =>
+      'The server denied access to this audit log.';
+
+  @override
+  String get auditLogFilterActionLabel => 'Filter by action';
+
+  @override
+  String get auditLogFilterDateFromLabel => 'From';
+
+  @override
+  String get auditLogFilterDateToLabel => 'To';
+
+  @override
+  String get auditLogFilterClearButton => 'Clear filters';
+
+  @override
+  String get auditLogSystemActor => 'System';
+
+  @override
+  String auditLogEntrySubtitle(String type, String id) {
+    return '$type #$id';
+  }
+
+  @override
+  String get auditLogViewDetailsButton => 'View details';
+
+  @override
+  String get auditLogDetailsOldValues => 'Previous values';
+
+  @override
+  String get auditLogDetailsNewValues => 'New values';
+
+  @override
+  String get auditLogDetailsNone => 'None recorded.';
+
+  @override
+  String auditLogPaginationLabel(String page, String lastPage) {
+    return 'Page $page of $lastPage';
+  }
+
+  @override
+  String get auditLogPreviousPage => 'Previous';
+
+  @override
+  String get auditLogNextPage => 'Next';
+
+  @override
+  String get auditLogOrganizationColumn => 'Organization';
 
   @override
   String get twoFactorSetupAppBarTitle => 'Two-factor authentication';
@@ -1756,8 +1831,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get orgSwitcherEmptyTitle => 'No organization yet';
+
+  @override
   String get orgSwitcherEmpty =>
-      'You are not a member of any organization yet.';
+      'You are not a member of any organization yet. An organization owner or admin needs to add you, or a platform administrator can create one for you. You can still manage your account security below.';
+
+  @override
+  String get orgSwitcherEmptyAccountAction => 'Account security';
 
   @override
   String get orgSwitcherActiveChip => 'Active';
@@ -1839,6 +1920,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postsListEmpty => 'No posts found for this filter.';
 
   @override
+  String get approvalsAppBarTitle => 'Approvals';
+
+  @override
+  String get approvalsHeadline => 'Pending approval';
+
+  @override
+  String get approvalsSubtitle =>
+      'Posts an editor submitted for review — approve to publish/schedule as requested, or reject with an optional note.';
+
+  @override
+  String get approvalsFailedToLoad => 'Failed to load the approvals queue.';
+
+  @override
+  String get approvalsEmpty => 'Nothing is waiting for approval right now.';
+
+  @override
+  String get approvalsLoadMore => 'Load more';
+
+  @override
+  String approvalsRequestedByMeta(String name) {
+    return 'Requested by $name';
+  }
+
+  @override
+  String get approvalsRequestedActionSchedule => 'Requested: schedule';
+
+  @override
+  String get approvalsRequestedActionPublishNow => 'Requested: publish now';
+
+  @override
+  String get approvalsApproveButton => 'Approve';
+
+  @override
+  String get approvalsRejectButton => 'Reject';
+
+  @override
+  String get approvalsApproveSuccess => 'Post approved.';
+
+  @override
+  String get approvalsRejectSuccess => 'Post rejected.';
+
+  @override
+  String get approvalsRejectDialogTitle => 'Reject this post?';
+
+  @override
+  String get approvalsRejectDialogNoteLabel =>
+      'Note for the requester (optional)';
+
+  @override
+  String get approvalsRejectDialogConfirm => 'Reject';
+
+  @override
   String postsListPublishedMeta(String date) {
     return 'Published $date';
   }
@@ -1868,4 +2001,219 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get composerInsertEmojiTooltip => 'Insert emoji';
+
+  @override
+  String get moduleHelpCenterTitle => 'Help Center';
+
+  @override
+  String moduleHelpCenterDescription(String appName) {
+    return 'Guides, FAQs, and how-to steps for using $appName.';
+  }
+
+  @override
+  String get helpIconTooltip => 'Help';
+
+  @override
+  String settingsAboutTitle(String appName) {
+    return 'About $appName';
+  }
+
+  @override
+  String get settingsAboutSubtitle =>
+      'Version, supported platforms, and security overview.';
+
+  @override
+  String get settingsHelpCenterTitle => 'Help Center';
+
+  @override
+  String get settingsHelpCenterSubtitle => 'The full step-by-step user guide.';
+
+  @override
+  String welcomeAboutLinkLabel(String appName) {
+    return 'About $appName';
+  }
+
+  @override
+  String aboutAppBarTitle(String appName) {
+    return 'About $appName';
+  }
+
+  @override
+  String aboutSectionDefinitionTitle(String appName) {
+    return 'What is $appName?';
+  }
+
+  @override
+  String get aboutSectionGoalsTitle => 'Goals';
+
+  @override
+  String get aboutSectionFeaturesTitle => 'Available features';
+
+  @override
+  String get aboutSectionPlatformsTitle => 'Supported platforms';
+
+  @override
+  String get aboutSectionRolesTitle => 'Roles within an organization';
+
+  @override
+  String get aboutSectionSecurityTitle => 'Security & privacy';
+
+  @override
+  String get aboutSectionAppInfoTitle => 'App information';
+
+  @override
+  String get aboutSectionTeamTitle => 'Team & ownership';
+
+  @override
+  String get aboutAppVersionLabel => 'Version';
+
+  @override
+  String get aboutAppBuildLabel => 'Build number';
+
+  @override
+  String get aboutAppEnvironmentLabel => 'Environment';
+
+  @override
+  String get aboutAppPackageLabel => 'Package identifier';
+
+  @override
+  String aboutCopyrightLabel(String year, String holder) {
+    return '© $year $holder. All rights reserved.';
+  }
+
+  @override
+  String get aboutPrivacyPolicyLink => 'Privacy Policy';
+
+  @override
+  String get aboutTermsOfServiceLink => 'Terms of Service';
+
+  @override
+  String get aboutDataDeletionLink => 'Delete my data';
+
+  @override
+  String get aboutSupportLink => 'Support & contact';
+
+  @override
+  String get aboutOpenHelpGuideButton => 'Open the user guide';
+
+  @override
+  String get aboutLoadErrorMessage =>
+      'Some app information could not be loaded.';
+
+  @override
+  String get aboutSuperAdminRoleNote =>
+      'Platform administrator capabilities are documented separately inside Platform Administration, not shown here.';
+
+  @override
+  String get platformStatusAvailableBeta => 'Available (Beta)';
+
+  @override
+  String get platformStatusPartial => 'Partially available';
+
+  @override
+  String get platformStatusComingSoon => 'Coming soon';
+
+  @override
+  String get platformStatusConnect => 'Connect';
+
+  @override
+  String get platformStatusDiscoverPages => 'Fetch pages';
+
+  @override
+  String get platformStatusTestConnection => 'Test connection';
+
+  @override
+  String get platformStatusPublish => 'Publish';
+
+  @override
+  String get platformStatusYes => 'Yes';
+
+  @override
+  String get platformStatusNo => 'No';
+
+  @override
+  String get helpCenterAppBarTitle => 'Help Center';
+
+  @override
+  String helpCenterSubtitle(String appName) {
+    return 'Everything you need to use $appName.';
+  }
+
+  @override
+  String get helpCenterSearchHint => 'Search the user guide…';
+
+  @override
+  String get helpCenterQuickLinksTitle => 'Quick links';
+
+  @override
+  String get helpCenterOpenGuideButton => 'Open the full user guide';
+
+  @override
+  String get helpCenterAboutCardTitle => 'About the system';
+
+  @override
+  String helpCenterAboutCardSubtitle(String appName) {
+    return 'Learn about $appName, its features, and platform status.';
+  }
+
+  @override
+  String get helpCenterFaqCardTitle => 'Frequently asked questions';
+
+  @override
+  String get helpCenterFaqCardSubtitle => 'Quick answers to common questions.';
+
+  @override
+  String get helpCenterTroubleshootingCardTitle => 'Troubleshooting';
+
+  @override
+  String get helpCenterTroubleshootingCardSubtitle =>
+      'Fixes for common error messages.';
+
+  @override
+  String get helpCenterNoOrganizationNotice =>
+      'You are not a member of any organization yet — some guide sections will only make sense once you join one.';
+
+  @override
+  String userGuideAppBarTitle(String appName) {
+    return '$appName user guide';
+  }
+
+  @override
+  String get userGuideSearchHint => 'Search a topic…';
+
+  @override
+  String get userGuideTocTitle => 'Table of contents';
+
+  @override
+  String get userGuideNoResultsTitle => 'No results';
+
+  @override
+  String get userGuideNoResultsMessage => 'Try different search words.';
+
+  @override
+  String get userGuideClearSearchButton => 'Clear search';
+
+  @override
+  String get userGuideFaqSectionTitle => 'Frequently asked questions';
+
+  @override
+  String get userGuideTroubleshootingSectionTitle => 'Troubleshooting';
+
+  @override
+  String get userGuideRolePermissionTableTitle => 'Who can do what?';
+
+  @override
+  String userGuideRequiredPermissionBadge(String role) {
+    return 'Requires: $role';
+  }
+
+  @override
+  String get userGuideNoOrganizationNotice =>
+      'You are not a member of any organization yet — some sections below will apply once you join one.';
+
+  @override
+  String get platformAdminGuideButton => 'Admin guide';
+
+  @override
+  String get platformAdminGuideDialogTitle => 'Platform administrator guide';
 }

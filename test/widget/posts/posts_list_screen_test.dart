@@ -10,42 +10,47 @@ import 'package:smart_publisher/src/features/posts/presentation/pages/posts_list
 
 import '../../helpers/fake_network_client.dart';
 import '../../helpers/localized_test_app.dart';
+import '../../helpers/organization_role_fixtures.dart';
 
 final _ownerAccess = OrganizationAccessState.active(
-  memberships: const <OrganizationEntity>[
+  memberships: <OrganizationEntity>[
     OrganizationEntity(
       id: 1,
       name: 'Owner Organization',
       slug: 'owner-organization',
       role: 'owner',
       isCurrent: true,
+      permissions: permissionsForRole('owner'),
     ),
   ],
-  currentOrganization: const OrganizationEntity(
+  currentOrganization: OrganizationEntity(
     id: 1,
     name: 'Owner Organization',
     slug: 'owner-organization',
     role: 'owner',
     isCurrent: true,
+    permissions: permissionsForRole('owner'),
   ),
 );
 
 final _viewerAccess = OrganizationAccessState.active(
-  memberships: const <OrganizationEntity>[
+  memberships: <OrganizationEntity>[
     OrganizationEntity(
       id: 1,
       name: 'Viewer Organization',
       slug: 'viewer-organization',
       role: 'viewer',
       isCurrent: true,
+      permissions: permissionsForRole('viewer'),
     ),
   ],
-  currentOrganization: const OrganizationEntity(
+  currentOrganization: OrganizationEntity(
     id: 1,
     name: 'Viewer Organization',
     slug: 'viewer-organization',
     role: 'viewer',
     isCurrent: true,
+    permissions: permissionsForRole('viewer'),
   ),
 );
 

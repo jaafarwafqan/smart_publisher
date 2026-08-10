@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/domain/services/analytics_service.dart';
-import 'package:smart_publisher/src/domain/publish_target.dart';
 import 'package:smart_publisher/src/features/analytics/data/repository/analytics_repository_impl.dart';
 import 'package:smart_publisher/src/features/analytics/domain/entities/analytics_metric_entity.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
@@ -9,13 +8,12 @@ import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.d
 import 'package:smart_publisher/src/features/posts/domain/usecases/create_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
 import 'package:smart_publisher/src/features/schedule/data/schedule_repository_impl.dart';
-import 'package:smart_publisher/src/publish_engine/engine/publish_engine.dart';
 
 import '../helpers/fake_network_client.dart';
 
 void main() {
   group('E2E - Content lifecycle', () {
-    test('create -> schedule -> publish -> analytics report/export', () async {
+    test('create -> schedule -> analytics report/export', () async {
       final postRepo = PostRepositoryImpl();
       final create = CreatePost(repository: postRepo);
       final scheduleRepo = ScheduleRepositoryImpl(
@@ -37,7 +35,6 @@ void main() {
         ),
       );
       final schedule = SchedulePost(repository: scheduleRepo);
-      final engine = PublishEngine();
 
       final analyticsRepo = AnalyticsRepositoryImpl(
         networkClient: FakeNetworkClient(
@@ -79,17 +76,6 @@ void main() {
         ),
       );
       expect(scheduled.data?.status, 'scheduled');
-
-      await engine.publish(
-        post: scheduled.data!,
-        targets: const <PublishTarget>[
-          PublishTarget(
-            category: PublishTargetCategory.social,
-            destinationKey: 'facebook',
-            socialPageId: 'page-1',
-          ),
-        ],
-      );
 
       final metricsResult = await analytics.metrics('e2e-post-1');
       expect(metricsResult.isSuccess, isTrue);

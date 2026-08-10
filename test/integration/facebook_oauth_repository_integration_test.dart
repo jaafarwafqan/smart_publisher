@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/features/auth/data/account_repository_impl.dart';
-import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import '../helpers/fake_network_client.dart';
 
@@ -37,7 +36,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.beginFacebookOAuth(
@@ -86,7 +84,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.completeFacebookOAuth(
@@ -135,7 +132,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.beginWhatsAppOAuth(
@@ -178,7 +174,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.completeWhatsAppOAuth(
@@ -221,7 +216,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.setWhatsAppBusinessId(

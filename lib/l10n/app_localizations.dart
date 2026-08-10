@@ -650,6 +650,12 @@ abstract class AppLocalizations {
   /// **'المنشورات'**
   String get dashboardPostsButton;
 
+  /// No description provided for @dashboardApprovalsButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموافقات'**
+  String get dashboardApprovalsButton;
+
   /// No description provided for @dashboardLoadFailed.
   ///
   /// In ar, this message translates to:
@@ -1460,6 +1466,18 @@ abstract class AppLocalizations {
   /// **'إضافة أو إدارة أعضاء مؤسستك.'**
   String get settingsMembersSubtitle;
 
+  /// No description provided for @settingsAuditLogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل التدقيق'**
+  String get settingsAuditLogTitle;
+
+  /// No description provided for @settingsAuditLogSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع من فعل ماذا داخل هذه المؤسسة.'**
+  String get settingsAuditLogSubtitle;
+
   /// No description provided for @settingsTwoFactorTitle.
   ///
   /// In ar, this message translates to:
@@ -1741,6 +1759,126 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حذف'**
   String get organizationMembersRemoveButton;
+
+  /// No description provided for @auditLogAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل التدقيق'**
+  String get auditLogAppBarTitle;
+
+  /// No description provided for @auditLogEmptyMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد أحداث تدقيق مطابقة.'**
+  String get auditLogEmptyMessage;
+
+  /// No description provided for @auditLogLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل سجل التدقيق.'**
+  String get auditLogLoadError;
+
+  /// No description provided for @auditLogRetryButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get auditLogRetryButton;
+
+  /// No description provided for @auditLogForbiddenTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مصرح لك'**
+  String get auditLogForbiddenTitle;
+
+  /// No description provided for @auditLogForbiddenMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض الخادم الوصول إلى سجل التدقيق هذا.'**
+  String get auditLogForbiddenMessage;
+
+  /// No description provided for @auditLogFilterActionLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية حسب الإجراء'**
+  String get auditLogFilterActionLabel;
+
+  /// No description provided for @auditLogFilterDateFromLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'من'**
+  String get auditLogFilterDateFromLabel;
+
+  /// No description provided for @auditLogFilterDateToLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى'**
+  String get auditLogFilterDateToLabel;
+
+  /// No description provided for @auditLogFilterClearButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح الفلاتر'**
+  String get auditLogFilterClearButton;
+
+  /// No description provided for @auditLogSystemActor.
+  ///
+  /// In ar, this message translates to:
+  /// **'النظام'**
+  String get auditLogSystemActor;
+
+  /// No description provided for @auditLogEntrySubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'{type} رقم {id}'**
+  String auditLogEntrySubtitle(String type, String id);
+
+  /// No description provided for @auditLogViewDetailsButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض التفاصيل'**
+  String get auditLogViewDetailsButton;
+
+  /// No description provided for @auditLogDetailsOldValues.
+  ///
+  /// In ar, this message translates to:
+  /// **'القيم السابقة'**
+  String get auditLogDetailsOldValues;
+
+  /// No description provided for @auditLogDetailsNewValues.
+  ///
+  /// In ar, this message translates to:
+  /// **'القيم الجديدة'**
+  String get auditLogDetailsNewValues;
+
+  /// No description provided for @auditLogDetailsNone.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد سجل.'**
+  String get auditLogDetailsNone;
+
+  /// No description provided for @auditLogPaginationLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحة {page} من {lastPage}'**
+  String auditLogPaginationLabel(String page, String lastPage);
+
+  /// No description provided for @auditLogPreviousPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'السابق'**
+  String get auditLogPreviousPage;
+
+  /// No description provided for @auditLogNextPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'التالي'**
+  String get auditLogNextPage;
+
+  /// No description provided for @auditLogOrganizationColumn.
+  ///
+  /// In ar, this message translates to:
+  /// **'المؤسسة'**
+  String get auditLogOrganizationColumn;
 
   /// No description provided for @twoFactorSetupAppBarTitle.
   ///
@@ -3170,11 +3308,23 @@ abstract class AppLocalizations {
   /// **'تم التبديل إلى {name}.'**
   String orgSwitcherSwitchedTo(String name);
 
+  /// No description provided for @orgSwitcherEmptyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مؤسسة بعد'**
+  String get orgSwitcherEmptyTitle;
+
   /// No description provided for @orgSwitcherEmpty.
   ///
   /// In ar, this message translates to:
-  /// **'أنت لست عضوًا في أي مؤسسة بعد.'**
+  /// **'أنت لست عضوًا في أي مؤسسة بعد. يحتاج مالك أو مسؤول مؤسسة لإضافتك، أو يمكن لمسؤول المنصة إنشاء مؤسسة لك. يمكنك مع ذلك إدارة أمان حسابك أدناه.'**
   String get orgSwitcherEmpty;
+
+  /// No description provided for @orgSwitcherEmptyAccountAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أمان الحساب'**
+  String get orgSwitcherEmptyAccountAction;
 
   /// No description provided for @orgSwitcherActiveChip.
   ///
@@ -3332,6 +3482,102 @@ abstract class AppLocalizations {
   /// **'لا توجد منشورات مطابقة لهذا الفلتر.'**
   String get postsListEmpty;
 
+  /// No description provided for @approvalsAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموافقات'**
+  String get approvalsAppBarTitle;
+
+  /// No description provided for @approvalsHeadline.
+  ///
+  /// In ar, this message translates to:
+  /// **'بانتظار الموافقة'**
+  String get approvalsHeadline;
+
+  /// No description provided for @approvalsSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'منشورات أرسلها محرر للمراجعة — وافق للنشر/الجدولة كما طُلب، أو ارفض مع ملاحظة اختيارية.'**
+  String get approvalsSubtitle;
+
+  /// No description provided for @approvalsFailedToLoad.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل قائمة الموافقات.'**
+  String get approvalsFailedToLoad;
+
+  /// No description provided for @approvalsEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد ما ينتظر الموافقة حاليًا.'**
+  String get approvalsEmpty;
+
+  /// No description provided for @approvalsLoadMore.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحميل المزيد'**
+  String get approvalsLoadMore;
+
+  /// No description provided for @approvalsRequestedByMeta.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلبه {name}'**
+  String approvalsRequestedByMeta(String name);
+
+  /// No description provided for @approvalsRequestedActionSchedule.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطلب: جدولة'**
+  String get approvalsRequestedActionSchedule;
+
+  /// No description provided for @approvalsRequestedActionPublishNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطلب: نشر فوري'**
+  String get approvalsRequestedActionPublishNow;
+
+  /// No description provided for @approvalsApproveButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'موافقة'**
+  String get approvalsApproveButton;
+
+  /// No description provided for @approvalsRejectButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض'**
+  String get approvalsRejectButton;
+
+  /// No description provided for @approvalsApproveSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت الموافقة على المنشور.'**
+  String get approvalsApproveSuccess;
+
+  /// No description provided for @approvalsRejectSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم رفض المنشور.'**
+  String get approvalsRejectSuccess;
+
+  /// No description provided for @approvalsRejectDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض هذا المنشور؟'**
+  String get approvalsRejectDialogTitle;
+
+  /// No description provided for @approvalsRejectDialogNoteLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة لمقدّم الطلب (اختياري)'**
+  String get approvalsRejectDialogNoteLabel;
+
+  /// No description provided for @approvalsRejectDialogConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض'**
+  String get approvalsRejectDialogConfirm;
+
   /// No description provided for @postsListPublishedMeta.
   ///
   /// In ar, this message translates to:
@@ -3373,6 +3619,384 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إدراج رمز تعبيري'**
   String get composerInsertEmojiTooltip;
+
+  /// No description provided for @moduleHelpCenterTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز المساعدة'**
+  String get moduleHelpCenterTitle;
+
+  /// No description provided for @moduleHelpCenterDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدلة وأسئلة شائعة وخطوات استخدام {appName}.'**
+  String moduleHelpCenterDescription(String appName);
+
+  /// No description provided for @helpIconTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'المساعدة'**
+  String get helpIconTooltip;
+
+  /// No description provided for @settingsAboutTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حول {appName}'**
+  String settingsAboutTitle(String appName);
+
+  /// No description provided for @settingsAboutSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الإصدار والمنصات المدعومة ونظرة على الأمان.'**
+  String get settingsAboutSubtitle;
+
+  /// No description provided for @settingsHelpCenterTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز المساعدة'**
+  String get settingsHelpCenterTitle;
+
+  /// No description provided for @settingsHelpCenterSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دليل الاستخدام الكامل خطوة بخطوة.'**
+  String get settingsHelpCenterSubtitle;
+
+  /// No description provided for @welcomeAboutLinkLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'حول {appName}'**
+  String welcomeAboutLinkLabel(String appName);
+
+  /// No description provided for @aboutAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حول {appName}'**
+  String aboutAppBarTitle(String appName);
+
+  /// No description provided for @aboutSectionDefinitionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما هو {appName}؟'**
+  String aboutSectionDefinitionTitle(String appName);
+
+  /// No description provided for @aboutSectionGoalsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أهداف النظام'**
+  String get aboutSectionGoalsTitle;
+
+  /// No description provided for @aboutSectionFeaturesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المزايا المتاحة'**
+  String get aboutSectionFeaturesTitle;
+
+  /// No description provided for @aboutSectionPlatformsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المنصات المدعومة'**
+  String get aboutSectionPlatformsTitle;
+
+  /// No description provided for @aboutSectionRolesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأدوار داخل المؤسسة'**
+  String get aboutSectionRolesTitle;
+
+  /// No description provided for @aboutSectionSecurityTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأمان والخصوصية'**
+  String get aboutSectionSecurityTitle;
+
+  /// No description provided for @aboutSectionAppInfoTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'معلومات التطبيق'**
+  String get aboutSectionAppInfoTitle;
+
+  /// No description provided for @aboutSectionTeamTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفريق والجهة المالكة'**
+  String get aboutSectionTeamTitle;
+
+  /// No description provided for @aboutAppVersionLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الإصدار'**
+  String get aboutAppVersionLabel;
+
+  /// No description provided for @aboutAppBuildLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم البناء'**
+  String get aboutAppBuildLabel;
+
+  /// No description provided for @aboutAppEnvironmentLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'البيئة'**
+  String get aboutAppEnvironmentLabel;
+
+  /// No description provided for @aboutAppPackageLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرّف الحزمة'**
+  String get aboutAppPackageLabel;
+
+  /// No description provided for @aboutCopyrightLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'جميع الحقوق محفوظة © {year} {holder}.'**
+  String aboutCopyrightLabel(String year, String holder);
+
+  /// No description provided for @aboutPrivacyPolicyLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'سياسة الخصوصية'**
+  String get aboutPrivacyPolicyLink;
+
+  /// No description provided for @aboutTermsOfServiceLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'شروط الاستخدام'**
+  String get aboutTermsOfServiceLink;
+
+  /// No description provided for @aboutDataDeletionLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف بيانات المستخدم'**
+  String get aboutDataDeletionLink;
+
+  /// No description provided for @aboutSupportLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعم والتواصل'**
+  String get aboutSupportLink;
+
+  /// No description provided for @aboutOpenHelpGuideButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح دليل الاستخدام'**
+  String get aboutOpenHelpGuideButton;
+
+  /// No description provided for @aboutLoadErrorMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل بعض معلومات التطبيق.'**
+  String get aboutLoadErrorMessage;
+
+  /// No description provided for @aboutSuperAdminRoleNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'صلاحيات مسؤول المنصة موثّقة بصورة منفصلة داخل مساحة إدارة المنصة، ولا تُعرض هنا.'**
+  String get aboutSuperAdminRoleNote;
+
+  /// No description provided for @platformStatusAvailableBeta.
+  ///
+  /// In ar, this message translates to:
+  /// **'متاح (تجريبي - Beta)'**
+  String get platformStatusAvailableBeta;
+
+  /// No description provided for @platformStatusPartial.
+  ///
+  /// In ar, this message translates to:
+  /// **'متاح جزئيًا'**
+  String get platformStatusPartial;
+
+  /// No description provided for @platformStatusComingSoon.
+  ///
+  /// In ar, this message translates to:
+  /// **'قريبًا'**
+  String get platformStatusComingSoon;
+
+  /// No description provided for @platformStatusConnect.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاتصال'**
+  String get platformStatusConnect;
+
+  /// No description provided for @platformStatusDiscoverPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلب الصفحات'**
+  String get platformStatusDiscoverPages;
+
+  /// No description provided for @platformStatusTestConnection.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختبار الاتصال'**
+  String get platformStatusTestConnection;
+
+  /// No description provided for @platformStatusPublish.
+  ///
+  /// In ar, this message translates to:
+  /// **'النشر'**
+  String get platformStatusPublish;
+
+  /// No description provided for @platformStatusYes.
+  ///
+  /// In ar, this message translates to:
+  /// **'متاح'**
+  String get platformStatusYes;
+
+  /// No description provided for @platformStatusNo.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير متاح'**
+  String get platformStatusNo;
+
+  /// No description provided for @helpCenterAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز المساعدة'**
+  String get helpCenterAppBarTitle;
+
+  /// No description provided for @helpCenterSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل ما تحتاج معرفته لاستخدام {appName}.'**
+  String helpCenterSubtitle(String appName);
+
+  /// No description provided for @helpCenterSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث في دليل الاستخدام…'**
+  String get helpCenterSearchHint;
+
+  /// No description provided for @helpCenterQuickLinksTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'روابط سريعة'**
+  String get helpCenterQuickLinksTitle;
+
+  /// No description provided for @helpCenterOpenGuideButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح دليل الاستخدام الكامل'**
+  String get helpCenterOpenGuideButton;
+
+  /// No description provided for @helpCenterAboutCardTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حول النظام'**
+  String get helpCenterAboutCardTitle;
+
+  /// No description provided for @helpCenterAboutCardSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعرّف على {appName} وميزاته وحالة كل منصة.'**
+  String helpCenterAboutCardSubtitle(String appName);
+
+  /// No description provided for @helpCenterFaqCardTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأسئلة الشائعة'**
+  String get helpCenterFaqCardTitle;
+
+  /// No description provided for @helpCenterFaqCardSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجابات سريعة على الأسئلة المتكررة.'**
+  String get helpCenterFaqCardSubtitle;
+
+  /// No description provided for @helpCenterTroubleshootingCardTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استكشاف الأخطاء'**
+  String get helpCenterTroubleshootingCardTitle;
+
+  /// No description provided for @helpCenterTroubleshootingCardSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حلول لأكثر رسائل الخطأ شيوعًا.'**
+  String get helpCenterTroubleshootingCardSubtitle;
+
+  /// No description provided for @helpCenterNoOrganizationNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت لست عضوًا في أي مؤسسة بعد — بعض أقسام الدليل ستفيدك أكثر بعد انضمامك لمؤسسة.'**
+  String get helpCenterNoOrganizationNotice;
+
+  /// No description provided for @userGuideAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دليل استخدام {appName}'**
+  String userGuideAppBarTitle(String appName);
+
+  /// No description provided for @userGuideSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث عن موضوع…'**
+  String get userGuideSearchHint;
+
+  /// No description provided for @userGuideTocTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'فهرس الأقسام'**
+  String get userGuideTocTitle;
+
+  /// No description provided for @userGuideNoResultsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد نتائج'**
+  String get userGuideNoResultsTitle;
+
+  /// No description provided for @userGuideNoResultsMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب كلمات بحث مختلفة.'**
+  String get userGuideNoResultsMessage;
+
+  /// No description provided for @userGuideClearSearchButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح البحث'**
+  String get userGuideClearSearchButton;
+
+  /// No description provided for @userGuideFaqSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأسئلة الشائعة'**
+  String get userGuideFaqSectionTitle;
+
+  /// No description provided for @userGuideTroubleshootingSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استكشاف الأخطاء'**
+  String get userGuideTroubleshootingSectionTitle;
+
+  /// No description provided for @userGuideRolePermissionTableTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'من يستطيع فعل ماذا؟'**
+  String get userGuideRolePermissionTableTitle;
+
+  /// No description provided for @userGuideRequiredPermissionBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتطلب: {role}'**
+  String userGuideRequiredPermissionBadge(String role);
+
+  /// No description provided for @userGuideNoOrganizationNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت لست عضوًا في أي مؤسسة بعد — بعض الأقسام أدناه ستنطبق عليك بعد انضمامك لمؤسسة.'**
+  String get userGuideNoOrganizationNotice;
+
+  /// No description provided for @platformAdminGuideButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'دليل الإدارة'**
+  String get platformAdminGuideButton;
+
+  /// No description provided for @platformAdminGuideDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دليل مسؤول المنصة'**
+  String get platformAdminGuideDialogTitle;
 }
 
 class _AppLocalizationsDelegate

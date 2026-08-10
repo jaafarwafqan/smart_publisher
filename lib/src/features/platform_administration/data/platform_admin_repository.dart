@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
+import '../../../core/base/pagination.dart';
 import '../../../core/network/laravel_api.dart';
 import '../../../core/network/network_client.dart';
+import '../../../shared/models/audit_log_entry.dart';
 
 class PlatformAdminException implements Exception {
   const PlatformAdminException(this.message, {this.statusCode});
@@ -442,6 +444,52 @@ class PlatformAdminRepository {
             )
             .toList(growable: false),
       },
+    );
+  }
+
+  /// Sprint G (role/permission remediation, 2026-08-09): the platform-wide
+  /// feed — super_admin only, unrestricted by organization (see
+  /// AdminAuditLogController on the backend). The org-scoped equivalent
+  /// lives on `OrganizationRepository.getAuditLogs()` instead, since it is
+  /// reachable by an organization owner/admin, not just a platform admin.
+  Future<PaginatedResult<AuditLogEntry>> getAuditLogs({
+    int? organizationId,
+    int? userId,
+    String? action,
+    String? dateFrom,
+    String? dateTo,
+    int page = 1,
+    int perPage = 25,
+  }) async {
+    final response = await _get(
+      LaravelEndpoints.platformAdminAuditLogs,
+      queryParameters: <String, dynamic>{
+        'page': page,
+        'per_page': perPage,
+        if (organizationId case final int organizationId)
+          'organization_id': organizationId,
+        if (userId case final int userId) 'user_id': userId,
+        if (action?.trim().isNotEmpty ?? false) 'action': action!.trim(),
+        if (dateFrom case final String dateFrom) 'date_from': dateFrom,
+        if (dateTo case final String dateTo) 'date_to': dateTo,
+      },
+    );
+    final envelope = _map(response.data);
+    final raw = _unwrap(response.data);
+    final meta =
+        envelope['meta'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final items = raw is List<dynamic>
+        ? raw
+              .whereType<Map<String, dynamic>>()
+              .map(AuditLogEntry.fromJson)
+              .toList(growable: false)
+        : const <AuditLogEntry>[];
+
+    return PaginatedResult<AuditLogEntry>(
+      items: items,
+      page: _intValue(meta['current_page'], fallback: page),
+      pageSize: _intValue(meta['per_page'], fallback: perPage),
+      totalCount: _intValue(meta['total'], fallback: items.length),
     );
   }
 

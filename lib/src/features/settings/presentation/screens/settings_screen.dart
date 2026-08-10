@@ -125,6 +125,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           sectionGap,
           Card(
             child: ListTile(
+              leading: const Icon(Icons.fact_check_outlined),
+              title: Text(l10n.settingsAuditLogTitle),
+              subtitle: Text(l10n.settingsAuditLogSubtitle),
+              trailing: Icon(
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left
+                    : Icons.chevron_right,
+              ),
+              onTap: () => context.push(RouteNames.organizationAuditLogPath),
+            ),
+          ),
+          sectionGap,
+          Card(
+            child: ListTile(
               leading: const Icon(Icons.security_outlined),
               title: Text(l10n.settingsTwoFactorTitle),
               subtitle: Text(l10n.settingsTwoFactorSubtitle),
@@ -277,6 +291,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+          sectionGap,
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: Text(l10n.settingsHelpCenterTitle),
+              subtitle: Text(l10n.settingsHelpCenterSubtitle),
+              trailing: Icon(
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left
+                    : Icons.chevron_right,
+              ),
+              onTap: () => context.push(RouteNames.helpCenterPath),
+            ),
+          ),
+          sectionGap,
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: Text(l10n.settingsAboutTitle(l10n.appName)),
+              subtitle: Text(l10n.settingsAboutSubtitle),
+              trailing: Icon(
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left
+                    : Icons.chevron_right,
+              ),
+              onTap: () => context.push(RouteNames.aboutPath),
             ),
           ),
           const SizedBox(height: AppSpacing.md),

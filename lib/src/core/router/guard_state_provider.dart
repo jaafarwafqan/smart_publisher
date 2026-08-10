@@ -1,19 +1,14 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../di/app_providers.dart';
 import '../storage/storage_provider.dart';
+import 'guard_storage_keys.dart';
+
+export 'guard_storage_keys.dart';
 
 part 'guard_state_provider.g.dart';
 
 enum UserRole { guest, publisher, admin }
-
-final class GuardStorageKeys {
-  GuardStorageKeys._();
-
-  static const authToken = 'auth.token';
-  static const userRole = 'auth.user.role';
-  static const platformAdmin = 'auth.user.is_platform_admin';
-  static const firstLaunchCompleted = 'app.first_launch_completed';
-}
 
 extension UserRoleStorage on UserRole {
   String toStorageValue() {
@@ -65,8 +60,23 @@ Future<UserRole> currentUserRole(CurrentUserRoleRef ref) async {
   return UserRoleStorage.fromStorageValue(storedRole);
 }
 
+/// Sprint E (role/permission remediation, 2026-08-09): previously this only
+/// read the `is_super_admin` flag written to local storage at login time —
+/// unlike [currentOrganizationAccessProvider], it was never re-verified
+/// against the backend, so a super_admin flag revoked in another session (or
+/// by another platform administrator) stayed trusted on this device until
+/// the next login. Now re-verified live via GET /me on every guarded
+/// navigation (route_guards.dart calls `ref.refresh(...)`, exactly like the
+/// organization-access provider already does), with the same fail-closed
+/// default: any error (including "no session") resolves to `false`, never a
+/// stale cached `true`.
 final currentPlatformAdminProvider = FutureProvider<bool>((ref) async {
-  final storage = ref.read(storageServiceProvider);
-  final value = await storage.readString(GuardStorageKeys.platformAdmin);
-  return value?.toLowerCase() == 'true';
+  try {
+    final status = await ref
+        .read(authSessionControllerProvider)
+        .fetchCurrentUserStatus();
+    return status.isSuperAdmin;
+  } catch (_) {
+    return false;
+  }
 });

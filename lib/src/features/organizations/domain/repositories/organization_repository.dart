@@ -1,4 +1,6 @@
+import '../../../../core/base/pagination.dart';
 import '../../../../core/result/app_result.dart';
+import '../../../../shared/models/audit_log_entry.dart';
 import '../entities/organization_entity.dart';
 import '../entities/organization_member_entity.dart';
 
@@ -29,4 +31,16 @@ abstract interface class OrganizationRepository {
   });
 
   Future<AppResult<void>> removeMember({required int userId});
+
+  /// Sprint G (role/permission remediation, 2026-08-09): the org-scoped
+  /// audit trail — gated server-side by `audit_logs.view`, distinct from the
+  /// platform-wide `super_admin`-only feed in `PlatformAdminRepository`.
+  Future<AppResult<PaginatedResult<AuditLogEntry>>> getAuditLogs({
+    required int organizationId,
+    int page = 1,
+    int perPage = 25,
+    String? action,
+    String? dateFrom,
+    String? dateTo,
+  });
 }

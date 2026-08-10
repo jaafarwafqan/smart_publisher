@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_publisher/src/core/base/pagination.dart';
 import 'package:smart_publisher/src/core/di/app_providers.dart';
 import 'package:smart_publisher/src/core/result/app_result.dart';
 import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart';
+import 'package:smart_publisher/src/shared/models/audit_log_entry.dart';
 import 'package:smart_publisher/src/core/storage/storage_provider.dart';
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
@@ -61,12 +63,35 @@ class _FakeOrganizationRepository implements OrganizationRepository {
       const Failure<void>('Not implemented for this test.'),
     );
   }
+
+  @override
+  Future<AppResult<PaginatedResult<AuditLogEntry>>> getAuditLogs({
+    required int organizationId,
+    int page = 1,
+    int perPage = 25,
+    String? action,
+    String? dateFrom,
+    String? dateTo,
+  }) {
+    return Future<AppResult<PaginatedResult<AuditLogEntry>>>.value(
+      const Failure<PaginatedResult<AuditLogEntry>>(
+        'Not implemented for this test.',
+      ),
+    );
+  }
 }
 
+// Sprint E (role/permission remediation): the backend now resolves and
+// sends the permission set directly (see OrganizationMembershipDtoV1), so a
+// test fixture must supply it explicitly instead of relying on a client-side
+// role-to-permissions map (OrganizationRolePermissions, now deleted). These
+// callers simulate exactly what GET /organizations would send for the named
+// role, matching App\Enums\OrganizationRole::permissions() on the backend.
 OrganizationEntity _membership(
   String role, {
   int id = 1,
   bool isCurrent = true,
+  Set<String> permissions = const <String>{},
 }) {
   return OrganizationEntity(
     id: id,
@@ -74,6 +99,7 @@ OrganizationEntity _membership(
     slug: 'organization-$id',
     role: role,
     isCurrent: isCurrent,
+    permissions: permissions,
   );
 }
 
@@ -87,56 +113,68 @@ ProviderContainer _containerFor(_FakeOrganizationRepository repository) {
 }
 
 void main() {
-  group('OrganizationRolePermissions', () {
+  group('OrganizationAccessState', () {
     test(
-      'matches the backend role templates and fails closed for unknown roles',
+      'active() exposes exactly the permissions the backend sent, nothing derived locally',
       () {
-        final owner = OrganizationRolePermissions.forRole('owner');
-        final admin = OrganizationRolePermissions.forRole('admin');
-        final manager = OrganizationRolePermissions.forRole('manager');
-        final editor = OrganizationRolePermissions.forRole('editor');
-        final viewer = OrganizationRolePermissions.forRole('viewer');
-
-        expect(owner, containsAll(OrganizationPermissions.all));
-        expect(admin, contains(OrganizationPermissions.settingsManage));
-        expect(
-          admin,
-          isNot(contains(OrganizationPermissions.organizationDelete)),
-        );
-        expect(
-          admin,
-          isNot(
-            contains(OrganizationPermissions.organizationTransferOwnership),
+        final owner = OrganizationAccessState.active(
+          memberships: <OrganizationEntity>[_membership('owner')],
+          currentOrganization: _membership(
+            'owner',
+            permissions: OrganizationPermissions.all,
           ),
         );
-
-        expect(manager, contains(OrganizationPermissions.postsViewAll));
-        expect(manager, contains(OrganizationPermissions.postsApprove));
-        expect(manager, contains(OrganizationPermissions.postsPublish));
-        expect(manager, contains(OrganizationPermissions.socialPagesManage));
         expect(
-          manager,
-          isNot(contains(OrganizationPermissions.settingsManage)),
+          owner.hasPermission(OrganizationPermissions.organizationDelete),
+          isTrue,
         );
 
-        expect(editor, contains(OrganizationPermissions.postsViewOwn));
-        expect(editor, contains(OrganizationPermissions.postsCreate));
-        expect(editor, contains(OrganizationPermissions.postsUpdateOwn));
-        expect(editor, isNot(contains(OrganizationPermissions.postsViewAll)));
-        expect(editor, isNot(contains(OrganizationPermissions.postsApprove)));
-        expect(editor, isNot(contains(OrganizationPermissions.postsPublish)));
+        final viewer = OrganizationAccessState.active(
+          memberships: <OrganizationEntity>[_membership('viewer')],
+          currentOrganization: _membership(
+            'viewer',
+            permissions: const <String>{
+              OrganizationPermissions.postsViewAll,
+              OrganizationPermissions.socialAccountsView,
+            },
+          ),
+        );
+        expect(
+          viewer.hasPermission(OrganizationPermissions.postsViewAll),
+          isTrue,
+        );
+        expect(
+          viewer.hasPermission(OrganizationPermissions.postsCreate),
+          isFalse,
+        );
+        expect(
+          viewer.hasPermission(OrganizationPermissions.socialAccountsConnect),
+          isFalse,
+        );
 
-        expect(viewer, contains(OrganizationPermissions.postsViewAll));
-        expect(viewer, isNot(contains(OrganizationPermissions.postsCreate)));
-        expect(viewer, isNot(contains(OrganizationPermissions.postsPublish)));
-        expect(OrganizationRolePermissions.forRole('unknown-role'), isEmpty);
+        // An unrecognized/empty permission set (e.g. a role the client
+        // doesn't know how to label yet) must fail closed — no permission
+        // granted — never fall back to guessing from the role name.
+        final unknown = OrganizationAccessState.active(
+          memberships: <OrganizationEntity>[_membership('mystery-role')],
+          currentOrganization: _membership('mystery-role'),
+        );
+        expect(unknown.hasAnyPermission(OrganizationPermissions.all), isFalse);
       },
     );
 
     test('editor can request approval but cannot publish directly', () {
+      final editorMembership = _membership(
+        'editor',
+        permissions: const <String>{
+          OrganizationPermissions.postsCreate,
+          OrganizationPermissions.postsRequestApproval,
+          OrganizationPermissions.postsUpdateOwn,
+        },
+      );
       final editor = OrganizationAccessState.active(
-        memberships: <OrganizationEntity>[_membership('editor')],
-        currentOrganization: _membership('editor'),
+        memberships: <OrganizationEntity>[editorMembership],
+        currentOrganization: editorMembership,
       );
 
       expect(editor.canRequestPostApproval, isTrue);
@@ -158,7 +196,11 @@ void main() {
       () async {
         final repository = _FakeOrganizationRepository(
           () async => Success<List<OrganizationEntity>>(<OrganizationEntity>[
-            _membership('owner', id: 1),
+            _membership(
+              'owner',
+              id: 1,
+              permissions: const <String>{OrganizationPermissions.postsPublish},
+            ),
             _membership('editor', id: 2, isCurrent: false),
           ]),
         );

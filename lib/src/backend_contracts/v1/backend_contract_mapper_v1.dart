@@ -54,6 +54,11 @@ class BackendContractMapperV1 {
       platforms: dto.platforms,
       targetPageIds: dto.targetPageIds,
       platformContent: dto.platformContent,
+      approvalStatus: dto.approvalStatus,
+      approvalRequestedAction: dto.approvalRequestedAction,
+      approvalNote: dto.approvalNote,
+      approvedByName: dto.approvedByName,
+      authorName: dto.authorName,
     );
   }
 

@@ -28,6 +28,9 @@ final class RouteNames {
   static const organizationMembers = 'organization_members';
   static const organizationMembersPath = '/settings/members';
 
+  static const organizationAuditLog = 'organization_audit_log';
+  static const organizationAuditLogPath = '/settings/audit-log';
+
   static const accountDataExport = 'account_data_export';
   static const accountDataExportPath = '/settings/data-export';
 
@@ -51,6 +54,9 @@ final class RouteNames {
 
   static const postsList = 'posts_list';
   static const postsListPath = '/posts';
+
+  static const postsApprovals = 'posts_approvals';
+  static const postsApprovalsPath = '/posts/approvals';
 
   static const mediaLibrary = 'media_library';
   static const mediaLibraryPath = '/media/library';
@@ -85,9 +91,21 @@ final class RouteNames {
   static const platformUsers = 'platform_users';
   static const platformUsersPath = '/platform/users';
 
+  static const platformAuditLog = 'platform_audit_log';
+  static const platformAuditLogPath = '/platform/audit-log';
+
   static const oauthProviderSettings = 'oauth_provider_settings';
   static const oauthProviderSettingsPath = '/administration/oauth-providers';
 
   static const productionRelease = 'production_release';
   static const productionReleasePath = '/release/production';
+
+  static const about = 'about';
+  static const aboutPath = '/about';
+
+  static const helpCenter = 'help_center';
+  static const helpCenterPath = '/help';
+
+  static const userGuide = 'user_guide';
+  static const userGuidePath = '/help/guide';
 }

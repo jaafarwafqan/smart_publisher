@@ -7,9 +7,15 @@ import 'package:smart_publisher/src/features/dashboard/presentation/widgets/acco
 import '../../helpers/localized_test_app.dart';
 
 const _managerAccess = AccountOperationAccess(
+  canCreate: true,
+  canUpdate: true,
   canConnect: true,
   canDisconnect: true,
-  canManagePages: true,
+  canDelete: true,
+  canTest: true,
+  canRefresh: true,
+  canSyncPages: true,
+  canSelectPages: true,
 );
 
 Future<void> _pump(

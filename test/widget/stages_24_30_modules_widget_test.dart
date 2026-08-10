@@ -24,6 +24,7 @@ import 'package:smart_publisher/src/features/schedule/presentation/pages/calenda
 import 'package:smart_publisher/src/features/settings/presentation/screens/settings_screen.dart';
 
 import '../helpers/localized_test_app.dart';
+import '../helpers/organization_role_fixtures.dart';
 
 class _FakeScheduleRepository extends ScheduleRepository {
   @override
@@ -63,12 +64,13 @@ void main() {
             NotificationRepositoryImpl(),
           ),
           currentOrganizationAccessProvider.overrideWith((_) async {
-            const currentOrganization = OrganizationEntity(
+            final currentOrganization = OrganizationEntity(
               id: 1,
               name: 'Test Organization',
               slug: 'test-organization',
               role: 'admin',
               isCurrent: true,
+              permissions: permissionsForRole('admin'),
             );
             return OrganizationAccessState.active(
               memberships: <OrganizationEntity>[currentOrganization],

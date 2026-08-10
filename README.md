@@ -35,8 +35,6 @@ Repository pattern (`*RepositoryImpl` per feature, all extending `BaseRepository
 lib/src/
   core/           # DI (app_providers.dart), network, security, theme, router
   features/       # posts, composer, media, schedule, auth, analytics, notifications, dashboard, administration
-  platforms/      # SocialPlatform abstraction + per-provider plugins
-  publish_engine/ # PublishEngine, retry policy, circuit breaker
   backend_contracts/v1/  # explicit DTOs + BackendContractMapperV1, one place all API shape assumptions live
   offline/        # OutboxStore + SyncWorker
 ```
@@ -44,6 +42,8 @@ lib/src/
 ### What's deliberately not here
 
 Earlier commit messages referenced a CQRS/Mediator/Policy-Engine architecture. It was audited, found to be **empty scaffolding — 0-byte files, never actually wired to anything** — and deleted, along with a duplicate dead `features/authentication/` folder. The real, live flow is Repository → Riverpod → Laravel API, documented as it actually works in `docs/architecture/request_flow.md`. Don't resurrect the old pattern without reading `docs/audit/ROUND1_CTO_AUDIT.md` (BUG-007) first — it explains why it was removed rather than "connected."
+
+`platforms/` (a `SocialPlatform` abstraction + per-provider plugins that faked successful connects/publishes with zero real HTTP calls) and `publish_engine/` (a local retry/circuit-breaker publish pipeline) were removed for the same reason during the role/permission remediation (2026-08-09): neither was wired to any provider the real app ever read — real connect/publish goes entirely through the backend OAuth flows and Job pipeline (`PublishPostJob`, `PublicationBatchCoordinator`).
 
 ## Documentation map
 

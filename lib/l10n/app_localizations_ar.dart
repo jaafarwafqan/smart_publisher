@@ -301,6 +301,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboardPostsButton => 'المنشورات';
 
   @override
+  String get dashboardApprovalsButton => 'الموافقات';
+
+  @override
   String get dashboardLoadFailed =>
       'تعذر تحميل لوحة التحكم. تحقق من الاتصال ثم أعد المحاولة.';
 
@@ -774,6 +777,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsMembersSubtitle => 'إضافة أو إدارة أعضاء مؤسستك.';
 
   @override
+  String get settingsAuditLogTitle => 'سجل التدقيق';
+
+  @override
+  String get settingsAuditLogSubtitle => 'راجع من فعل ماذا داخل هذه المؤسسة.';
+
+  @override
   String get settingsTwoFactorTitle => 'المصادقة الثنائية';
 
   @override
@@ -926,6 +935,71 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get organizationMembersRemoveButton => 'حذف';
+
+  @override
+  String get auditLogAppBarTitle => 'سجل التدقيق';
+
+  @override
+  String get auditLogEmptyMessage => 'لا توجد أحداث تدقيق مطابقة.';
+
+  @override
+  String get auditLogLoadError => 'فشل تحميل سجل التدقيق.';
+
+  @override
+  String get auditLogRetryButton => 'إعادة المحاولة';
+
+  @override
+  String get auditLogForbiddenTitle => 'غير مصرح لك';
+
+  @override
+  String get auditLogForbiddenMessage =>
+      'رفض الخادم الوصول إلى سجل التدقيق هذا.';
+
+  @override
+  String get auditLogFilterActionLabel => 'تصفية حسب الإجراء';
+
+  @override
+  String get auditLogFilterDateFromLabel => 'من';
+
+  @override
+  String get auditLogFilterDateToLabel => 'إلى';
+
+  @override
+  String get auditLogFilterClearButton => 'مسح الفلاتر';
+
+  @override
+  String get auditLogSystemActor => 'النظام';
+
+  @override
+  String auditLogEntrySubtitle(String type, String id) {
+    return '$type رقم $id';
+  }
+
+  @override
+  String get auditLogViewDetailsButton => 'عرض التفاصيل';
+
+  @override
+  String get auditLogDetailsOldValues => 'القيم السابقة';
+
+  @override
+  String get auditLogDetailsNewValues => 'القيم الجديدة';
+
+  @override
+  String get auditLogDetailsNone => 'لا يوجد سجل.';
+
+  @override
+  String auditLogPaginationLabel(String page, String lastPage) {
+    return 'صفحة $page من $lastPage';
+  }
+
+  @override
+  String get auditLogPreviousPage => 'السابق';
+
+  @override
+  String get auditLogNextPage => 'التالي';
+
+  @override
+  String get auditLogOrganizationColumn => 'المؤسسة';
 
   @override
   String get twoFactorSetupAppBarTitle => 'المصادقة الثنائية';
@@ -1739,7 +1813,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get orgSwitcherEmpty => 'أنت لست عضوًا في أي مؤسسة بعد.';
+  String get orgSwitcherEmptyTitle => 'لا توجد مؤسسة بعد';
+
+  @override
+  String get orgSwitcherEmpty =>
+      'أنت لست عضوًا في أي مؤسسة بعد. يحتاج مالك أو مسؤول مؤسسة لإضافتك، أو يمكن لمسؤول المنصة إنشاء مؤسسة لك. يمكنك مع ذلك إدارة أمان حسابك أدناه.';
+
+  @override
+  String get orgSwitcherEmptyAccountAction => 'أمان الحساب';
 
   @override
   String get orgSwitcherActiveChip => 'نشط';
@@ -1821,6 +1902,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String get postsListEmpty => 'لا توجد منشورات مطابقة لهذا الفلتر.';
 
   @override
+  String get approvalsAppBarTitle => 'الموافقات';
+
+  @override
+  String get approvalsHeadline => 'بانتظار الموافقة';
+
+  @override
+  String get approvalsSubtitle =>
+      'منشورات أرسلها محرر للمراجعة — وافق للنشر/الجدولة كما طُلب، أو ارفض مع ملاحظة اختيارية.';
+
+  @override
+  String get approvalsFailedToLoad => 'فشل تحميل قائمة الموافقات.';
+
+  @override
+  String get approvalsEmpty => 'لا يوجد ما ينتظر الموافقة حاليًا.';
+
+  @override
+  String get approvalsLoadMore => 'تحميل المزيد';
+
+  @override
+  String approvalsRequestedByMeta(String name) {
+    return 'طلبه $name';
+  }
+
+  @override
+  String get approvalsRequestedActionSchedule => 'الطلب: جدولة';
+
+  @override
+  String get approvalsRequestedActionPublishNow => 'الطلب: نشر فوري';
+
+  @override
+  String get approvalsApproveButton => 'موافقة';
+
+  @override
+  String get approvalsRejectButton => 'رفض';
+
+  @override
+  String get approvalsApproveSuccess => 'تمت الموافقة على المنشور.';
+
+  @override
+  String get approvalsRejectSuccess => 'تم رفض المنشور.';
+
+  @override
+  String get approvalsRejectDialogTitle => 'رفض هذا المنشور؟';
+
+  @override
+  String get approvalsRejectDialogNoteLabel => 'ملاحظة لمقدّم الطلب (اختياري)';
+
+  @override
+  String get approvalsRejectDialogConfirm => 'رفض';
+
+  @override
   String postsListPublishedMeta(String date) {
     return 'نُشر $date';
   }
@@ -1850,4 +1982,218 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get composerInsertEmojiTooltip => 'إدراج رمز تعبيري';
+
+  @override
+  String get moduleHelpCenterTitle => 'مركز المساعدة';
+
+  @override
+  String moduleHelpCenterDescription(String appName) {
+    return 'أدلة وأسئلة شائعة وخطوات استخدام $appName.';
+  }
+
+  @override
+  String get helpIconTooltip => 'المساعدة';
+
+  @override
+  String settingsAboutTitle(String appName) {
+    return 'حول $appName';
+  }
+
+  @override
+  String get settingsAboutSubtitle =>
+      'رقم الإصدار والمنصات المدعومة ونظرة على الأمان.';
+
+  @override
+  String get settingsHelpCenterTitle => 'مركز المساعدة';
+
+  @override
+  String get settingsHelpCenterSubtitle => 'دليل الاستخدام الكامل خطوة بخطوة.';
+
+  @override
+  String welcomeAboutLinkLabel(String appName) {
+    return 'حول $appName';
+  }
+
+  @override
+  String aboutAppBarTitle(String appName) {
+    return 'حول $appName';
+  }
+
+  @override
+  String aboutSectionDefinitionTitle(String appName) {
+    return 'ما هو $appName؟';
+  }
+
+  @override
+  String get aboutSectionGoalsTitle => 'أهداف النظام';
+
+  @override
+  String get aboutSectionFeaturesTitle => 'المزايا المتاحة';
+
+  @override
+  String get aboutSectionPlatformsTitle => 'المنصات المدعومة';
+
+  @override
+  String get aboutSectionRolesTitle => 'الأدوار داخل المؤسسة';
+
+  @override
+  String get aboutSectionSecurityTitle => 'الأمان والخصوصية';
+
+  @override
+  String get aboutSectionAppInfoTitle => 'معلومات التطبيق';
+
+  @override
+  String get aboutSectionTeamTitle => 'الفريق والجهة المالكة';
+
+  @override
+  String get aboutAppVersionLabel => 'رقم الإصدار';
+
+  @override
+  String get aboutAppBuildLabel => 'رقم البناء';
+
+  @override
+  String get aboutAppEnvironmentLabel => 'البيئة';
+
+  @override
+  String get aboutAppPackageLabel => 'معرّف الحزمة';
+
+  @override
+  String aboutCopyrightLabel(String year, String holder) {
+    return 'جميع الحقوق محفوظة © $year $holder.';
+  }
+
+  @override
+  String get aboutPrivacyPolicyLink => 'سياسة الخصوصية';
+
+  @override
+  String get aboutTermsOfServiceLink => 'شروط الاستخدام';
+
+  @override
+  String get aboutDataDeletionLink => 'حذف بيانات المستخدم';
+
+  @override
+  String get aboutSupportLink => 'الدعم والتواصل';
+
+  @override
+  String get aboutOpenHelpGuideButton => 'افتح دليل الاستخدام';
+
+  @override
+  String get aboutLoadErrorMessage => 'تعذّر تحميل بعض معلومات التطبيق.';
+
+  @override
+  String get aboutSuperAdminRoleNote =>
+      'صلاحيات مسؤول المنصة موثّقة بصورة منفصلة داخل مساحة إدارة المنصة، ولا تُعرض هنا.';
+
+  @override
+  String get platformStatusAvailableBeta => 'متاح (تجريبي - Beta)';
+
+  @override
+  String get platformStatusPartial => 'متاح جزئيًا';
+
+  @override
+  String get platformStatusComingSoon => 'قريبًا';
+
+  @override
+  String get platformStatusConnect => 'الاتصال';
+
+  @override
+  String get platformStatusDiscoverPages => 'جلب الصفحات';
+
+  @override
+  String get platformStatusTestConnection => 'اختبار الاتصال';
+
+  @override
+  String get platformStatusPublish => 'النشر';
+
+  @override
+  String get platformStatusYes => 'متاح';
+
+  @override
+  String get platformStatusNo => 'غير متاح';
+
+  @override
+  String get helpCenterAppBarTitle => 'مركز المساعدة';
+
+  @override
+  String helpCenterSubtitle(String appName) {
+    return 'كل ما تحتاج معرفته لاستخدام $appName.';
+  }
+
+  @override
+  String get helpCenterSearchHint => 'ابحث في دليل الاستخدام…';
+
+  @override
+  String get helpCenterQuickLinksTitle => 'روابط سريعة';
+
+  @override
+  String get helpCenterOpenGuideButton => 'افتح دليل الاستخدام الكامل';
+
+  @override
+  String get helpCenterAboutCardTitle => 'حول النظام';
+
+  @override
+  String helpCenterAboutCardSubtitle(String appName) {
+    return 'تعرّف على $appName وميزاته وحالة كل منصة.';
+  }
+
+  @override
+  String get helpCenterFaqCardTitle => 'الأسئلة الشائعة';
+
+  @override
+  String get helpCenterFaqCardSubtitle => 'إجابات سريعة على الأسئلة المتكررة.';
+
+  @override
+  String get helpCenterTroubleshootingCardTitle => 'استكشاف الأخطاء';
+
+  @override
+  String get helpCenterTroubleshootingCardSubtitle =>
+      'حلول لأكثر رسائل الخطأ شيوعًا.';
+
+  @override
+  String get helpCenterNoOrganizationNotice =>
+      'أنت لست عضوًا في أي مؤسسة بعد — بعض أقسام الدليل ستفيدك أكثر بعد انضمامك لمؤسسة.';
+
+  @override
+  String userGuideAppBarTitle(String appName) {
+    return 'دليل استخدام $appName';
+  }
+
+  @override
+  String get userGuideSearchHint => 'ابحث عن موضوع…';
+
+  @override
+  String get userGuideTocTitle => 'فهرس الأقسام';
+
+  @override
+  String get userGuideNoResultsTitle => 'لا توجد نتائج';
+
+  @override
+  String get userGuideNoResultsMessage => 'جرّب كلمات بحث مختلفة.';
+
+  @override
+  String get userGuideClearSearchButton => 'مسح البحث';
+
+  @override
+  String get userGuideFaqSectionTitle => 'الأسئلة الشائعة';
+
+  @override
+  String get userGuideTroubleshootingSectionTitle => 'استكشاف الأخطاء';
+
+  @override
+  String get userGuideRolePermissionTableTitle => 'من يستطيع فعل ماذا؟';
+
+  @override
+  String userGuideRequiredPermissionBadge(String role) {
+    return 'يتطلب: $role';
+  }
+
+  @override
+  String get userGuideNoOrganizationNotice =>
+      'أنت لست عضوًا في أي مؤسسة بعد — بعض الأقسام أدناه ستنطبق عليك بعد انضمامك لمؤسسة.';
+
+  @override
+  String get platformAdminGuideButton => 'دليل الإدارة';
+
+  @override
+  String get platformAdminGuideDialogTitle => 'دليل مسؤول المنصة';
 }

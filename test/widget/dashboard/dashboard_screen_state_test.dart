@@ -21,7 +21,6 @@ import 'package:smart_publisher/src/features/dashboard/presentation/pages/dashbo
 import 'package:smart_publisher/src/features/notifications/data/notification_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
-import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import '../../helpers/fake_network_client.dart';
 import '../../helpers/localized_test_app.dart';
@@ -83,7 +82,7 @@ void main() {
             ),
             postRepositoryProvider.overrideWithValue(posts),
             accountRepositoryProvider.overrideWithValue(
-              AccountRepositoryImpl(platformFactory: PlatformFactory()),
+              AccountRepositoryImpl(),
             ),
             analyticsRepositoryProvider.overrideWithValue(
               AnalyticsRepositoryImpl(),

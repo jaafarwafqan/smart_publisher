@@ -21,7 +21,8 @@ class AccountPagesPanel extends StatefulWidget {
     required this.onAddChannel,
     required this.onSaveSelection,
     required this.onDeletePage,
-    required this.canManagePages,
+    required this.canSync,
+    required this.canSelect,
   });
 
   final List<SocialPageEntity> pages;
@@ -30,7 +31,12 @@ class AccountPagesPanel extends StatefulWidget {
   final Future<void> Function() onAddChannel;
   final Future<void> Function(List<String> pageIds) onSaveSelection;
   final Future<void> Function(String pageId) onDeletePage;
-  final bool canManagePages;
+  // Role/permission remediation: discovering/adding/removing pages
+  // (social_pages.sync) is now a distinct grant from choosing which
+  // already-discovered pages publish (social_pages.select) — see
+  // SocialAccountPolicy::syncPages()/selectPages() on the backend.
+  final bool canSync;
+  final bool canSelect;
 
   @override
   State<AccountPagesPanel> createState() => _AccountPagesPanelState();
@@ -107,7 +113,7 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
       ),
       childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
       children: <Widget>[
-        if (widget.canManagePages)
+        if (widget.canSync)
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
@@ -136,7 +142,7 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               value: canSelect && _selected.contains(page.id),
-              onChanged: widget.canManagePages && canSelect
+              onChanged: widget.canSelect && canSelect
                   ? (checked) {
                       setState(() {
                         if (checked ?? false) {
@@ -173,7 +179,7 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
                   _statusLabel(page.status, l10n),
                 ].join(' • '),
               ),
-              secondary: widget.canManagePages
+              secondary: widget.canSync
                   ? IconButton(
                       tooltip: l10n.pagesPanelRemove,
                       icon: const Icon(Icons.delete_outline),
@@ -182,7 +188,7 @@ class _AccountPagesPanelState extends State<AccountPagesPanel> {
                   : null,
             );
           }),
-        if (widget.pages.isNotEmpty && widget.canManagePages)
+        if (widget.pages.isNotEmpty && widget.canSelect)
           Align(
             alignment: AlignmentDirectional.centerEnd,
             child: FilledButton(

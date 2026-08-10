@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/base/pagination.dart';
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../features/organizations/application/current_organization_access.dart';
+import '../../../../features/organizations/presentation/screens/organization_audit_log_screen.dart';
+import '../../../../shared/models/audit_log_entry.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
@@ -75,6 +78,59 @@ class _PlatformAdministrationScreenState
     context.go(RouteNames.loginPath);
   }
 
+  void _showPlatformAdminGuide(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: const Text('دليل مسؤول المنصة'),
+          content: const SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _AdminGuidePoint(
+                    title: 'إنشاء مؤسسة',
+                    body:
+                        'من «المؤسسات»، اضغط «إنشاء مؤسسة» — اختر مالكًا موجودًا أو أنشئ مالكًا جديدًا بكلمة مرور لا تقل عن 12 حرفًا.',
+                  ),
+                  _AdminGuidePoint(
+                    title: 'إدارة مستخدمي النظام',
+                    body:
+                        'من «مستخدمو النظام»: تفعيل/تعطيل حساب، منح أو سحب صلاحية مسؤول المنصة، وتعديل عضويات المستخدم عبر المؤسسات.',
+                  ),
+                  _AdminGuidePoint(
+                    title: 'إعدادات مزوّدي OAuth',
+                    body:
+                        'App ID وApp Secret لكل مزوّد — محمية حصريًا بصلاحية مسؤول المنصة، منفصلة تمامًا عن أدوار المؤسسات.',
+                  ),
+                  _AdminGuidePoint(
+                    title: 'سجل تدقيق المنصة',
+                    body:
+                        'يسجّل كل إجراء إداري حساس (تعطيل مؤسسة، تغيير دور مسؤول، تعديل إعدادات OAuth) قابلاً للمراجعة لاحقًا.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => context.push(RouteNames.aboutPath),
+              child: const Text('حول النظام'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('إغلاق'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -87,6 +143,17 @@ class _PlatformAdministrationScreenState
               tooltip: 'تحديث البيانات',
               onPressed: _reload,
               icon: const Icon(Icons.refresh),
+            ),
+            // Sprint (Help Center, 2026-08-10): a super_admin session never
+            // reaches /help (RouteGuards bounces it straight back to
+            // /platform — see the isPlatformAdmin branch) — this in-page
+            // dialog is the one place a platform administrator gets guide
+            // content, per the explicit instruction not to route them into
+            // the organization-scoped guide automatically.
+            IconButton(
+              tooltip: 'دليل الإدارة',
+              onPressed: () => _showPlatformAdminGuide(context),
+              icon: const Icon(Icons.help_outline),
             ),
             IconButton(
               tooltip: 'تسجيل الخروج',
@@ -199,6 +266,23 @@ class _PlatformDashboardContent extends StatelessWidget {
               onPressed: () => context.push(RouteNames.platformUsersPath),
               icon: const Icon(Icons.manage_accounts_outlined),
               label: const Text('إدارة مستخدمي النظام'),
+            ),
+            // Sprint D (role/permission remediation): App ID/App Secret for
+            // every organization's shared OAuth providers is now
+            // super_admin-only on the backend (moved off the legacy Spatie
+            // system-settings permission) — this was the one entry point
+            // missing from the platform admin workspace to actually reach
+            // that screen; previously it had no navigation link anywhere.
+            OutlinedButton.icon(
+              onPressed: () =>
+                  context.push(RouteNames.oauthProviderSettingsPath),
+              icon: const Icon(Icons.vpn_key_outlined),
+              label: const Text('إعدادات مزوّدي OAuth'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => context.push(RouteNames.platformAuditLogPath),
+              icon: const Icon(Icons.fact_check_outlined),
+              label: const Text('سجل تدقيق المنصة'),
             ),
           ],
         ),
@@ -796,6 +880,197 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Sprint G (role/permission remediation, 2026-08-09): the platform-wide
+/// counterpart to `OrganizationAuditLogScreen` — super_admin only,
+/// unrestricted by organization (`GET /admin/audit-logs`). Reuses
+/// `AuditLogTile`/`AuditLogPagination` from the organization-scoped screen
+/// rather than duplicating row rendering.
+class PlatformAuditLogScreen extends ConsumerStatefulWidget {
+  const PlatformAuditLogScreen({super.key});
+
+  @override
+  ConsumerState<PlatformAuditLogScreen> createState() =>
+      _PlatformAuditLogScreenState();
+}
+
+class _PlatformAuditLogScreenState
+    extends ConsumerState<PlatformAuditLogScreen> {
+  final _actionController = TextEditingController();
+  Future<PaginatedResult<AuditLogEntry>>? _entries;
+  int _page = 1;
+  int _organizationFilter = -1;
+  late final Future<PlatformPage<PlatformOrganization>> _filterOrganizations;
+
+  @override
+  void initState() {
+    super.initState();
+    _filterOrganizations = ref
+        .read(platformAdminRepositoryProvider)
+        .getOrganizations(perPage: 100);
+    _reload();
+  }
+
+  @override
+  void dispose() {
+    _actionController.dispose();
+    super.dispose();
+  }
+
+  void _reload({int? page}) {
+    setState(() {
+      _page = page ?? 1;
+      _entries = ref
+          .read(platformAdminRepositoryProvider)
+          .getAuditLogs(
+            page: _page,
+            action: _actionController.text,
+            organizationId: _organizationFilter == -1
+                ? null
+                : _organizationFilter,
+          );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('سجل تدقيق المنصة')),
+        body: AdaptiveContentWidth(
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: _actionController,
+                      onSubmitted: (_) => _reload(),
+                      decoration: InputDecoration(
+                        labelText: 'تصفية حسب الإجراء',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          tooltip: 'بحث',
+                          onPressed: _reload,
+                          icon: const Icon(Icons.search),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    FutureBuilder<PlatformPage<PlatformOrganization>>(
+                      future: _filterOrganizations,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const SizedBox.shrink();
+                        }
+                        return Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: DropdownButton<int>(
+                            value: _organizationFilter,
+                            items: <DropdownMenuItem<int>>[
+                              const DropdownMenuItem(
+                                value: -1,
+                                child: Text('كل المؤسسات'),
+                              ),
+                              ...snapshot.data!.items.map(
+                                (organization) => DropdownMenuItem(
+                                  value: organization.id,
+                                  child: Text(organization.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() => _organizationFilter = value);
+                              _reload();
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: FutureBuilder<PaginatedResult<AuditLogEntry>>(
+                  future: _entries,
+                  builder: (context, snapshot) {
+                    final state =
+                        snapshot.connectionState != ConnectionState.done
+                        ? AppAsyncState.loading
+                        : snapshot.hasError
+                        ? AppAsyncState.error
+                        : snapshot.data!.items.isEmpty
+                        ? AppAsyncState.empty
+                        : AppAsyncState.content;
+                    return AppAsyncSwitcher(
+                      state: state,
+                      loading: const Center(child: CircularProgressIndicator()),
+                      error: _PlatformErrorState(
+                        error: snapshot.error,
+                        onRetry: _reload,
+                      ),
+                      empty: const AppEmptyState(
+                        icon: Icons.fact_check_outlined,
+                        title: 'لا توجد أحداث مطابقة',
+                        message: 'جرّب تعديل الفلاتر.',
+                      ),
+                      content: ListView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          0,
+                          AppSpacing.lg,
+                          AppSpacing.xxl,
+                        ),
+                        children: <Widget>[
+                          ...(snapshot.data?.items ?? const <AuditLogEntry>[])
+                              .map(
+                                (entry) => AuditLogTile(
+                                  entry: entry,
+                                  showOrganization: true,
+                                ),
+                              ),
+                          AuditLogPagination(
+                            page: snapshot.data,
+                            onPage: (page) => _reload(page: page),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminGuidePoint extends StatelessWidget {
+  const _AdminGuidePoint({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          Text(body, style: Theme.of(context).textTheme.bodyMedium),
+        ],
       ),
     );
   }

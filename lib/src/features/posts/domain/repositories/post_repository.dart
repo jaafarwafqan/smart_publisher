@@ -26,4 +26,19 @@ abstract class PostRepository extends BaseRepository<PostEntity> {
     String postId, {
     List<String> socialPageIds = const <String>[],
   });
+
+  /// Sprint F (role/permission remediation): the manager/admin/owner
+  /// Approvals queue — GET /posts?approval_status=pending, not a separate
+  /// endpoint. Requires a connection; there is no offline/local mode for
+  /// reviewing someone else's pending request.
+  Future<AppResult<PaginatedResult<PostEntity>>> getPendingApprovalsPage({
+    int page = 1,
+  });
+
+  /// POST /posts/{id}/approve — runs whatever action (schedule/publish-now)
+  /// was originally requested, using the data captured at request time.
+  Future<AppResult<PostEntity>> approvePost(String postId);
+
+  /// POST /posts/{id}/reject — [note] is optional context for the requester.
+  Future<AppResult<PostEntity>> rejectPost(String postId, {String? note});
 }

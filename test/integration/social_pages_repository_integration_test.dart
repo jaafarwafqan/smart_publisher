@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/features/auth/data/account_repository_impl.dart';
 import 'package:smart_publisher/src/features/auth/domain/entities/account_entity.dart';
-import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import '../helpers/fake_network_client.dart';
 
@@ -54,7 +53,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.connectTelegramBot(
@@ -99,7 +97,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.getPages(
@@ -144,7 +141,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.addPage(
@@ -188,7 +184,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.selectPages(
@@ -208,7 +203,6 @@ void main() {
       () async {
         final repository = AccountRepositoryImpl(
           networkClient: FakeNetworkClient(),
-          platformFactory: PlatformFactory(),
         );
 
         const unsynced = AccountEntity(

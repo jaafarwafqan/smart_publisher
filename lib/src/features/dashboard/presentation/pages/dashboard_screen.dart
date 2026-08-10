@@ -570,6 +570,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: Text(l10n.appName),
         actions: <Widget>[
           IconButton(
+            tooltip: l10n.helpIconTooltip,
+            onPressed: () => context.push(RouteNames.helpCenterPath),
+            icon: const Icon(Icons.help_outline),
+          ),
+          IconButton(
             tooltip: l10n.logoutTooltip,
             onPressed: () async {
               await ref.read(authSessionControllerProvider).logout();
@@ -713,6 +718,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   OrganizationPermissions.postsViewAll,
                 }) ??
                 false,
+            canApprove:
+                organizationAccess?.hasPermission(
+                  OrganizationPermissions.postsApprove,
+                ) ??
+                false,
             organizationAccess: organizationAccess,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -817,6 +827,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         badge: unreadNotifications > 0 ? '$unreadNotifications' : null,
         onTap: () => context.push(RouteNames.notificationsPath),
       ),
+      WorkspaceModule(
+        icon: Icons.help_outline,
+        title: l10n.moduleHelpCenterTitle,
+        description: l10n.moduleHelpCenterDescription(l10n.appName),
+        onTap: () => context.push(RouteNames.helpCenterPath),
+      ),
       if (organizationAccess?.hasPermission(
             OrganizationPermissions.settingsManage,
           ) ??
@@ -905,12 +921,14 @@ class _Header extends StatelessWidget {
     required this.session,
     required this.canCreatePost,
     required this.canViewPosts,
+    required this.canApprove,
     required this.organizationAccess,
   });
 
   final AuthSession? session;
   final bool canCreatePost;
   final bool canViewPosts;
+  final bool canApprove;
   final OrganizationAccessState? organizationAccess;
 
   @override
@@ -1004,6 +1022,18 @@ class _Header extends StatelessWidget {
                   onPressed: () => context.push(RouteNames.postsListPath),
                   icon: const Icon(Icons.library_books_outlined),
                   label: Text(l10n.dashboardPostsButton),
+                ),
+              if (canApprove)
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.onPrimary,
+                    side: BorderSide(
+                      color: colorScheme.onPrimary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  onPressed: () => context.push(RouteNames.postsApprovalsPath),
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: Text(l10n.dashboardApprovalsButton),
                 ),
             ],
           ),

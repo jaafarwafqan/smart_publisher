@@ -16,6 +16,11 @@ class PostEntity extends BaseEntity {
     this.platforms = const <String>[],
     this.targetPageIds = const <String>[],
     this.platformContent = const <String, String>{},
+    this.approvalStatus,
+    this.approvalRequestedAction,
+    this.approvalNote,
+    this.approvedByName,
+    this.authorName,
   });
 
   @override
@@ -42,6 +47,19 @@ class PostEntity extends BaseEntity {
   /// that platform.
   final Map<String, String> platformContent;
 
+  /// Sprint F (role/permission remediation): null/absent means this post
+  /// never entered the approval workflow — a role holding `posts.publish`
+  /// (or `posts.request_approval`, once approved) scheduled/published it
+  /// directly. `'pending'`/`'approved'`/`'rejected'` mirror
+  /// `Post::isPendingApproval()` on the backend.
+  final String? approvalStatus;
+  final String? approvalRequestedAction;
+  final String? approvalNote;
+  final String? approvedByName;
+  final String? authorName;
+
+  bool get isPendingApproval => approvalStatus == 'pending';
+
   PostEntity copyWith({
     String? id,
     String? title,
@@ -57,6 +75,11 @@ class PostEntity extends BaseEntity {
     List<String>? platforms,
     List<String>? targetPageIds,
     Map<String, String>? platformContent,
+    String? approvalStatus,
+    String? approvalRequestedAction,
+    String? approvalNote,
+    String? approvedByName,
+    String? authorName,
   }) {
     return PostEntity(
       id: id ?? this.id,
@@ -73,6 +96,12 @@ class PostEntity extends BaseEntity {
       platforms: platforms ?? this.platforms,
       targetPageIds: targetPageIds ?? this.targetPageIds,
       platformContent: platformContent ?? this.platformContent,
+      approvalStatus: approvalStatus ?? this.approvalStatus,
+      approvalRequestedAction:
+          approvalRequestedAction ?? this.approvalRequestedAction,
+      approvalNote: approvalNote ?? this.approvalNote,
+      approvedByName: approvedByName ?? this.approvedByName,
+      authorName: authorName ?? this.authorName,
     );
   }
 }

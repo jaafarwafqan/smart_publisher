@@ -23,9 +23,9 @@ import 'package:smart_publisher/src/features/notifications/data/notification_rep
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
-import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import 'helpers/fake_network_client.dart';
+import 'helpers/organization_role_fixtures.dart';
 
 class _EnglishLocaleNotifier extends LocaleNotifier {
   @override
@@ -72,9 +72,7 @@ void main() {
         app_events.EventDispatcher(EventBus()),
       ),
     );
-    final accountRepository = AccountRepositoryImpl(
-      platformFactory: PlatformFactory(),
-    );
+    final accountRepository = AccountRepositoryImpl();
 
     await tester.pumpWidget(
       ProviderScope(
@@ -99,12 +97,13 @@ void main() {
             NotificationRepositoryImpl(),
           ),
           currentOrganizationAccessProvider.overrideWith((_) async {
-            const currentOrganization = OrganizationEntity(
+            final currentOrganization = OrganizationEntity(
               id: 1,
               name: 'Jane Doe Organization',
               slug: 'jane-doe-organization',
               role: 'owner',
               isCurrent: true,
+              permissions: permissionsForRole('owner'),
             );
             return OrganizationAccessState.active(
               memberships: <OrganizationEntity>[currentOrganization],

@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dio/dio.dart'
     show BaseOptions, Dio, DioException, RequestOptions;
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../events/event.dart';
 import '../events/event_bus.dart';
@@ -14,7 +15,7 @@ import '../network/laravel_api.dart';
 import '../network/network_client.dart';
 import '../network/network_interceptor.dart';
 import '../release/release_config.dart';
-import '../router/guard_state_provider.dart';
+import '../router/guard_storage_keys.dart';
 import '../security/encryption_service.dart';
 import '../security/oauth_manager.dart';
 import '../security/scope_authorizer.dart';
@@ -57,8 +58,6 @@ import '../../offline/sync/conflict_resolution.dart';
 import '../../offline/sync/outbox_sync_handlers.dart';
 import '../../offline/sync/resumable_upload_manager.dart';
 import '../../offline/sync/sync_worker.dart';
-import '../../platforms/core/platform_factory.dart';
-import '../../publish_engine/engine/publish_engine.dart';
 
 part 'app_providers.g.dart';
 
@@ -270,15 +269,8 @@ final twoFactorControllerProvider = Provider<TwoFactorController>((ref) {
   return TwoFactorController(networkClient: ref.read(networkClientProvider));
 });
 
-final platformFactoryProvider = Provider<PlatformFactory>((ref) {
-  return PlatformFactory();
-});
-
 final accountRepositoryProvider = Provider<AccountRepository>((ref) {
-  return AccountRepositoryImpl(
-    networkClient: ref.read(networkClientProvider),
-    platformFactory: ref.read(platformFactoryProvider),
-  );
+  return AccountRepositoryImpl(networkClient: ref.read(networkClientProvider));
 });
 
 final systemSettingsRepositoryProvider = Provider<SystemSettingsRepository>((
@@ -303,11 +295,6 @@ final platformAdminRepositoryProvider = Provider<PlatformAdminRepository>((
     networkClient: ref.read(networkClientProvider),
   );
 });
-
-@Riverpod(keepAlive: true)
-PublishEngine publishEngine(PublishEngineRef ref) {
-  return PublishEngine(eventDispatcher: ref.read(eventDispatcherProvider));
-}
 
 @Riverpod(keepAlive: true)
 DraftStorage draftStorage(DraftStorageRef ref) {
@@ -428,4 +415,14 @@ UploadMedia uploadMediaUseCase(UploadMediaUseCaseRef ref) {
 @Riverpod(keepAlive: true)
 CompressMedia compressMediaUseCase(CompressMediaUseCaseRef ref) {
   return CompressMedia(repository: ref.read(mediaRepositoryProvider));
+}
+
+/// Sprint (Help Center, 2026-08-10): the single place the app name,
+/// version, and build number are read from — `AboutSystemScreen` must
+/// never hardcode these, since they already live in `pubspec.yaml` at
+/// build time and this reads them back at runtime instead of duplicating
+/// the value in a second place.
+@Riverpod(keepAlive: true)
+Future<PackageInfo> packageInfo(PackageInfoRef ref) {
+  return PackageInfo.fromPlatform();
 }

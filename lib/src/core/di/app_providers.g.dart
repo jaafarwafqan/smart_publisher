@@ -6,7 +6,7 @@ part of 'app_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$networkClientHash() => r'9e09ebe8423f93c917e53a24b332d18b5014c289';
+String _$networkClientHash() => r'76ad1034bb7cd1d709a4663035d2a1cdadab184c';
 
 /// See also [networkClient].
 @ProviderFor(networkClient)
@@ -23,7 +23,7 @@ final networkClientProvider = Provider<NetworkClient>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef NetworkClientRef = ProviderRef<NetworkClient>;
-String _$secretsManagerHash() => r'adb2386297105017a43d0c346a8fa03e319c960c';
+String _$secretsManagerHash() => r'5d501b893a3f8b964e89883630cd678ff089cf3f';
 
 /// See also [secretsManager].
 @ProviderFor(secretsManager)
@@ -110,7 +110,7 @@ final scopeAuthorizerProvider = Provider<ScopeAuthorizer>.internal(
 // ignore: unused_element
 typedef ScopeAuthorizerRef = ProviderRef<ScopeAuthorizer>;
 String _$tokenLifecycleManagerHash() =>
-    r'286cfd13c033548e8d5b38a8caa14c43cda82806';
+    r'02d954fcaad341403d6eed2b2eecfdd80efa859d';
 
 /// See also [tokenLifecycleManager].
 @ProviderFor(tokenLifecycleManager)
@@ -179,23 +179,6 @@ final authEventPublisherProvider = Provider<AuthEventPublisher>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthEventPublisherRef = ProviderRef<AuthEventPublisher>;
-String _$publishEngineHash() => r'74c7beec9a4612b10b28313e4990c8ca394ada87';
-
-/// See also [publishEngine].
-@ProviderFor(publishEngine)
-final publishEngineProvider = Provider<PublishEngine>.internal(
-  publishEngine,
-  name: r'publishEngineProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$publishEngineHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef PublishEngineRef = ProviderRef<PublishEngine>;
 String _$draftStorageHash() => r'e08e8541e4e93ae9f0810f85a982965608d57d09';
 
 /// See also [draftStorage].
@@ -284,7 +267,7 @@ final scheduleRepositoryProvider = Provider<ScheduleRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ScheduleRepositoryRef = ProviderRef<ScheduleRepository>;
-String _$postRepositoryHash() => r'88a07ba19b3a7e4b4015325f51798ed0b95849ed';
+String _$postRepositoryHash() => r'1537c3f82081775e46714df1e15e41e03da4931f';
 
 /// See also [postRepository].
 @ProviderFor(postRepository)
@@ -407,5 +390,28 @@ final compressMediaUseCaseProvider = Provider<CompressMedia>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CompressMediaUseCaseRef = ProviderRef<CompressMedia>;
+String _$packageInfoHash() => r'f7bd90882137aac7a9f28e9d10eae6efeee8c9d0';
+
+/// Sprint (Help Center, 2026-08-10): the single place the app name,
+/// version, and build number are read from — `AboutSystemScreen` must
+/// never hardcode these, since they already live in `pubspec.yaml` at
+/// build time and this reads them back at runtime instead of duplicating
+/// the value in a second place.
+///
+/// Copied from [packageInfo].
+@ProviderFor(packageInfo)
+final packageInfoProvider = FutureProvider<PackageInfo>.internal(
+  packageInfo,
+  name: r'packageInfoProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$packageInfoHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PackageInfoRef = FutureProviderRef<PackageInfo>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

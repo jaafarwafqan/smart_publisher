@@ -5,27 +5,45 @@ import '../domain/entities/organization_entity.dart';
 
 /// The permission vocabulary exposed by the organization membership model.
 ///
-/// These values deliberately mirror
-/// `App\\Enums\\OrganizationPermission` in the Laravel application. The
-/// `/organizations` contract currently returns a membership role, rather than
-/// a per-member permission array, so [OrganizationRolePermissions] derives
-/// this set from Laravel's fixed role template. Keep the two maps in sync if
-/// the backend permission enum or role template changes.
+/// These values deliberately mirror `App\\Enums\\OrganizationPermission` in
+/// the Laravel application — kept here as string constants purely so call
+/// sites get a typo-checked reference to compare against, not because
+/// Flutter derives the grant set itself. The actual grant set for the active
+/// organization comes straight from the backend (see
+/// `OrganizationMembershipDtoV1.permissions`, sent by GET /organizations and
+/// POST /organizations/{id}/switch) — Sprint E (role/permission remediation)
+/// removed the role-name-to-permissions map that used to live here
+/// (`OrganizationRolePermissions`), since it required hand-syncing with
+/// `App\Enums\OrganizationRole::permissions()` on every change.
 abstract final class OrganizationPermissions {
   static const postsViewOwn = 'posts.view_own';
   static const postsViewAll = 'posts.view_all';
   static const postsCreate = 'posts.create';
   static const postsUpdateOwn = 'posts.update_own';
   static const postsUpdateAll = 'posts.update_all';
+  static const postsRequestApproval = 'posts.request_approval';
   static const postsApprove = 'posts.approve';
   static const postsPublish = 'posts.publish';
   static const postsDeleteOwn = 'posts.delete_own';
   static const postsDeleteAll = 'posts.delete_all';
 
+  // Role/permission remediation (2026-08-09): social_accounts.connect used
+  // to gate create/update/test/refresh/disconnect all at once — split to
+  // match the granular App\Enums\OrganizationPermission cases on the
+  // backend (see SocialAccountPolicy).
   static const socialAccountsView = 'social_accounts.view';
+  static const socialAccountsCreate = 'social_accounts.create';
+  static const socialAccountsUpdate = 'social_accounts.update';
   static const socialAccountsConnect = 'social_accounts.connect';
   static const socialAccountsDisconnect = 'social_accounts.disconnect';
-  static const socialPagesManage = 'social_pages.manage';
+  static const socialAccountsDelete = 'social_accounts.delete';
+  static const socialAccountsTest = 'social_accounts.test';
+  static const socialAccountsRefresh = 'social_accounts.refresh';
+  static const socialAccountsSync = 'social_accounts.sync';
+
+  static const socialPagesView = 'social_pages.view';
+  static const socialPagesSelect = 'social_pages.select';
+  static const socialPagesSync = 'social_pages.sync';
 
   static const membersView = 'members.view';
   static const membersInvite = 'members.invite';
@@ -34,9 +52,12 @@ abstract final class OrganizationPermissions {
 
   static const analyticsView = 'analytics.view';
   static const settingsManage = 'settings.manage';
+  static const organizationView = 'organization.view';
+  static const organizationUpdate = 'organization.update';
   static const organizationTransferOwnership =
       'organization.transfer_ownership';
   static const organizationDelete = 'organization.delete';
+  static const auditLogsView = 'audit_logs.view';
 
   static const all = <String>{
     postsViewOwn,
@@ -44,86 +65,35 @@ abstract final class OrganizationPermissions {
     postsCreate,
     postsUpdateOwn,
     postsUpdateAll,
+    postsRequestApproval,
     postsApprove,
     postsPublish,
     postsDeleteOwn,
     postsDeleteAll,
     socialAccountsView,
+    socialAccountsCreate,
+    socialAccountsUpdate,
     socialAccountsConnect,
     socialAccountsDisconnect,
-    socialPagesManage,
+    socialAccountsDelete,
+    socialAccountsTest,
+    socialAccountsRefresh,
+    socialAccountsSync,
+    socialPagesView,
+    socialPagesSelect,
+    socialPagesSync,
     membersView,
     membersInvite,
     membersChangeRole,
     membersRemove,
     analyticsView,
     settingsManage,
+    organizationView,
+    organizationUpdate,
     organizationTransferOwnership,
     organizationDelete,
+    auditLogsView,
   };
-}
-
-/// The fixed organization-role templates enforced by Laravel.
-///
-/// UI decisions are made through [OrganizationAccessState.hasPermission],
-/// never from the role name itself. The role only exists here because it is
-/// the permission-bearing field in the current `/organizations` response.
-abstract final class OrganizationRolePermissions {
-  static const _manager = <String>{
-    OrganizationPermissions.postsViewAll,
-    OrganizationPermissions.postsCreate,
-    OrganizationPermissions.postsUpdateOwn,
-    OrganizationPermissions.postsUpdateAll,
-    OrganizationPermissions.postsApprove,
-    OrganizationPermissions.postsPublish,
-    OrganizationPermissions.postsDeleteOwn,
-    OrganizationPermissions.socialAccountsView,
-    OrganizationPermissions.socialAccountsConnect,
-    OrganizationPermissions.socialAccountsDisconnect,
-    OrganizationPermissions.socialPagesManage,
-    OrganizationPermissions.membersView,
-    OrganizationPermissions.analyticsView,
-  };
-
-  static const _editor = <String>{
-    OrganizationPermissions.postsViewOwn,
-    OrganizationPermissions.postsCreate,
-    OrganizationPermissions.postsUpdateOwn,
-    OrganizationPermissions.postsDeleteOwn,
-    OrganizationPermissions.socialAccountsView,
-    OrganizationPermissions.membersView,
-    OrganizationPermissions.analyticsView,
-  };
-
-  static const _viewer = <String>{
-    OrganizationPermissions.postsViewAll,
-    OrganizationPermissions.socialAccountsView,
-    OrganizationPermissions.membersView,
-    OrganizationPermissions.analyticsView,
-  };
-
-  static Set<String> forRole(String role) {
-    switch (role.trim().toLowerCase()) {
-      case 'owner':
-        return OrganizationPermissions.all;
-      case 'admin':
-        return OrganizationPermissions.all.difference(<String>{
-          OrganizationPermissions.organizationTransferOwnership,
-          OrganizationPermissions.organizationDelete,
-        });
-      case 'manager':
-        return _manager;
-      case 'editor':
-        return _editor;
-      case 'viewer':
-        return _viewer;
-      default:
-        // A role outside the documented backend contract must never inherit
-        // viewer access by accident. Keep the client fail-closed until the
-        // API and this map are updated together.
-        return const <String>{};
-    }
-  }
 }
 
 /// A resolved active membership and the permissions it grants for this
@@ -145,9 +115,7 @@ class OrganizationAccessState {
     return OrganizationAccessState._(
       memberships: List<OrganizationEntity>.unmodifiable(memberships),
       currentOrganization: currentOrganization,
-      permissions: OrganizationRolePermissions.forRole(
-        currentOrganization.role,
-      ),
+      permissions: currentOrganization.permissions,
     );
   }
 
@@ -178,12 +146,16 @@ class OrganizationAccessState {
   }
 
   /// Editors can submit their own post requests, but cannot execute them
-  /// directly. This mirrors Laravel's `PostPolicy::publish`: `posts.update_own`
-  /// grants the request while `posts.publish` is the direct-execution gate.
+  /// directly. This mirrors Laravel's `PostPolicy::publish`:
+  /// `posts.request_approval` (or, as a fallback for a role holding
+  /// `posts.update_own` without the newer explicit grant) is what allows
+  /// submitting the request, while `posts.publish` is the direct-execution
+  /// gate.
   bool get canRequestPostApproval {
     return !hasPermission(OrganizationPermissions.postsPublish) &&
         hasPermission(OrganizationPermissions.postsCreate) &&
-        hasPermission(OrganizationPermissions.postsUpdateOwn);
+        (hasPermission(OrganizationPermissions.postsRequestApproval) ||
+            hasPermission(OrganizationPermissions.postsUpdateOwn));
   }
 
   bool get canPublishOrRequestApproval {

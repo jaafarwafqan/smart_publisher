@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_publisher/src/features/auth/data/account_repository_impl.dart';
 import 'package:smart_publisher/src/features/auth/domain/entities/account_entity.dart';
-import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import '../helpers/fake_network_client.dart';
 
@@ -36,7 +35,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final result = await repository.getAccounts(userId: _userId);
@@ -60,35 +58,30 @@ void main() {
     );
 
     test(
-      'connect sends oauth token lifecycle and scopes to the social-accounts endpoint',
+      // Sprint I (role/permission remediation, 2026-08-09): connectAccount()
+      // used to fall back to a locally-generated mock token posted to a
+      // manual "store" endpoint (SocialAccountController::store()); that
+      // endpoint was removed from the backend once Sprint C confirmed every
+      // real UI path always resolves to a dedicated flow first
+      // (connectTelegramBot / beginFacebookOAuth+completeFacebookOAuth /
+      // beginWhatsAppOAuth+completeWhatsAppOAuth). This asserts the honest
+      // failure that replaced the fake-success path, and that no network
+      // call is made at all.
+      'connectAccount fails without a network call — every real platform has its own dedicated connect flow',
       () async {
-        Map<String, dynamic>? sentPayload;
-        String? sentPath;
+        var postCalled = false;
 
         final repository = AccountRepositoryImpl(
           networkClient: FakeNetworkClient(
             postHandler: (path, data) async {
-              sentPath = path;
-              sentPayload = data as Map<String, dynamic>;
+              postCalled = true;
               return Response<dynamic>(
                 requestOptions: RequestOptions(path: path),
                 statusCode: 201,
-                data: <String, dynamic>{
-                  'success': true,
-                  'data': <String, dynamic>{
-                    'id': '99',
-                    'provider': 'facebook',
-                    'provider_account_id': sentPayload!['provider_account_id'],
-                    'account_name': 'Business Page',
-                    'status': 'connected',
-                    'has_refresh_token': true,
-                    'scopes': <String>['publish', 'schedule'],
-                  },
-                },
+                data: const <String, dynamic>{},
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final accountsResult = await repository.getAccounts(userId: _userId);
@@ -101,66 +94,8 @@ void main() {
           userId: _userId,
         );
 
-        expect(connectResult.isSuccess, isTrue);
-        expect(sentPath, contains('/users/$_userId/social-accounts'));
-        expect(sentPayload, isNotNull);
-        expect(sentPayload!['provider'], 'facebook');
-        expect(sentPayload!['access_token'], isNotNull);
-        expect(sentPayload!['refresh_token'], isNotNull);
-        expect(sentPayload!['token_expires_at'], isNotNull);
-        expect(sentPayload!['scopes'], isA<List<dynamic>>());
-        expect((sentPayload!['scopes'] as List<dynamic>).isNotEmpty, isTrue);
-        expect(connectResult.data!.remoteId, '99');
-      },
-    );
-
-    test(
-      'connecting the X account sends provider "x" to the backend, not the internal "twitter" key '
-      '(regression: SocialAccountController only recognizes "x")',
-      () async {
-        Map<String, dynamic>? sentPayload;
-
-        final repository = AccountRepositoryImpl(
-          networkClient: FakeNetworkClient(
-            postHandler: (path, data) async {
-              sentPayload = data as Map<String, dynamic>;
-              return Response<dynamic>(
-                requestOptions: RequestOptions(path: path),
-                statusCode: 201,
-                data: <String, dynamic>{
-                  'success': true,
-                  'data': <String, dynamic>{
-                    'id': '77',
-                    'provider': 'x',
-                    'provider_account_id': sentPayload!['provider_account_id'],
-                    'account_name': 'X',
-                    'status': 'connected',
-                    'has_refresh_token': true,
-                  },
-                },
-              );
-            },
-          ),
-          platformFactory: PlatformFactory(),
-        );
-
-        final accountsResult = await repository.getAccounts(userId: _userId);
-        final account = (accountsResult.data ?? const []).firstWhere(
-          (a) => a.platform == 'twitter',
-        );
-
-        final connectResult = await repository.connectAccount(
-          account,
-          userId: _userId,
-        );
-
-        expect(sentPayload!['provider'], 'x');
-        expect(connectResult.isSuccess, isTrue);
-        // The response's platform ("x") must map back to this app's
-        // internal "twitter" key, or a subsequent getAccounts() would treat
-        // it as a brand new, unmatched platform instead of merging into the
-        // existing local card.
-        expect(connectResult.data!.platform, 'twitter');
+        expect(connectResult.isFailure, isTrue);
+        expect(postCalled, isFalse);
       },
     );
 
@@ -201,7 +136,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final accountsResult = await repository.getAccounts(userId: _userId);
@@ -265,7 +199,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final accountsResult = await repository.getAccounts(userId: _userId);
@@ -316,7 +249,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final accountsResult = await repository.getAccounts(userId: _userId);
@@ -372,7 +304,6 @@ void main() {
               );
             },
           ),
-          platformFactory: PlatformFactory(),
         );
 
         final accountsResult = await repository.getAccounts(userId: _userId);

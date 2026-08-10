@@ -27,6 +27,7 @@ import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.d
 
 import '../../helpers/fake_network_client.dart';
 import '../../helpers/localized_test_app.dart';
+import '../../helpers/organization_role_fixtures.dart';
 
 class _FakeAuthSessionController extends AuthSessionController {
   _FakeAuthSessionController()
@@ -253,40 +254,44 @@ const _facebookAccountWithEmbeddedNonBetaTargets = AccountEntity(
 );
 
 final _ownerAccess = OrganizationAccessState.active(
-  memberships: const <OrganizationEntity>[
+  memberships: <OrganizationEntity>[
     OrganizationEntity(
       id: 1,
       name: 'Owner Organization',
       slug: 'owner-organization',
       role: 'owner',
       isCurrent: true,
+      permissions: permissionsForRole('owner'),
     ),
   ],
-  currentOrganization: const OrganizationEntity(
+  currentOrganization: OrganizationEntity(
     id: 1,
     name: 'Owner Organization',
     slug: 'owner-organization',
     role: 'owner',
     isCurrent: true,
+    permissions: permissionsForRole('owner'),
   ),
 );
 
 final _editorAccess = OrganizationAccessState.active(
-  memberships: const <OrganizationEntity>[
+  memberships: <OrganizationEntity>[
     OrganizationEntity(
       id: 1,
       name: 'Editorial Organization',
       slug: 'editorial-organization',
       role: 'editor',
       isCurrent: true,
+      permissions: permissionsForRole('editor'),
     ),
   ],
-  currentOrganization: const OrganizationEntity(
+  currentOrganization: OrganizationEntity(
     id: 1,
     name: 'Editorial Organization',
     slug: 'editorial-organization',
     role: 'editor',
     isCurrent: true,
+    permissions: permissionsForRole('editor'),
   ),
 );
 

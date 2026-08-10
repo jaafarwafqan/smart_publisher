@@ -1,10 +1,12 @@
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../../backend_contracts/v1/organizations_contract_v1.dart';
 import '../../../core/base/base_repository.dart';
+import '../../../core/base/pagination.dart';
 import '../../../core/network/laravel_api.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/app_result.dart';
 import '../../../core/tenancy/active_organization_store.dart';
+import '../../../shared/models/audit_log_entry.dart';
 import '../domain/entities/organization_entity.dart';
 import '../domain/entities/organization_member_entity.dart';
 import '../domain/repositories/organization_repository.dart';
@@ -184,6 +186,59 @@ class OrganizationRepositoryImpl extends BaseRepository<OrganizationEntity>
     );
   }
 
+  @override
+  Future<AppResult<PaginatedResult<AuditLogEntry>>> getAuditLogs({
+    required int organizationId,
+    int page = 1,
+    int perPage = 25,
+    String? action,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    if (networkClient == null) {
+      return Failure<PaginatedResult<AuditLogEntry>>(
+        'Loading the audit log requires a connection.',
+      );
+    }
+
+    return execute(
+      () async {
+        final response = await networkClient!.get(
+          LaravelEndpoints.organizationAuditLogs(organizationId.toString()),
+          queryParameters: <String, dynamic>{
+            'page': page,
+            'per_page': perPage,
+            if (action?.trim().isNotEmpty ?? false) 'action': action!.trim(),
+            if (dateFrom case final String dateFrom) 'date_from': dateFrom,
+            if (dateTo case final String dateTo) 'date_to': dateTo,
+          },
+        );
+        final envelope = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : const <String, dynamic>{};
+        final rawItems = _unwrapPayload(envelope);
+        final meta = envelope['meta'] is Map<String, dynamic>
+            ? envelope['meta'] as Map<String, dynamic>
+            : const <String, dynamic>{};
+        final items = rawItems is List<dynamic>
+            ? rawItems
+                  .whereType<Map<String, dynamic>>()
+                  .map(AuditLogEntry.fromJson)
+                  .toList(growable: false)
+            : const <AuditLogEntry>[];
+
+        return PaginatedResult<AuditLogEntry>(
+          items: items,
+          page: (meta['current_page'] as num?)?.toInt() ?? page,
+          pageSize: (meta['per_page'] as num?)?.toInt() ?? perPage,
+          totalCount: (meta['total'] as num?)?.toInt() ?? items.length,
+        );
+      },
+      operation: 'organizations.audit_logs.list',
+      fallbackMessage: 'Failed to load the audit log',
+    );
+  }
+
   dynamic _unwrapPayload(dynamic raw) {
     if (raw is Map<String, dynamic> && raw.containsKey('success')) {
       return ApiEnvelopeV1.fromJson(raw).data;
@@ -207,6 +262,7 @@ class OrganizationRepositoryImpl extends BaseRepository<OrganizationEntity>
       slug: dto.slug,
       role: dto.role,
       isCurrent: dto.isCurrent,
+      permissions: dto.permissions.toSet(),
     );
   }
 }

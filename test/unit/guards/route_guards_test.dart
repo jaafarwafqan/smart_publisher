@@ -8,6 +8,8 @@ import 'package:smart_publisher/src/core/storage/storage_provider.dart';
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
 
+import '../../helpers/organization_role_fixtures.dart';
+
 final _guardRedirectProvider = FutureProvider.family<String?, String>(
   (ref, path) => RouteGuards.guardPath(path, ref),
 );
@@ -19,6 +21,7 @@ OrganizationAccessState _accessFor(String role) {
     slug: 'release-team',
     role: role,
     isCurrent: true,
+    permissions: permissionsForRole(role),
   );
   return OrganizationAccessState.active(
     memberships: <OrganizationEntity>[membership],
@@ -183,6 +186,29 @@ void main() {
         expect(
           await _redirect(container, RouteNames.oauthProviderSettingsPath),
           RouteNames.administrationPath,
+        );
+      },
+    );
+
+    test(
+      'a super_admin session can actually reach OAuth provider settings',
+      () async {
+        // Sprint D (role/permission remediation): oauthProviderSettingsPath
+        // lives outside the /platform prefix, so without the explicit
+        // allowance in _isPlatformAdministrationRoute() a super_admin
+        // session would be bounced straight back to /platform by the
+        // isPlatformAdmin branch — the same regression the "platform
+        // administration is independent" test above guards against for
+        // every OTHER non-platform route.
+        final noOrganization = OrganizationAccessState.noActiveOrganization(
+          memberships: const <OrganizationEntity>[],
+        );
+        final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+        addTearDown(superAdmin.dispose);
+
+        expect(
+          await _redirect(superAdmin, RouteNames.oauthProviderSettingsPath),
+          isNull,
         );
       },
     );
@@ -357,6 +383,116 @@ void main() {
             reason: '$role (deletion)',
           );
         }
+      },
+    );
+  });
+
+  group('RouteGuards help center', () {
+    test(
+      '/about renders identically unauthenticated, authenticated, and for a platform admin',
+      () async {
+        final unauthenticated = _containerFor(
+          OrganizationAccessState.noActiveOrganization(
+            memberships: const <OrganizationEntity>[],
+          ),
+          authenticated: false,
+        );
+        final orgMember = _containerFor(_accessFor('viewer'));
+        final noOrganization = OrganizationAccessState.noActiveOrganization(
+          memberships: const <OrganizationEntity>[],
+        );
+        final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+        addTearDown(unauthenticated.dispose);
+        addTearDown(orgMember.dispose);
+        addTearDown(superAdmin.dispose);
+
+        // Unauthenticated visitors never even reach a login redirect for it.
+        expect(await _redirect(unauthenticated, RouteNames.aboutPath), isNull);
+        expect(await _redirect(orgMember, RouteNames.aboutPath), isNull);
+        // A super_admin session is bounced from almost every non-/platform
+        // route (see the "platform administration is independent" test
+        // above) — /about is the deliberate exception.
+        expect(await _redirect(superAdmin, RouteNames.aboutPath), isNull);
+      },
+    );
+
+    test(
+      '/help and /help/guide are reachable without an active organization',
+      () async {
+        final access = OrganizationAccessState.noActiveOrganization(
+          memberships: const <OrganizationEntity>[],
+        );
+        final container = _containerFor(access);
+        addTearDown(container.dispose);
+
+        expect(await _redirect(container, RouteNames.helpCenterPath), isNull);
+        expect(await _redirect(container, RouteNames.userGuidePath), isNull);
+      },
+    );
+
+    test(
+      '/help and /help/guide are reachable by every organization role',
+      () async {
+        for (final role in <String>[
+          'owner',
+          'admin',
+          'manager',
+          'editor',
+          'viewer',
+        ]) {
+          final container = _containerFor(_accessFor(role));
+          addTearDown(container.dispose);
+
+          expect(
+            await _redirect(container, RouteNames.helpCenterPath),
+            isNull,
+            reason: role,
+          );
+          expect(
+            await _redirect(container, RouteNames.userGuidePath),
+            isNull,
+            reason: role,
+          );
+        }
+      },
+    );
+
+    test(
+      'a platform admin session is bounced away from the organization-scoped guide',
+      () async {
+        final noOrganization = OrganizationAccessState.noActiveOrganization(
+          memberships: const <OrganizationEntity>[],
+        );
+        final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+        addTearDown(superAdmin.dispose);
+
+        expect(
+          await _redirect(superAdmin, RouteNames.helpCenterPath),
+          RouteNames.platformAdministrationPath,
+        );
+        expect(
+          await _redirect(superAdmin, RouteNames.userGuidePath),
+          RouteNames.platformAdministrationPath,
+        );
+      },
+    );
+
+    test(
+      'an unauthenticated visitor is sent to login for /help but not /about',
+      () async {
+        final unauthenticated = _containerFor(
+          OrganizationAccessState.noActiveOrganization(
+            memberships: const <OrganizationEntity>[],
+          ),
+          authenticated: false,
+        );
+        addTearDown(unauthenticated.dispose);
+
+        expect(
+          await _redirect(unauthenticated, RouteNames.helpCenterPath),
+          RouteNames.loginPath,
+        );
+        expect(await _redirect(unauthenticated, RouteNames.aboutPath), isNull);
       },
     );
   });

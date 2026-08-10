@@ -90,6 +90,11 @@ class PostResponseDtoV1 {
     this.platforms = const <String>[],
     this.targetPageIds = const <String>[],
     this.platformContent = const <String, String>{},
+    this.approvalStatus,
+    this.approvalRequestedAction,
+    this.approvalNote,
+    this.approvedByName,
+    this.authorName,
   });
 
   final String id;
@@ -105,6 +110,15 @@ class PostResponseDtoV1 {
   final List<String> targetPageIds;
   final Map<String, String> platformContent;
 
+  // Sprint F (role/permission remediation): powers the Approvals screen —
+  // null/absent means the post never entered the approval workflow at all
+  // (a direct-publish-capable role scheduled/published it itself).
+  final String? approvalStatus;
+  final String? approvalRequestedAction;
+  final String? approvalNote;
+  final String? approvedByName;
+  final String? authorName;
+
   factory PostResponseDtoV1.fromJson(Map<String, dynamic> json) {
     final metaValue = json['meta'];
     final meta = metaValue is Map<String, dynamic>
@@ -116,6 +130,12 @@ class PostResponseDtoV1 {
     final rawPlatformContent = platformContentValue is Map<String, dynamic>
         ? platformContentValue
         : const <String, dynamic>{};
+    final approvedByValue = json['approved_by'];
+    final approvedByMap = approvedByValue is Map<String, dynamic>
+        ? approvedByValue
+        : null;
+    final userValue = json['user'];
+    final userMap = userValue is Map<String, dynamic> ? userValue : null;
 
     return PostResponseDtoV1(
       id: _asString(json['id']),
@@ -132,6 +152,11 @@ class PostResponseDtoV1 {
       platformContent: rawPlatformContent.map(
         (key, value) => MapEntry(key, value.toString()),
       ),
+      approvalStatus: json['approval_status']?.toString(),
+      approvalRequestedAction: json['approval_requested_action']?.toString(),
+      approvalNote: json['approval_note']?.toString(),
+      approvedByName: approvedByMap?['name']?.toString(),
+      authorName: userMap?['name']?.toString(),
     );
   }
 

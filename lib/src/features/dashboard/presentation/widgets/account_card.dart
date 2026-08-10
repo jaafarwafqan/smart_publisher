@@ -172,7 +172,8 @@ class AccountCard extends StatelessWidget {
                 onAddChannel: onAddChannel,
                 onSaveSelection: onSaveSelection,
                 onDeletePage: onDeletePage,
-                canManagePages: operationAccess.canManagePages,
+                canSync: operationAccess.canSyncPages,
+                canSelect: operationAccess.canSelectPages,
               ),
             ],
           ],
@@ -299,13 +300,13 @@ class _ActionRow extends StatelessWidget {
               icon: const Icon(Icons.link_off, size: 18),
               label: Text(l10n.actionDisconnect),
             ),
-          if (hasRefreshToken && operationAccess.canConnect)
+          if (hasRefreshToken && operationAccess.canRefresh)
             OutlinedButton.icon(
               onPressed: onRefreshToken,
               icon: const Icon(Icons.autorenew, size: 18),
               label: Text(l10n.actionRefreshToken),
             ),
-          if (operationAccess.canConnect)
+          if (operationAccess.canTest)
             OutlinedButton.icon(
               onPressed: onTestConnection,
               icon: const Icon(Icons.wifi_tethering, size: 18),
@@ -322,7 +323,9 @@ class _ActionRow extends StatelessWidget {
         );
       case AccountStatus.expired:
         final actions = <Widget>[
-          if (operationAccess.canConnect)
+          if (hasRefreshToken
+              ? operationAccess.canRefresh
+              : operationAccess.canConnect)
             if (hasRefreshToken)
               FilledButton.icon(
                 onPressed: onRefreshToken,
@@ -335,7 +338,7 @@ class _ActionRow extends StatelessWidget {
                 icon: const Icon(Icons.login, size: 18),
                 label: Text(l10n.actionReauthenticate),
               ),
-          if (operationAccess.canConnect)
+          if (operationAccess.canTest)
             OutlinedButton.icon(
               onPressed: onTestConnection,
               icon: const Icon(Icons.wifi_tethering, size: 18),

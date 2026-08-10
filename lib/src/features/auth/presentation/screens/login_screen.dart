@@ -264,6 +264,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ],
                           ),
+                          Center(
+                            child: TextButton(
+                              onPressed: () =>
+                                  context.push(RouteNames.aboutPath),
+                              child: Text(
+                                l10n.welcomeAboutLinkLabel(l10n.appName),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),

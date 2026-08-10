@@ -115,10 +115,16 @@ class CurrentUserStatusDtoV1 {
   const CurrentUserStatusDtoV1({
     required this.twoFactorEnabled,
     required this.emailVerified,
+    this.isSuperAdmin = false,
   });
 
   final bool twoFactorEnabled;
   final bool emailVerified;
+
+  // Sprint E (role/permission remediation): re-verified live from GET /me
+  // on every guarded navigation (see currentPlatformAdminProvider) instead
+  // of only trusting the value written to local storage at login time.
+  final bool isSuperAdmin;
 
   factory CurrentUserStatusDtoV1.fromJson(Map<String, dynamic> json) {
     final user = json['user'];
@@ -126,6 +132,7 @@ class CurrentUserStatusDtoV1 {
     return CurrentUserStatusDtoV1(
       twoFactorEnabled: userMap['two_factor_enabled'] == true,
       emailVerified: userMap['email_verified'] == true,
+      isSuperAdmin: userMap['is_super_admin'] == true,
     );
   }
 }

@@ -34,6 +34,7 @@ class OrganizationMembershipDtoV1 {
     required this.slug,
     required this.role,
     required this.isCurrent,
+    required this.permissions,
   });
 
   final int id;
@@ -42,6 +43,11 @@ class OrganizationMembershipDtoV1 {
   final String role;
   final bool isCurrent;
 
+  // Sprint E (role/permission remediation): resolved server-side from
+  // App\Enums\OrganizationRole::permissions() — both GET /organizations
+  // and POST /organizations/{id}/switch include it.
+  final List<String> permissions;
+
   factory OrganizationMembershipDtoV1.fromJson(Map<String, dynamic> json) {
     return OrganizationMembershipDtoV1(
       id: (json['id'] as num?)?.toInt() ?? 0,
@@ -49,6 +55,9 @@ class OrganizationMembershipDtoV1 {
       slug: (json['slug'] ?? '').toString(),
       role: (json['role'] ?? 'viewer').toString(),
       isCurrent: (json['is_current'] ?? false) as bool,
+      permissions: (json['permissions'] as List<dynamic>? ?? const <dynamic>[])
+          .map((permission) => permission.toString())
+          .toList(growable: false),
     );
   }
 }

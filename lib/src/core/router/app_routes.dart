@@ -9,6 +9,10 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/two_factor_challenge_screen.dart';
 import '../../features/auth/presentation/screens/two_factor_setup_screen.dart';
+import '../../features/help_center/presentation/screens/about_system_screen.dart';
+import '../../features/help_center/presentation/screens/help_center_screen.dart';
+import '../../features/help_center/presentation/screens/user_guide_screen.dart';
+import '../../features/organizations/presentation/screens/organization_audit_log_screen.dart';
 import '../../features/organizations/presentation/screens/organization_members_screen.dart';
 import '../../features/settings/presentation/screens/account_data_export_screen.dart';
 import '../../features/settings/presentation/screens/account_data_deletion_screen.dart';
@@ -21,6 +25,7 @@ import '../../features/distribution/presentation/pages/production_release_screen
 import '../../features/media/presentation/pages/media_library_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/posts/domain/entities/post_entity.dart';
+import '../../features/posts/presentation/pages/approvals_screen.dart';
 import '../../features/posts/presentation/pages/posts_list_screen.dart';
 import '../../features/platform_administration/presentation/screens/platform_admin_screens.dart';
 import '../../features/schedule/presentation/pages/calendar_screen.dart';
@@ -67,9 +72,21 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: FilledButton(
-                        onPressed: () => context.go(RouteNames.loginPath),
-                        child: Text(l10n.welcomeContinueButton),
+                      child: Wrap(
+                        spacing: 12,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: <Widget>[
+                          FilledButton(
+                            onPressed: () => context.go(RouteNames.loginPath),
+                            child: Text(l10n.welcomeContinueButton),
+                          ),
+                          TextButton(
+                            onPressed: () => context.push(RouteNames.aboutPath),
+                            child: Text(
+                              l10n.welcomeAboutLinkLabel(l10n.appName),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -250,6 +267,11 @@ final List<GoRoute> appRoutes = [
     builder: (context, state) => const OrganizationMembersScreen(),
   ),
   GoRoute(
+    path: RouteNames.organizationAuditLogPath,
+    name: RouteNames.organizationAuditLog,
+    builder: (context, state) => const OrganizationAuditLogScreen(),
+  ),
+  GoRoute(
     path: RouteNames.accountDataExportPath,
     name: RouteNames.accountDataExport,
     builder: (context, state) => const AccountDataExportScreen(),
@@ -298,6 +320,11 @@ final List<GoRoute> appRoutes = [
     path: RouteNames.postsListPath,
     name: RouteNames.postsList,
     builder: (context, state) => const PostsListScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.postsApprovalsPath,
+    name: RouteNames.postsApprovals,
+    builder: (context, state) => const ApprovalsScreen(),
   ),
   GoRoute(
     path: RouteNames.mediaLibraryPath,
@@ -357,6 +384,11 @@ final List<GoRoute> appRoutes = [
     builder: (context, state) => const PlatformUsersScreen(),
   ),
   GoRoute(
+    path: RouteNames.platformAuditLogPath,
+    name: RouteNames.platformAuditLog,
+    builder: (context, state) => const PlatformAuditLogScreen(),
+  ),
+  GoRoute(
     path: RouteNames.oauthProviderSettingsPath,
     name: RouteNames.oauthProviderSettings,
     builder: (context, state) => const OAuthProviderSettingsScreen(),
@@ -365,5 +397,23 @@ final List<GoRoute> appRoutes = [
     path: RouteNames.productionReleasePath,
     name: RouteNames.productionRelease,
     builder: (context, state) => const ProductionReleaseScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.aboutPath,
+    name: RouteNames.about,
+    builder: (context, state) => const AboutSystemScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.helpCenterPath,
+    name: RouteNames.helpCenter,
+    builder: (context, state) => const HelpCenterScreen(),
+  ),
+  GoRoute(
+    path: RouteNames.userGuidePath,
+    name: RouteNames.userGuide,
+    builder: (context, state) {
+      final extra = state.extra;
+      return UserGuideScreen(initialQuery: extra is String ? extra : null);
+    },
   ),
 ];

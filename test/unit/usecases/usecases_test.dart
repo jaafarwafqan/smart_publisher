@@ -151,6 +151,33 @@ class _FakePostRepository extends PostRepository {
   }) async {
     return const Success<void>(null);
   }
+
+  @override
+  Future<AppResult<PaginatedResult<PostEntity>>> getPendingApprovalsPage({
+    int page = 1,
+  }) async {
+    return const Success<PaginatedResult<PostEntity>>(
+      PaginatedResult<PostEntity>(
+        items: <PostEntity>[],
+        page: 1,
+        pageSize: 20,
+        totalCount: 0,
+      ),
+    );
+  }
+
+  @override
+  Future<AppResult<PostEntity>> approvePost(String postId) async {
+    return Success<PostEntity>(PostEntity(id: postId, title: 't', body: 'b'));
+  }
+
+  @override
+  Future<AppResult<PostEntity>> rejectPost(
+    String postId, {
+    String? note,
+  }) async {
+    return Success<PostEntity>(PostEntity(id: postId, title: 't', body: 'b'));
+  }
 }
 
 class _FakeScheduleRepository extends ScheduleRepository {

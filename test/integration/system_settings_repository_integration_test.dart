@@ -79,7 +79,7 @@ void main() {
         );
 
         expect(result.isSuccess, isTrue);
-        expect(sentPath, contains('/system-settings/oauth-providers/linkedin'));
+        expect(sentPath, contains('/admin/oauth-providers/linkedin'));
         expect(sentPayload!['client_id'], 'li-client-id-updated');
         expect(sentPayload!.containsKey('client_secret'), isFalse);
         expect(result.data!.clientId, 'li-client-id-updated');
@@ -150,10 +150,7 @@ void main() {
         final result = await repository.testConnection('facebook');
 
         expect(result.isSuccess, isTrue);
-        expect(
-          sentPath,
-          contains('/system-settings/oauth-providers/facebook/test'),
-        );
+        expect(sentPath, contains('/admin/oauth-providers/facebook/test'));
         expect(result.data!.success, isTrue);
         expect(
           result.data!.message,
@@ -229,10 +226,7 @@ void main() {
       final result = await repository.getAuditLog('facebook');
 
       expect(result.isSuccess, isTrue);
-      expect(
-        sentPath,
-        contains('/system-settings/oauth-providers/facebook/audit-log'),
-      );
+      expect(sentPath, contains('/admin/oauth-providers/facebook/audit-log'));
       expect(result.data!.length, 2);
       expect(result.data!.first.action, 'updated');
       expect(result.data!.first.changedFields, ['client_id', 'client_secret']);

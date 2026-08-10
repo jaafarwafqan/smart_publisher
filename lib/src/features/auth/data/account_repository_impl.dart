@@ -5,19 +5,16 @@ import '../../../backend_contracts/v1/social_pages_contract_v1.dart';
 import '../../../core/network/laravel_api.dart';
 import '../../../core/network/network_client.dart';
 import '../../../core/result/app_result.dart';
-import '../../../platforms/core/platform_factory.dart';
-import '../../../platforms/core/social_platform.dart';
 import '../domain/entities/account_entity.dart';
 import '../domain/entities/account_health_check_entity.dart';
 import '../domain/entities/social_page_entity.dart';
 import '../domain/repositories/account_repository.dart';
 
 class AccountRepositoryImpl extends AccountRepository {
-  AccountRepositoryImpl({this.networkClient, required this.platformFactory})
-    : _localAccounts = _defaultAccounts(platformFactory);
+  AccountRepositoryImpl({this.networkClient})
+    : _localAccounts = _defaultAccounts();
 
   final NetworkClient? networkClient;
-  final PlatformFactory platformFactory;
   final Map<String, AccountEntity> _localAccounts;
 
   @override
@@ -84,63 +81,22 @@ class AccountRepositoryImpl extends AccountRepository {
     }
   }
 
+  /// No platform has a generic manual-token connect flow anymore — every
+  /// real one goes through its own dedicated method
+  /// ([connectTelegramBot], [beginFacebookOAuth]/[completeFacebookOAuth],
+  /// [beginWhatsAppOAuth]/[completeWhatsAppOAuth]). This used to fall back
+  /// to a locally-generated mock token posted to a manual "store" endpoint;
+  /// that endpoint was removed from the backend (Sprint C of the
+  /// role/permission remediation, 2026-08-09) once every real UI path was
+  /// confirmed to always resolve to a dedicated flow first, so this is kept
+  /// only to fail honestly rather than silently succeed with fake data.
   @override
   Future<AppResult<AccountEntity>> connectAccount(
     AccountEntity account, {
     required String userId,
   }) async {
-    return execute(
-      () async {
-        final platform = platformFactory.createById(
-          _platformIdFor(account.platform),
-        );
-        final auth = await platform.connect();
-        if (!auth.success) {
-          throw StateError(auth.message);
-        }
-
-        final permissions = auth.permissions.isNotEmpty
-            ? auth.permissions
-            : _permissionsFor(platform);
-
-        if (networkClient != null &&
-            auth.token != null &&
-            auth.token!.isNotEmpty) {
-          final response = await networkClient!.post(
-            LaravelEndpoints.socialAccountsStore(userId),
-            data: ConnectSocialAccountRequestDtoV1(
-              provider: _backendProviderFor(account.platform),
-              // The native SDK layer used here doesn't return a stable
-              // provider-side account id, so the token itself (unique per
-              // connection) stands in as the provider_account_id.
-              providerAccountId: auth.token!,
-              accountName: account.name,
-              accessToken: auth.token,
-              refreshToken: auth.refreshToken,
-              tokenExpiresAt: auth.expiresAt,
-              scopes: permissions,
-            ).toJson(),
-          );
-          final payload = _unwrapPayload(response.data);
-          if (payload is Map<String, dynamic>) {
-            final linked = _toEntity(
-              SocialAccountResponseDtoV1.fromJson(payload),
-            );
-            final updated = linked.copyWith(id: account.id);
-            _localAccounts[account.id] = updated;
-            return updated;
-          }
-        }
-
-        final updated = account.copyWith(
-          status: AccountStatus.connected,
-          permissions: permissions,
-        );
-        _localAccounts[updated.id] = updated;
-        return updated;
-      },
-      operation: 'accounts.connect',
-      fallbackMessage: 'Failed to connect account',
+    return Failure<AccountEntity>(
+      '${account.name} must be connected through its dedicated flow.',
     );
   }
 
@@ -155,10 +111,6 @@ class AccountRepositoryImpl extends AccountRepository {
         if (local == null) {
           throw StateError('Account not found');
         }
-        final platform = platformFactory.createById(
-          _platformIdFor(local.platform),
-        );
-        await platform.disconnect();
 
         _localAccounts[account.id] = local.copyWith(
           status: AccountStatus.disconnected,
@@ -705,53 +657,42 @@ class AccountRepositoryImpl extends AccountRepository {
     return raw;
   }
 
-  static Map<String, AccountEntity> _defaultAccounts(PlatformFactory factory) {
-    const platformOrder = <String>[
-      'facebook',
-      'instagram',
-      'telegram',
-      'whatsapp',
-      'linkedin',
-      'twitter',
-    ];
+  /// Sprint I (role/permission remediation, 2026-08-09): used to be seeded
+  /// from `SocialPlatform.capability()` via `PlatformFactory` (removed
+  /// along with the rest of lib/src/platforms/* — it existed only to back
+  /// this local mock-connect placeholder list and the now-deleted local
+  /// publish_engine). The values below are the exact permission sets that
+  /// derivation produced; hardcoded here since they were always static per
+  /// platform, never actually server-driven.
+  static const Map<String, List<String>> _defaultPermissionsByPlatform =
+      <String, List<String>>{
+        'facebook': <String>['publish', 'schedule', 'hashtags', 'mentions'],
+        'instagram': <String>['publish', 'schedule', 'hashtags', 'mentions'],
+        'telegram': <String>[
+          'publish',
+          'schedule',
+          'hashtags',
+          'mentions',
+          'documents',
+          'polls',
+        ],
+        'whatsapp': <String>['publish', 'schedule', 'documents'],
+        'linkedin': <String>['publish', 'schedule', 'hashtags', 'mentions'],
+        'twitter': <String>['publish', 'schedule', 'hashtags', 'mentions'],
+      };
 
+  static Map<String, AccountEntity> _defaultAccounts() {
     return <String, AccountEntity>{
-      for (final platformId in platformOrder)
-        platformId: _accountForPlatform(factory.createById(platformId)),
+      for (final entry in _defaultPermissionsByPlatform.entries)
+        entry.key: AccountEntity(
+          id: entry.key,
+          name: _displayName(entry.key),
+          platform: entry.key,
+          avatarUrl: null,
+          status: AccountStatus.disconnected,
+          permissions: entry.value,
+        ),
     };
-  }
-
-  static AccountEntity _accountForPlatform(SocialPlatform platform) {
-    final name = _displayName(platform.platformId);
-    return AccountEntity(
-      id: platform.platformId,
-      name: name,
-      platform: platform.platformId,
-      avatarUrl: null,
-      status: AccountStatus.disconnected,
-      permissions: _permissionsFor(platform),
-    );
-  }
-
-  static List<String> _permissionsFor(SocialPlatform platform) {
-    final capability = platform.capability();
-    final permissions = <String>['publish'];
-    if (capability.supportsScheduling) {
-      permissions.add('schedule');
-    }
-    if (capability.supportsHashtags) {
-      permissions.add('hashtags');
-    }
-    if (capability.supportsMentions) {
-      permissions.add('mentions');
-    }
-    if (capability.supportsDocuments) {
-      permissions.add('documents');
-    }
-    if (capability.supportsPolls) {
-      permissions.add('polls');
-    }
-    return permissions;
   }
 
   static String _displayName(String platformId) {
@@ -773,27 +714,8 @@ class AccountRepositoryImpl extends AccountRepository {
     }
   }
 
-  static String _platformIdFor(String platform) {
-    if (platform == 'x') {
-      return 'twitter';
-    }
-    return platform;
-  }
-
-  /// Maps this app's internal platform key to the exact `provider` string
-  /// the backend's `SocialAccountController::PROVIDERS` whitelist accepts.
-  /// Everything matches 1:1 except X/Twitter: the internal key is
-  /// `'twitter'` (see [XPlatform.platformId]) but the backend only
-  /// recognizes `'x'`.
-  static String _backendProviderFor(String platform) {
-    if (platform == 'twitter') {
-      return 'x';
-    }
-    return platform;
-  }
-
-  /// Inverse of [_backendProviderFor] — used when mapping a fetched
-  /// `SocialAccountResponseDtoV1` back to an [AccountEntity], so a
+  /// Inverse of the backend's `provider` string mapping — used when mapping
+  /// a fetched `SocialAccountResponseDtoV1` back to an [AccountEntity], so a
   /// server-known "x" account matches this app's locally-seeded "twitter"
   /// placeholder in [_mergeRemoteAccounts] instead of creating a duplicate.
   static String _platformFromBackendProvider(String provider) {

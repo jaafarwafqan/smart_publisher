@@ -3,6 +3,8 @@ import 'package:smart_publisher/src/features/dashboard/application/account_opera
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
 
+import '../../helpers/organization_role_fixtures.dart';
+
 OrganizationAccessState _accessFor(String role) {
   final membership = OrganizationEntity(
     id: 1,
@@ -10,6 +12,7 @@ OrganizationAccessState _accessFor(String role) {
     slug: 'beta-organization',
     role: role,
     isCurrent: true,
+    permissions: permissionsForRole(role),
   );
 
   return OrganizationAccessState.active(
@@ -35,14 +38,26 @@ void main() {
         _accessFor('owner'),
       );
 
+      expect(editor.canCreate, isFalse);
+      expect(editor.canUpdate, isFalse);
       expect(editor.canConnect, isFalse);
       expect(editor.canDisconnect, isFalse);
-      expect(editor.canManagePages, isFalse);
+      expect(editor.canDelete, isFalse);
+      expect(editor.canTest, isFalse);
+      expect(editor.canRefresh, isFalse);
+      expect(editor.canSyncPages, isFalse);
+      expect(editor.canSelectPages, isFalse);
 
       for (final access in <AccountOperationAccess>[manager, admin, owner]) {
+        expect(access.canCreate, isTrue);
+        expect(access.canUpdate, isTrue);
         expect(access.canConnect, isTrue);
         expect(access.canDisconnect, isTrue);
-        expect(access.canManagePages, isTrue);
+        expect(access.canDelete, isTrue);
+        expect(access.canTest, isTrue);
+        expect(access.canRefresh, isTrue);
+        expect(access.canSyncPages, isTrue);
+        expect(access.canSelectPages, isTrue);
       }
     },
   );
@@ -50,8 +65,14 @@ void main() {
   test('missing active-organization access fails closed', () {
     const denied = AccountOperationAccess.denied();
 
+    expect(denied.canCreate, isFalse);
+    expect(denied.canUpdate, isFalse);
     expect(denied.canConnect, isFalse);
     expect(denied.canDisconnect, isFalse);
-    expect(denied.canManagePages, isFalse);
+    expect(denied.canDelete, isFalse);
+    expect(denied.canTest, isFalse);
+    expect(denied.canRefresh, isFalse);
+    expect(denied.canSyncPages, isFalse);
+    expect(denied.canSelectPages, isFalse);
   });
 }

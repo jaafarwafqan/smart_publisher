@@ -174,12 +174,18 @@ final class LaravelEndpoints {
       LaravelApi.versioned('/posts/$postId/schedule');
   static String postDraft(String postId) =>
       LaravelApi.versioned('/posts/$postId/draft');
+  static String postApprove(String postId) =>
+      LaravelApi.versioned('/posts/$postId/approve');
+  static String postReject(String postId) =>
+      LaravelApi.versioned('/posts/$postId/reject');
 
   static final String calendar = LaravelApi.versioned('/calendar');
 
   static final String organizations = LaravelApi.versioned('/organizations');
   static String organizationSwitch(String organizationId) =>
       LaravelApi.versioned('/organizations/$organizationId/switch');
+  static String organizationAuditLogs(String organizationId) =>
+      LaravelApi.versioned('/organizations/$organizationId/audit-logs');
 
   static final String platformAdminDashboard = LaravelApi.versioned(
     '/admin/dashboard',
@@ -191,6 +197,9 @@ final class LaravelEndpoints {
       LaravelApi.versioned('/admin/organizations/$id');
   static String platformAdminOrganizationStatus(String id) =>
       LaravelApi.versioned('/admin/organizations/$id/status');
+  static final String platformAdminAuditLogs = LaravelApi.versioned(
+    '/admin/audit-logs',
+  );
   static final String platformAdminUsers = LaravelApi.versioned('/admin/users');
   static String platformAdminUserById(String id) =>
       LaravelApi.versioned('/admin/users/$id');
@@ -207,17 +216,19 @@ final class LaravelEndpoints {
   static String organizationMemberById(String userId) =>
       LaravelApi.versioned('/organization/members/$userId');
 
+  // Sprint D (role/permission remediation, 2026-08-09): moved from
+  // /system-settings/oauth-providers (guarded by the legacy Spatie
+  // system-settings.view/manage permission) to /admin/oauth-providers
+  // (super_admin only) — see routes/api.php on the backend.
   static final String systemSettingsOAuthProviders = LaravelApi.versioned(
-    '/system-settings/oauth-providers',
+    '/admin/oauth-providers',
   );
   static String systemSettingsOAuthProviderById(String provider) =>
-      LaravelApi.versioned('/system-settings/oauth-providers/$provider');
+      LaravelApi.versioned('/admin/oauth-providers/$provider');
   static String systemSettingsOAuthProviderTest(String provider) =>
-      LaravelApi.versioned('/system-settings/oauth-providers/$provider/test');
+      LaravelApi.versioned('/admin/oauth-providers/$provider/test');
   static String systemSettingsOAuthProviderAuditLog(String provider) =>
-      LaravelApi.versioned(
-        '/system-settings/oauth-providers/$provider/audit-log',
-      );
+      LaravelApi.versioned('/admin/oauth-providers/$provider/audit-log');
 
   static final List<String> authLoginCandidates = <String>[
     LaravelApi.apiPath('/auth/login'),

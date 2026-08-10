@@ -21,7 +21,6 @@ import 'package:smart_publisher/src/features/notifications/data/notification_rep
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
-import 'package:smart_publisher/src/platforms/core/platform_factory.dart';
 
 import '../../helpers/fake_network_client.dart';
 import '../../helpers/localized_test_app.dart';
@@ -66,9 +65,7 @@ Future<void> _pumpDashboard(
           _FakeSessionController(),
         ),
         postRepositoryProvider.overrideWithValue(PostRepositoryImpl()),
-        accountRepositoryProvider.overrideWithValue(
-          AccountRepositoryImpl(platformFactory: PlatformFactory()),
-        ),
+        accountRepositoryProvider.overrideWithValue(AccountRepositoryImpl()),
         analyticsRepositoryProvider.overrideWithValue(
           AnalyticsRepositoryImpl(),
         ),

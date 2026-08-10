@@ -1,18 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_publisher/src/domain/publish_target.dart';
 import 'package:smart_publisher/src/features/posts/data/post_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/post_entity.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/create_post.dart';
 import 'package:smart_publisher/src/features/posts/domain/usecases/schedule_post.dart';
 import 'package:smart_publisher/src/features/schedule/data/schedule_repository_impl.dart';
-import 'package:smart_publisher/src/publish_engine/engine/publish_engine.dart';
 
 import '../helpers/fake_network_client.dart';
 
 void main() {
   group('Integration - Post Creation Composer Flow', () {
-    test('create with media/platforms then schedule and publish', () async {
+    test('create with media/platforms then schedule', () async {
       final repository = PostRepositoryImpl();
       final createPost = CreatePost(repository: repository);
       final scheduleRepo = ScheduleRepositoryImpl(
@@ -39,7 +37,6 @@ void main() {
         ),
       );
       final schedulePost = SchedulePost(repository: scheduleRepo);
-      final publishEngine = PublishEngine();
 
       final draft = PostEntity(
         id: 'composer-flow-1',
@@ -74,25 +71,6 @@ void main() {
       expect(scheduled.data, isNotNull);
       expect(scheduled.data!.status, 'scheduled');
       expect(scheduled.data!.scheduledAt, isNotNull);
-
-      await publishEngine.publish(
-        post: created.data!,
-        targets: const <PublishTarget>[
-          PublishTarget(
-            category: PublishTargetCategory.social,
-            destinationKey: 'facebook',
-            socialPageId: 'page-1',
-          ),
-          PublishTarget(
-            category: PublishTargetCategory.professional,
-            destinationKey: 'linkedin',
-            socialPageId: 'page-2',
-          ),
-        ],
-      );
-
-      final job = await publishEngine.queueManager.findById(created.data!.id);
-      expect(job?.status.name, 'succeeded');
     });
   });
 }

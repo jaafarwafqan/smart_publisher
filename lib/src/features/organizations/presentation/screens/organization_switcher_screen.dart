@@ -11,6 +11,7 @@ import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
+import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../application/current_organization_access.dart';
 import '../../domain/entities/organization_entity.dart';
@@ -92,13 +93,47 @@ class _OrganizationSwitcherScreenState
     context.go(RouteNames.dashboardPath);
   }
 
+  // Sprint A (role/permission remediation): this screen is now the primary
+  // landing state for a freshly registered account with zero memberships —
+  // not a rare edge case. A user parked here (no organization yet) must
+  // still be able to leave the session, so the app bar needs its own logout
+  // action rather than relying on a settings screen this account can't
+  // necessarily reach. Same provider-invalidation sequence as
+  // PlatformAdminScreens' logout.
+  Future<void> _logout() async {
+    await ref.read(authSessionControllerProvider).logout();
+    await ref.read(activeOrganizationStoreProvider).clear();
+    ref.invalidate(authStateProvider);
+    ref.invalidate(currentUserRoleProvider);
+    ref.invalidate(currentPlatformAdminProvider);
+    ref.invalidate(currentOrganizationAccessProvider);
+    if (!mounted) {
+      return;
+    }
+    context.go(RouteNames.loginPath);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final access = ref.watch(currentOrganizationAccessProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.orgSwitcherAppBarTitle)),
+      appBar: AppBar(
+        title: Text(l10n.orgSwitcherAppBarTitle),
+        actions: <Widget>[
+          IconButton(
+            tooltip: l10n.helpIconTooltip,
+            onPressed: () => context.push(RouteNames.helpCenterPath),
+            icon: const Icon(Icons.help_outline),
+          ),
+          IconButton(
+            tooltip: l10n.logoutTooltip,
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: AdaptiveContentWidth(
         child: access.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -141,9 +176,18 @@ class _OrganizationList extends StatelessWidget {
     if (organizations.isEmpty) {
       return Center(
         child: AppEmptyState(
+          title: l10n.orgSwitcherEmptyTitle,
           message: l10n.orgSwitcherEmpty,
           icon: Icons.business_outlined,
           showCard: false,
+          // Not an error state — a self-registered account with no
+          // organization yet is expected and normal now (see Sprint A).
+          // The only account-level screen reachable without an
+          // organization is two-factor setup (route_guards.dart grants it
+          // to every authenticated user regardless of membership), so it
+          // stands in as the "manage my account" affordance here.
+          actionLabel: l10n.orgSwitcherEmptyAccountAction,
+          onAction: () => context.push(RouteNames.twoFactorSetupPath),
         ),
       );
     }

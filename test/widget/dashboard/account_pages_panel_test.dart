@@ -13,7 +13,8 @@ Future<void> _pump(
   Future<void> Function()? onAddChannel,
   Future<void> Function(List<String>)? onSaveSelection,
   Future<void> Function(String)? onDeletePage,
-  bool canManagePages = true,
+  bool canSync = true,
+  bool canSelect = true,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -27,7 +28,8 @@ Future<void> _pump(
           onAddChannel: onAddChannel ?? () async {},
           onSaveSelection: onSaveSelection ?? (_) async {},
           onDeletePage: onDeletePage ?? (_) async {},
-          canManagePages: canManagePages,
+          canSync: canSync,
+          canSelect: canSelect,
         ),
       ),
     ),
@@ -192,7 +194,8 @@ void main() {
       tester,
       pages: const <SocialPageEntity>[channel],
       discoveryMode: 'manual',
-      canManagePages: false,
+      canSync: false,
+      canSelect: false,
     );
 
     expect(find.text('Nursing Channel'), findsOneWidget);
