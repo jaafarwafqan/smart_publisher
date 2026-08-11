@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:go_router/go_router.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
@@ -381,7 +383,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
       // See publishNow — the backend distinguishes "scheduled" from
       // "submitted for approval" via this same message field.
-      _showFeedback(scheduled.message ?? l10n.composerPostScheduledSuccess);
+      _leaveComposerAfterSuccess(
+        scheduled.message ?? l10n.composerPostScheduledSuccess,
+      );
     });
   }
 
@@ -414,8 +418,26 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       // manager/admin/owner review) — surface it verbatim rather than a
       // fixed string that would say "queued for publishing" even when it
       // wasn't.
-      _showFeedback(published.message ?? l10n.composerPostQueuedSuccess);
+      _leaveComposerAfterSuccess(
+        published.message ?? l10n.composerPostQueuedSuccess,
+      );
     });
+  }
+
+  /// A completed publish/schedule is a terminal action, unlike a draft save
+  /// — was previously reported live: the inline `_feedback` banner (still
+  /// used for every in-progress/failure case) is easy to miss since nothing
+  /// actually happens after it appears, leaving the account staring at the
+  /// same form wondering whether anything worked. A SnackBar survives the
+  /// navigation below (unlike `_feedback`, which lives in this screen's
+  /// own State and would just be discarded), so the confirmation is still
+  /// visible on the screen the account lands on.
+  void _leaveComposerAfterSuccess(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    context.go(RouteNames.dashboardPath);
   }
 
   Future<void> _pickAndUploadMediaFile() async {
