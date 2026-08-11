@@ -38,8 +38,36 @@ extension UserRoleStorage on UserRole {
 @Riverpod(keepAlive: true)
 Future<bool> authState(AuthStateRef ref) async {
   final storage = ref.read(storageServiceProvider);
-  final token = await storage.readString(GuardStorageKeys.authToken);
-  return token != null && token.trim().isNotEmpty;
+
+  // The read (not just the catch below) is retried once: on web
+  // specifically, the very first storage read right after a hard page
+  // reload can race flutter_secure_storage's own async web backend init
+  // (WebCrypto/IndexedDB) and throw transiently — reproduced live landing
+  // back from a real cross-origin OAuth redirect (Facebook consent, then
+  // back), where this is exactly the first storage read of the fresh page
+  // load. A short retry resolves the race in place, so an actually-valid
+  // session isn't punted to /login (discarding a just-completed OAuth
+  // consent) over what's typically a few milliseconds of backend warm-up.
+  for (var attempt = 0; attempt < 2; attempt++) {
+    try {
+      final token = await storage.readString(GuardStorageKeys.authToken);
+      return token != null && token.trim().isNotEmpty;
+    } catch (_) {
+      if (attempt == 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        continue;
+      }
+      // Second attempt also failed — was uncaught until 2026-08-11, which
+      // propagated through RouteGuards.guard's redirect callback and made
+      // GoRouter render its generic errorBuilder ("page not found") instead
+      // of the correct outcome for "can't confirm a session right now":
+      // fail closed to /login, same as every other fail-closed check in
+      // this guard chain (currentPlatformAdminProvider,
+      // currentOrganizationAccessProvider's catch-all below).
+      return false;
+    }
+  }
+  return false;
 }
 
 @Riverpod(keepAlive: true)
