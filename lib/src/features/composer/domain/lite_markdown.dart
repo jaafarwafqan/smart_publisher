@@ -6,7 +6,21 @@ class LiteMarkdown {
   LiteMarkdown._();
 
   static final RegExp _bold = RegExp(r'\*\*(.+?)\*\*', dotAll: true);
-  static final RegExp _italic = RegExp(r'_(.+?)_', dotAll: true);
+
+  // CommonMark's own rule for this exact ambiguity: `_` immediately
+  // adjacent to a letter/digit ("intraword") never opens/closes emphasis —
+  // without it, any hashtag using underscores as a word separator (a
+  // standard Arabic-hashtag convention, since spaces aren't allowed) gets
+  // misread as italic markup, silently eating every underscore between the
+  // first and last hashtag in the caption. Reproduced live: four hashtags
+  // like #رسول_الله #وفاء_للحسين collapsed into two mangled, merged runs.
+  // \w is ASCII-only in Dart regex (doesn't cover Arabic letters), so this
+  // needs \p{L}/\p{N} + the unicode flag, not \b/\w.
+  static final RegExp _italic = RegExp(
+    r'(?<![\p{L}\p{N}])_(.+?)_(?![\p{L}\p{N}])',
+    dotAll: true,
+    unicode: true,
+  );
 
   /// The plain text a non-Telegram platform will really display — markers
   /// stripped cleanly, never left as literal asterisks/underscores.
@@ -22,7 +36,11 @@ class LiteMarkdown {
     final runs = <LiteMarkdownRun>[];
     var cursor = 0;
 
-    final combined = RegExp(r'\*\*(.+?)\*\*|_(.+?)_', dotAll: true);
+    final combined = RegExp(
+      r'\*\*(.+?)\*\*|(?<![\p{L}\p{N}])_(.+?)_(?![\p{L}\p{N}])',
+      dotAll: true,
+      unicode: true,
+    );
 
     for (final match in combined.allMatches(text)) {
       if (match.start > cursor) {
