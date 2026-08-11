@@ -140,12 +140,21 @@ SecretsManager secretsManager(SecretsManagerRef ref) {
     defaultValue: false,
   );
 
-  if (kIsWeb) {
-    // Web storage cannot guarantee hardware-backed secret protection.
-    return InMemorySecretsManager();
-  }
-
-  if (kReleaseMode) {
+  // Was `if (kIsWeb) return InMemorySecretsManager()` until 2026-08-11: true
+  // that web storage can't guarantee hardware-backed protection the way a
+  // phone's keystore can, but InMemorySecretsManager doesn't trade that
+  // guarantee for a weaker persistent one — it holds the encryption key in
+  // a plain in-process Map, gone on any full page reload. secureTokenStorage
+  // (EncryptedTokenStorage) still finds its encrypted blob in
+  // storageServiceProvider's now-persistent storage after such a reload,
+  // but with the key to decrypt it gone, every read fails — the backend
+  // then rejects whatever garbage Authorization header results with 401,
+  // which is exactly what a real cross-origin OAuth redirect (Facebook
+  // consent, then back) reproduced live: the reload past the redirect
+  // landed the account "logged in" per local state but 401ing on the very
+  // next real request. flutter_secure_storage (PlatformSecureSecretsManager)
+  // has supported web all along, backed by the browser's own storage.
+  if (kReleaseMode || kIsWeb) {
     return PlatformSecureSecretsManager();
   }
 
