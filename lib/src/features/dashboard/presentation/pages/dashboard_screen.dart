@@ -43,11 +43,23 @@ import '../widgets/workspace_modules_grid.dart';
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
-  // Web development can use localhost. Meta requires a valid HTTPS redirect
-  // URI for the mobile browser flow, so test/production builds may supply a
-  // public callback that relays back to the registered Android deep link.
-  static const String _webDevelopmentOAuthRedirectUri =
-      'http://localhost:5055/';
+  // Defaults to local dev only; a deployed web build (staging or
+  // production) must supply its own public HTTPS callback via
+  // --dart-define, same mechanism the mobile deep link already used below —
+  // this was hardcoded to localhost unconditionally until 2026-08-11, which
+  // silently broke Facebook OAuth on every deployed web build (Meta redirects
+  // there, and nothing on the deployer's actual domain is listening).
+  // FacebookOAuthCallback.fromUri (core/web/facebook_oauth_callback.dart)
+  // parses ?code=&state= off whatever page this lands on, so it must resolve
+  // to a URL the app's own router serves while the account is still
+  // authenticated — RouteNames.dashboardPath, where this OAuth flow always
+  // starts from, is the one guaranteed not to get redirected elsewhere
+  // (mid-flight, an unauthenticated or platform-admin session shouldn't be
+  // here anyway).
+  static const String _webOAuthRedirectUri = String.fromEnvironment(
+    'SP_WEB_SOCIAL_OAUTH_REDIRECT_URI',
+    defaultValue: 'http://localhost:5055/',
+  );
   static const String _mobileOAuthRedirectUri = String.fromEnvironment(
     'SP_SOCIAL_OAUTH_REDIRECT_URI',
     defaultValue: 'smartpublisher://oauth/callback',
@@ -55,7 +67,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
   @visibleForTesting
   static String oauthRedirectUriFor({required bool isWeb}) {
-    return isWeb ? _webDevelopmentOAuthRedirectUri : _mobileOAuthRedirectUri;
+    return isWeb ? _webOAuthRedirectUri : _mobileOAuthRedirectUri;
   }
 
   @override
