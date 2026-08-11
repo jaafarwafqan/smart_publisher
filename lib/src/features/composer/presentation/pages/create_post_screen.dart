@@ -441,6 +441,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _pickAndUploadMediaFile() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // The backend validates the upload's post_id as nullable|integer|
+    // exists:posts,id — was previously sent as a client-generated
+    // 'temp-post-<timestamp>' string whenever a file was picked before the
+    // first draft save, which always failed that check with a 422.
+    // Reproduced live: a brand-new post + an image attached from the
+    // composer before ever saving could never actually upload. Backend
+    // title is 'required' (content is nullable) for a draft, so a title is
+    // needed before a draft can be auto-created here — ask for it rather
+    // than inventing a placeholder.
+    if (_draftId == null && _titleController.text.trim().isEmpty) {
+      _showFeedback(l10n.composerTitleRequiredForMedia, isError: true);
+      return;
+    }
+
     // Flutter Web has no filesystem — file_picker can only hand back bytes
     // there, and reading `.path` on web throws instead of returning null, so
     // it must never be touched unless we're actually on a platform with one.
@@ -456,7 +472,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final file = result.files.single;
     final bytes = kIsWeb ? file.bytes : null;
     final path = kIsWeb ? null : file.path;
-    final l10n = AppLocalizations.of(context)!;
 
     if (kIsWeb && bytes == null) {
       _showFeedback(l10n.composerFileDataUnavailable, isError: true);
@@ -470,8 +485,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final referenceName = path ?? file.name;
 
     await _runSubmission(() async {
-      final postId =
-          _draftId ?? 'temp-post-${DateTime.now().microsecondsSinceEpoch}';
+      // A real, persisted post id — auto-creates the draft first (silently,
+      // same as the explicit "Save draft" action) if this is the very first
+      // thing attached to a brand-new post.
+      final postId = _draftId ?? (await _saveOrUpdateDraftEntity()).id;
       final media = MediaEntity(
         id: 'media-${DateTime.now().microsecondsSinceEpoch}',
         postId: postId,

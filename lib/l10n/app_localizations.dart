@@ -2450,6 +2450,12 @@ abstract class AppLocalizations {
   /// **'العنوان والمحتوى مطلوبان.'**
   String get composerTitleContentRequired;
 
+  /// No description provided for @composerTitleRequiredForMedia.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف عنوانًا للمنشور أولًا قبل إرفاق وسائط.'**
+  String get composerTitleRequiredForMedia;
+
   /// No description provided for @composerSelectAtLeastOnePage.
   ///
   /// In ar, this message translates to:

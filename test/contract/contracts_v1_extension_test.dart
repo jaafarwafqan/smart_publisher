@@ -59,6 +59,56 @@ void main() {
       expect(dto.title, 'Title');
     });
 
+    test(
+      'PostResponseDtoV1 reads real media_attachments objects into '
+      'attachment URLs, not the nonexistent flat attachments field '
+      '(reported live: media genuinely linked server-side vanished from '
+      'the composer on reopen)',
+      () {
+        final dto = PostResponseDtoV1.fromJson(<String, dynamic>{
+          'id': 123,
+          'title': 'Title',
+          'content': 'Body',
+          'status': 'draft',
+          'media_attachments': <dynamic>[
+            <String, dynamic>{
+              'id': 1,
+              'post_id': 123,
+              'type': 'image',
+              'path': 'media/2026/08/photo.jpg',
+            },
+            <String, dynamic>{
+              'id': 2,
+              'post_id': 123,
+              'type': 'image',
+              'url': 'https://cdn.example.com/photo2.jpg',
+            },
+          ],
+        });
+
+        expect(dto.attachments, <String>[
+          'media/2026/08/photo.jpg',
+          'https://cdn.example.com/photo2.jpg',
+        ]);
+      },
+    );
+
+    test(
+      'PostResponseDtoV1 falls back to a flat attachments list when '
+      'media_attachments is absent',
+      () {
+        final dto = PostResponseDtoV1.fromJson(<String, dynamic>{
+          'id': 123,
+          'title': 'Title',
+          'content': 'Body',
+          'status': 'draft',
+          'attachments': <dynamic>['legacy.jpg'],
+        });
+
+        expect(dto.attachments, <String>['legacy.jpg']);
+      },
+    );
+
     test('PostAnalyticsResponseDtoV1 parses numeric strings', () {
       final dto = PostAnalyticsResponseDtoV1.fromJson(<String, dynamic>{
         'post_id': 77,

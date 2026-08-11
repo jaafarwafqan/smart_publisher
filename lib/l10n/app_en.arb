@@ -462,6 +462,7 @@
   "composerInvalidMediaUrl": "That doesn't look like a URL (http:// or https://). To attach a file from your device, use \"Upload File\" instead.",
   "composerMediaUrlAlreadyAdded": "Media URL already added.",
   "composerTitleContentRequired": "Title and content are required.",
+  "composerTitleRequiredForMedia": "Add a post title first before attaching media.",
   "composerSelectAtLeastOnePage": "Select at least one page or channel for publishing.",
   "composerSelectScheduleTime": "Select a schedule time before scheduling.",
   "composerScheduleTimeMustBeFuture": "Schedule time must be in the future.",

@@ -1323,6 +1323,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get composerTitleContentRequired => 'العنوان والمحتوى مطلوبان.';
 
   @override
+  String get composerTitleRequiredForMedia =>
+      'أضف عنوانًا للمنشور أولًا قبل إرفاق وسائط.';
+
+  @override
   String get composerSelectAtLeastOnePage =>
       'اختر صفحة أو قناة واحدة على الأقل للنشر.';
 

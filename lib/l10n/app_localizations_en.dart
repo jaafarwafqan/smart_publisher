@@ -1333,6 +1333,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get composerTitleContentRequired => 'Title and content are required.';
 
   @override
+  String get composerTitleRequiredForMedia =>
+      'Add a post title first before attaching media.';
+
+  @override
   String get composerSelectAtLeastOnePage =>
       'Select at least one page or channel for publishing.';
 

@@ -463,6 +463,7 @@
   "composerInvalidMediaUrl": "هذا لا يبدو رابطًا صحيحًا (http:// أو https://). لإرفاق ملف من جهازك استخدم \"رفع ملف\" بدلاً من ذلك.",
   "composerMediaUrlAlreadyAdded": "رابط الوسائط مُضاف بالفعل.",
   "composerTitleContentRequired": "العنوان والمحتوى مطلوبان.",
+  "composerTitleRequiredForMedia": "أضف عنوانًا للمنشور أولًا قبل إرفاق وسائط.",
   "composerSelectAtLeastOnePage": "اختر صفحة أو قناة واحدة على الأقل للنشر.",
   "composerSelectScheduleTime": "اختر وقت الجدولة قبل الجدولة.",
   "composerScheduleTimeMustBeFuture": "يجب أن يكون وقت الجدولة في المستقبل.",

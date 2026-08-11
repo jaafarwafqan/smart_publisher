@@ -1,4 +1,5 @@
 import '../../domain/publish_target.dart';
+import 'media_contract_v1.dart';
 
 String _asString(Object? value, {String fallback = ''}) {
   if (value == null) {
@@ -146,7 +147,7 @@ class PostResponseDtoV1 {
       updatedAt: _parseDate(json['updated_at']),
       scheduledAt: _parseDate(json['scheduled_at']),
       publishedAt: _parseDate(json['published_at']),
-      attachments: _parseStringList(json['attachments']),
+      attachments: _parseMediaAttachmentUrls(json),
       platforms: _parseStringList(json['platforms']),
       targetPageIds: _parseStringList(json['target_page_ids']),
       platformContent: rawPlatformContent.map(
@@ -165,6 +166,29 @@ class PostResponseDtoV1 {
       return DateTime.tryParse(value);
     }
     return null;
+  }
+
+  /// The real API response nests media as `media_attachments` (full
+  /// MediaAttachment objects — see docs/api/openapi_v1.yaml), never a flat
+  /// `attachments` string list. Reading a field that plainly doesn't exist
+  /// in the real response always silently produced an empty list —
+  /// reproduced live: media uploaded and genuinely linked server-side (the
+  /// real, tested upload+attach path) simply vanished from the composer
+  /// the moment the draft was reopened, because this is exactly where that
+  /// reload re-hydrates from. Reuses MediaResponseDtoV1's own parsing
+  /// (already correct for this exact object shape via the Media Library) —
+  /// falls back to a legacy flat `attachments` list only if present, for
+  /// any older/other response shape that might still send one.
+  static List<String> _parseMediaAttachmentUrls(Map<String, dynamic> json) {
+    final mediaAttachments = json['media_attachments'];
+    if (mediaAttachments is List<dynamic>) {
+      return mediaAttachments
+          .whereType<Map<String, dynamic>>()
+          .map((item) => MediaResponseDtoV1.fromJson(item).url)
+          .where((url) => url.trim().isNotEmpty)
+          .toList(growable: false);
+    }
+    return _parseStringList(json['attachments']);
   }
 
   static List<String> _parseStringList(Object? value) {
