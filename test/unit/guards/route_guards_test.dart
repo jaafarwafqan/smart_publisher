@@ -132,17 +132,23 @@ void main() {
     );
 
     test(
-      'platform administration is independent from organization access',
+      'platform administration is reachable by super_admin but no longer '
+      'forces them into it',
       () async {
         final noOrganization = OrganizationAccessState.noActiveOrganization(
           memberships: const <OrganizationEntity>[],
         );
         final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+        final superAdminWithOrg = _containerFor(
+          _accessFor('owner'),
+          platformAdmin: true,
+        );
         final regularUser = _containerFor(
           _accessFor('owner'),
           platformAdmin: false,
         );
         addTearDown(superAdmin.dispose);
+        addTearDown(superAdminWithOrg.dispose);
         addTearDown(regularUser.dispose);
 
         expect(
@@ -154,32 +160,38 @@ void main() {
           isNull,
         );
         expect(
-          await _redirect(superAdmin, RouteNames.dashboardPath),
-          RouteNames.platformAdministrationPath,
-        );
-        expect(
           await _redirect(regularUser, RouteNames.platformUsersPath),
           RouteNames.dashboardPath,
         );
 
-        // The gap this guards against: a pure platform-admin account has
-        // zero organization memberships (noOrganization above), so any
-        // route other than /dashboard and /platform/* must still land back
-        // in the platform workspace instead of falling through to the
-        // organization-access checks below and dead-ending in the
-        // organization switcher.
+        // 2026-08-11 decision: a super_admin's default landing is the
+        // regular dashboard, same as any other user — no longer forced into
+        // a separate platform-only workspace. One with an active
+        // organization reaches /dashboard exactly like a regular member.
+        expect(
+          await _redirect(superAdminWithOrg, RouteNames.dashboardPath),
+          isNull,
+        );
+
+        // A super_admin with zero organization memberships still falls
+        // through to the same "no active organization" branch a regular
+        // zero-membership user hits — the organization switcher already
+        // renders a distinct state for this, so it's not a dead end.
         for (final path in <String>[
           RouteNames.settingsPath,
           RouteNames.postsListPath,
           RouteNames.calendarPath,
-          RouteNames.organizationsPath,
         ]) {
           expect(
             await _redirect(superAdmin, path),
-            RouteNames.platformAdministrationPath,
+            RouteNames.organizationsPath,
             reason: path,
           );
         }
+        expect(
+          await _redirect(superAdmin, RouteNames.organizationsPath),
+          isNull,
+        );
       },
     );
 
@@ -520,8 +532,14 @@ void main() {
     );
 
     test(
-      'a platform admin session is bounced away from the organization-scoped guide',
+      'a platform admin session can also reach the help center, same as any '
+      'authenticated account',
       () async {
+        // 2026-08-11 decision: super_admin is no longer forced through a
+        // platform-only workspace, so it falls through to this
+        // not-gated-on-organization check exactly like everyone else — see
+        // the reachable-by-super_admin test above for what's still
+        // super_admin-exclusive (/platform/*, oauthProviderSettingsPath).
         final noOrganization = OrganizationAccessState.noActiveOrganization(
           memberships: const <OrganizationEntity>[],
         );
@@ -530,11 +548,11 @@ void main() {
 
         expect(
           await _redirect(superAdmin, RouteNames.helpCenterPath),
-          RouteNames.platformAdministrationPath,
+          isNull,
         );
         expect(
           await _redirect(superAdmin, RouteNames.userGuidePath),
-          RouteNames.platformAdministrationPath,
+          isNull,
         );
       },
     );

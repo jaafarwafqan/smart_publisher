@@ -85,6 +85,7 @@
 
   "logoutTooltip": "تسجيل الخروج",
   "performanceTooltip": "الأداء",
+  "platformAdministrationTooltip": "إدارة المنصة",
 
   "dashboardStatPosts": "المنشورات",
   "dashboardStatScheduled": "مجدولة",

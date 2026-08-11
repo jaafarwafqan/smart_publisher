@@ -84,6 +84,7 @@
 
   "logoutTooltip": "Logout",
   "performanceTooltip": "Performance",
+  "platformAdministrationTooltip": "Platform administration",
 
   "dashboardStatPosts": "Posts",
   "dashboardStatScheduled": "Scheduled",

@@ -569,6 +569,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: AppBar(
         title: Text(l10n.appName),
         actions: <Widget>[
+          // 2026-08-11: super_admin now lands on the regular dashboard
+          // (route_guards.dart no longer forces a separate workspace) —
+          // this is the menu entry point into it instead.
+          if (ref.watch(currentPlatformAdminProvider).valueOrNull ?? false)
+            IconButton(
+              tooltip: l10n.platformAdministrationTooltip,
+              onPressed: () =>
+                  context.push(RouteNames.platformAdministrationPath),
+              icon: const Icon(Icons.admin_panel_settings_outlined),
+            ),
           IconButton(
             tooltip: l10n.helpIconTooltip,
             onPressed: () => context.push(RouteNames.helpCenterPath),

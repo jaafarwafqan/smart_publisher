@@ -31,88 +31,68 @@ final class RouteGuards {
     final isAuthenticated = await ref.read(authStateProvider.future);
 
     if (path == RouteNames.splashPath) {
-      if (!isAuthenticated) {
-        return RouteNames.loginPath;
-      }
-      final isPlatformAdmin = await ref.read(
-        currentPlatformAdminProvider.future,
-      );
-      return isPlatformAdmin
-          ? RouteNames.platformAdministrationPath
-          : RouteNames.dashboardPath;
+      // 2026-08-11 decision: a super_admin's default landing is the regular
+      // dashboard, same as any other user — platform administration is now
+      // a place they navigate to via a menu action, not a forced separate
+      // workspace. See the isPlatformAdmin route block below for what stays
+      // true regardless: /platform/* and oauthProviderSettingsPath are
+      // still super_admin-only.
+      return isAuthenticated ? RouteNames.dashboardPath : RouteNames.loginPath;
     }
 
     if (_isAuthenticationRoute(path)) {
       if (!isAuthenticated) {
         return null;
       }
-      final isPlatformAdmin = await ref.read(
-        currentPlatformAdminProvider.future,
-      );
-      return isPlatformAdmin
-          ? RouteNames.platformAdministrationPath
-          : RouteNames.dashboardPath;
+      return RouteNames.dashboardPath;
     }
 
     if (!isAuthenticated) {
       return RouteNames.loginPath;
     }
 
-    // A platform administrator has an intentionally separate workspace and
-    // never falls through to the organization-scoped app below — not just
-    // from /dashboard, but from ANY organization-scoped URL (a stale
-    // bookmark, deep link, or a route reached before this account was
-    // promoted to platform admin). Checking this before the
-    // organization-access lookup further down also matters in practice: a
-    // pure platform-admin account typically has zero organization
-    // memberships, so without this early return every route except
-    // /dashboard and /platform/* would fall through to the "no active
-    // organization" branch and dead-end the admin in the organization
-    // switcher instead of their own workspace.
     final isPlatformAdmin = await ref.refresh(
       currentPlatformAdminProvider.future,
     );
-    if (isPlatformAdmin) {
-      // Sprint (2026-08-10): the very first guarded navigation this session
-      // must always land the super_admin on the platform overview, never on
-      // whatever sub-route happens to be current — a stale deep link, a
-      // bookmark, or Flutter Web restoring the last browser URL on a hard
-      // reload, all of which reach this branch directly without ever
-      // passing through the splash-only redirect above (that one only
-      // fires when the path is exactly '/'). Once landed, this flag stays
-      // consumed for the rest of the session, so clicking further into
-      // /platform/* afterwards (e.g. the "إدارة المستخدمين" header button)
-      // is completely unaffected.
-      final hasLanded = ref.read(hasLandedSuperAdminSessionProvider);
-      if (!hasLanded) {
-        ref.read(hasLandedSuperAdminSessionProvider.notifier).state = true;
-        // Narrowly targets the deep-link bug itself: a /platform/* SUB-route
-        // (users, organizations, audit-log, ...). Anything else — the bare
-        // overview itself, oauthProviderSettingsPath, /dashboard, or any
-        // other URL — already reaches the correct outcome via the existing
-        // allowed-check below, so leave those alone here.
-        if (path != RouteNames.platformAdministrationPath &&
-            _isPlatformAdministrationRoute(path)) {
-          return RouteNames.platformAdministrationPath;
+
+    // /platform/* and oauthProviderSettingsPath (Sprint D: platform-level
+    // OAuth client credentials, super_admin-gated on the backend — see
+    // routes/api.php's /admin group) stay super_admin-only in both
+    // directions, but a super_admin is no longer forced to live inside
+    // them: everything else below (dashboard, posts, ...) is reachable too,
+    // same as any other authenticated account.
+    if (_isPlatformAdministrationRoute(path) ||
+        path.startsWith(RouteNames.oauthProviderSettingsPath)) {
+      if (!isPlatformAdmin) {
+        // Two distinct non-admin targets, preserved from before this
+        // change: /platform/* bounces to the regular dashboard,
+        // oauthProviderSettingsPath bounces to the organization-level
+        // /administration screen (an org owner/admin's nearest legitimate
+        // page, not a bare dashboard).
+        return _isPlatformAdministrationRoute(path)
+            ? RouteNames.dashboardPath
+            : RouteNames.administrationPath;
+      }
+
+      // Sprint (2026-08-10) deep-link fix, preserved: the first guarded
+      // navigation this session must not land a super_admin directly on a
+      // /platform/* SUB-route (a stale bookmark or Flutter Web restoring
+      // the last URL on a hard reload) — force the overview first. Once
+      // landed, this flag stays consumed for the rest of the session, so
+      // clicking further into /platform/* afterwards is unaffected.
+      // oauthProviderSettingsPath has no "overview" concept, so this only
+      // applies to _isPlatformAdministrationRoute paths.
+      if (_isPlatformAdministrationRoute(path)) {
+        final hasLanded = ref.read(hasLandedSuperAdminSessionProvider);
+        if (!hasLanded) {
+          ref.read(hasLandedSuperAdminSessionProvider.notifier).state = true;
+          if (path != RouteNames.platformAdministrationPath) {
+            return RouteNames.platformAdministrationPath;
+          }
         }
       }
 
-      // Sprint D (role/permission remediation): oauthProviderSettingsPath
-      // lives outside the /platform prefix for historical reasons, but is
-      // now exclusively super_admin-gated on the backend (see
-      // routes/api.php's /admin group) — allow it here specifically, not
-      // via _isPlatformAdministrationRoute() itself, since that helper is
-      // also used below to redirect a NON-admin session away from it with a
-      // different, more specific target (/administration, not /dashboard).
-      final allowed =
-          _isPlatformAdministrationRoute(path) ||
-          path.startsWith(RouteNames.oauthProviderSettingsPath);
-
-      return allowed ? null : RouteNames.platformAdministrationPath;
-    }
-
-    if (_isPlatformAdministrationRoute(path)) {
-      return RouteNames.dashboardPath;
+      return null;
     }
 
     // Keep this route reachable for users whose active membership expired,
@@ -149,16 +129,10 @@ final class RouteGuards {
       return RouteNames.organizationsPath;
     }
 
-    // OAuth client credentials are platform-level secrets, guarded by
-    // super_admin only (Sprint D moved this off the legacy Spatie
-    // system-settings permission — see routes/api.php's /admin group). No
-    // organization role, however senior, grants that capability, so an
-    // organization owner/admin must not be routed into a guaranteed 403
-    // screen. A real super_admin session never reaches this branch at all
-    // (it returns from the isPlatformAdmin check above).
-    if (path.startsWith(RouteNames.oauthProviderSettingsPath)) {
-      return RouteNames.administrationPath;
-    }
+    // oauthProviderSettingsPath is handled entirely by the
+    // _isPlatformAdministrationRoute(path) || path.startsWith(...) block
+    // above (both the super_admin-allowed and non-admin-bounced cases), so
+    // nothing reaches this point for that path.
 
     final requiredPermissions = _requiredPermissionsFor(path);
     if (requiredPermissions.isEmpty ||

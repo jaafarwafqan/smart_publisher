@@ -253,6 +253,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get performanceTooltip => 'Performance';
 
   @override
+  String get platformAdministrationTooltip => 'Platform administration';
+
+  @override
   String get dashboardStatPosts => 'Posts';
 
   @override

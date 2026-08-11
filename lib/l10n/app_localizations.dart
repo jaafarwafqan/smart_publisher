@@ -554,6 +554,12 @@ abstract class AppLocalizations {
   /// **'الأداء'**
   String get performanceTooltip;
 
+  /// No description provided for @platformAdministrationTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة المنصة'**
+  String get platformAdministrationTooltip;
+
   /// No description provided for @dashboardStatPosts.
   ///
   /// In ar, this message translates to:

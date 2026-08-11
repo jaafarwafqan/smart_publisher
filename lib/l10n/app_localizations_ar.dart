@@ -254,6 +254,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get performanceTooltip => 'الأداء';
 
   @override
+  String get platformAdministrationTooltip => 'إدارة المنصة';
+
+  @override
   String get dashboardStatPosts => 'المنشورات';
 
   @override
