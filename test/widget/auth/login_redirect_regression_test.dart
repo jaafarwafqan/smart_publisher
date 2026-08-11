@@ -160,7 +160,8 @@ void main() {
       expect(
         button.onPressed,
         isNull,
-        reason: 'submit button must stay disabled while the redirect is in flight',
+        reason:
+            'submit button must stay disabled while the redirect is in flight',
       );
 
       // Now let the redirect actually resolve.

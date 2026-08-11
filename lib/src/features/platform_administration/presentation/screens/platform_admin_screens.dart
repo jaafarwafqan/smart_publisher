@@ -1610,7 +1610,17 @@ class _CreateOrganizationDialogState
   @override
   void initState() {
     super.initState();
+    // Fetched eagerly regardless of _useExistingOwner (so switching to
+    // "existing owner" later doesn't need to wait), but the FutureBuilder
+    // that actually consumes this only builds once that toggle is flipped
+    // — so a rejection before then would otherwise have zero listeners
+    // attached at the moment it rejects, which Dart reports as an
+    // "unhandled" async error even though it's genuinely handled once the
+    // FutureBuilder builds. ignore() marks it handled for that reporting
+    // purpose only — it does not consume or transform the result, so the
+    // FutureBuilder still receives the real value/error normally.
     _availableUsers = ref.read(platformAdminRepositoryProvider).getUsers();
+    _availableUsers.ignore();
   }
 
   @override
@@ -1659,11 +1669,7 @@ class _CreateOrganizationDialogState
       // integration would hook into) but never shown to the user — an
       // unclassified exception's message could contain implementation
       // detail that isn't meant to be user-facing.
-      AppLogger.e(
-        'Unexpected error creating organization',
-        error,
-        stackTrace,
-      );
+      AppLogger.e('Unexpected error creating organization', error, stackTrace);
       if (mounted) {
         setState(() {
           _submitting = false;
