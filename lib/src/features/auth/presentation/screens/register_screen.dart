@@ -68,17 +68,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return;
       }
       setState(() {
+        _submitting = false;
         _error = error is AuthSessionException
             ? error.message
             : error.toString().replaceFirst('Exception: ', '');
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
-      }
     }
+    // See LoginScreen._login()'s identical comment: no unconditional
+    // _submitting reset on the success path — context.go() only starts
+    // GoRouter's async redirect, and resetting here would re-enable the
+    // form while the app is still visibly on this screen.
   }
 
   @override

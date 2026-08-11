@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart' show Locale;
 
 import '../logger/app_logger.dart';
 import '../observability/error_correlation.dart';
@@ -114,6 +115,45 @@ class OrganizationHeaderInterceptor implements NetworkInterceptor {
     if (organizationId != null) {
       options.headers['X-Organization-Id'] = organizationId.toString();
     }
+    handler.next(options);
+  }
+
+  @override
+  Future<void> onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    handler.next(response);
+  }
+
+  @override
+  Future<void> onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    handler.next(error);
+  }
+}
+
+/// Sends the app's currently-selected UI language on every request, so the
+/// backend's `SetLocaleFromHeaderMiddleware` can render error messages
+/// (validation failures, 401/403/404, ...) in the same language the rest
+/// of the screen is already in, instead of always English regardless of
+/// what the user has chosen (see `localeProvider`/`LocaleNotifier`). Reads
+/// the CURRENT locale on every request, not just once at construction —
+/// same live-read pattern as [OrganizationHeaderInterceptor] — so switching
+/// language mid-session takes effect on the very next request.
+class LocaleHeaderInterceptor implements NetworkInterceptor {
+  const LocaleHeaderInterceptor({required this.localeReader});
+
+  final Locale Function() localeReader;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    options.headers['Accept-Language'] = localeReader().languageCode;
     handler.next(options);
   }
 

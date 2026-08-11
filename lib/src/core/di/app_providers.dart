@@ -10,6 +10,7 @@ import '../events/event.dart';
 import '../events/event_bus.dart';
 import '../events/event_dispatcher.dart';
 import '../events/logging_event_handler.dart';
+import '../locale/locale_provider.dart';
 import '../network/dio_network_client.dart';
 import '../network/laravel_api.dart';
 import '../network/network_client.dart';
@@ -98,6 +99,7 @@ NetworkClient networkClient(NetworkClientRef ref) {
       OrganizationHeaderInterceptor(
         store: ref.read(activeOrganizationStoreProvider),
       ),
+      LocaleHeaderInterceptor(localeReader: () => ref.read(localeProvider)),
       RefreshTokenInterceptor(
         tokenLifecycleManager: ref.read(tokenLifecycleManagerProvider),
       ),
@@ -262,6 +264,7 @@ final authSessionControllerProvider = Provider<AuthSessionController>((ref) {
     tokenLifecycleManager: ref.read(tokenLifecycleManagerProvider),
     storageService: ref.read(storageServiceProvider),
     authEventPublisher: ref.read(authEventPublisherProvider),
+    localeReader: () => ref.read(localeProvider),
   );
 });
 
@@ -377,6 +380,7 @@ MediaRepository mediaRepository(MediaRepositoryRef ref) {
     eventDispatcher: ref.read(eventDispatcherProvider),
     outboxStore: ref.read(outboxStoreProvider),
     resumableUploadManager: ref.read(resumableUploadManagerProvider),
+    activeOrganizationStore: ref.read(activeOrganizationStoreProvider),
   );
 }
 

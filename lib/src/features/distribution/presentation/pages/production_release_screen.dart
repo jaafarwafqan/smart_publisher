@@ -21,17 +21,26 @@ class _ProductionReleaseScreenState
     extends ConsumerState<ProductionReleaseScreen> {
   List<_ReleaseCheckItem>? _checks;
 
+  // Every item defaults to unverified: this screen has no wiring to a real
+  // evidence source (a CI run id, a deployment log, a signed sign-off
+  // record) for any of these claims, so it must never assert a check
+  // passed just because a developer typed `done: true` here. A prior
+  // version did exactly that for all nine items, including secrets and
+  // rollback — showing 100% release readiness with zero actual evidence
+  // behind it. Flip an item to `done: true` only once it is backed by a
+  // real, linked evidence source; until then this whole list is
+  // illustrative of what needs verifying, not a live status.
   List<_ReleaseCheckItem> _buildChecks(AppLocalizations l10n) {
     return <_ReleaseCheckItem>[
-      _ReleaseCheckItem(label: l10n.releaseCheckTestsPassed, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckAnalyzeClean, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckApiContracts, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckSecretsVerified, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckQueueChecks, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckObservability, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckRunbook, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckRollback, done: true),
-      _ReleaseCheckItem(label: l10n.releaseCheckSignoff, done: true),
+      _ReleaseCheckItem(label: l10n.releaseCheckTestsPassed, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckAnalyzeClean, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckApiContracts, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckSecretsVerified, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckQueueChecks, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckObservability, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckRunbook, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckRollback, done: false),
+      _ReleaseCheckItem(label: l10n.releaseCheckSignoff, done: false),
     ];
   }
 
@@ -82,6 +91,31 @@ class _ProductionReleaseScreenState
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(l10n.releaseActionsUnavailable),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Card(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        l10n.releaseChecksUnverifiedBanner,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -188,6 +222,13 @@ class _ReleaseCheckTimelineItem extends StatelessWidget {
           child: Card(
             child: CheckboxListTile(
               title: Text(item.label),
+              subtitle: item.done
+                  ? null
+                  : Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.releaseCheckStatusUnverified,
+                    ),
               value: item.done,
               // A local checkbox cannot attest that CI, staging, or a
               // rollback actually completed. This screen is read-only until

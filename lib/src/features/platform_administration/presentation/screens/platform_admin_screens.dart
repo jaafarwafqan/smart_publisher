@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/base/pagination.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/logger/app_logger.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -139,6 +141,20 @@ class _PlatformAdministrationScreenState
         appBar: AppBar(
           title: const Text('إدارة المنصة'),
           actions: <Widget>[
+            // A direct one-click shortcut to /platform/users right next to
+            // the header title — the existing "إدارة مستخدمي النظام" quick
+            // action further down the dashboard body still exists too, but
+            // requires scrolling; super_admin sees everything from this
+            // workspace, so the most-used management surface belongs in
+            // the header itself.
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+              ),
+              onPressed: () => context.push(RouteNames.platformUsersPath),
+              icon: const Icon(Icons.manage_accounts_outlined),
+              label: const Text('إدارة المستخدمين'),
+            ),
             IconButton(
               tooltip: 'تحديث البيانات',
               onPressed: _reload,
@@ -179,7 +195,15 @@ class _PlatformAdministrationScreenState
                   onRetry: _reload,
                 ),
                 empty: const SizedBox.shrink(),
-                content: _PlatformDashboardContent(data: snapshot.data!),
+                // Dart evaluates constructor arguments eagerly, regardless
+                // of which one AppAsyncSwitcher's internal switch actually
+                // picks — content: snapshot.data! used to run on every
+                // single build, including the very first one (data is
+                // still null while state == loading), throwing before the
+                // switch ever got a chance to select `loading` instead.
+                content: snapshot.hasData
+                    ? _PlatformDashboardContent(data: snapshot.data!)
+                    : const SizedBox.shrink(),
               );
             },
           ),
@@ -499,12 +523,14 @@ class _PlatformOrganizationsScreenState
                         actionLabel: 'إنشاء مؤسسة',
                         onAction: _createOrganization,
                       ),
-                      content: _OrganizationList(
-                        page: snapshot.data!,
-                        onStatus: _setStatus,
-                        onEdit: _editOrganization,
-                        onPage: (page) => _reload(page: page),
-                      ),
+                      content: snapshot.hasData
+                          ? _OrganizationList(
+                              page: snapshot.data!,
+                              onStatus: _setStatus,
+                              onEdit: _editOrganization,
+                              onPage: (page) => _reload(page: page),
+                            )
+                          : const SizedBox.shrink(),
                     );
                   },
                 ),
@@ -569,7 +595,9 @@ class _PlatformOrganizationDetailScreenState
                   onRetry: _reload,
                 ),
                 empty: const SizedBox.shrink(),
-                content: _OrganizationDetailsContent(details: snapshot.data!),
+                content: snapshot.hasData
+                    ? _OrganizationDetailsContent(details: snapshot.data!)
+                    : const SizedBox.shrink(),
               );
             },
           ),
@@ -865,14 +893,16 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                         actionLabel: 'إضافة مستخدم',
                         onAction: _createUser,
                       ),
-                      content: _UserList(
-                        page: snapshot.data!,
-                        onStatus: _changeStatus,
-                        onPlatformRole: _changePlatformRole,
-                        onEdit: _editUser,
-                        onMemberships: _editMemberships,
-                        onPage: (page) => _reload(page: page),
-                      ),
+                      content: snapshot.hasData
+                          ? _UserList(
+                              page: snapshot.data!,
+                              onStatus: _changeStatus,
+                              onPlatformRole: _changePlatformRole,
+                              onEdit: _editUser,
+                              onMemberships: _editMemberships,
+                              onPage: (page) => _reload(page: page),
+                            )
+                          : const SizedBox.shrink(),
                     );
                   },
                 ),
@@ -1616,6 +1646,30 @@ class _CreateOrganizationDialogState
           _error = error.message;
         });
       }
+    } catch (error, stackTrace) {
+      // A live E2E test found this dialog getting permanently stuck showing
+      // its loading spinner after the organization was genuinely created
+      // server-side — root cause: this catch only handled
+      // PlatformAdminException, so any other exception (a response-parsing
+      // edge case, a client-side error unrelated to the HTTP call itself)
+      // propagated uncaught, and _submitting never reset. Any exception
+      // now surfaces as a real error and re-enables the form instead of
+      // leaving it stuck forever. The raw error is logged for
+      // diagnosis (the exact wiring point a real Sentry/Crashlytics
+      // integration would hook into) but never shown to the user — an
+      // unclassified exception's message could contain implementation
+      // detail that isn't meant to be user-facing.
+      AppLogger.e(
+        'Unexpected error creating organization',
+        error,
+        stackTrace,
+      );
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = AppLocalizations.of(context)!.platformAdminUnexpectedError;
+        });
+      }
     }
   }
 
@@ -1652,6 +1706,47 @@ class _CreateOrganizationDialogState
                 FutureBuilder<PlatformPage<PlatformUser>>(
                   future: _availableUsers,
                   builder: (context, snapshot) {
+                    // A failed fetch (network error, backend error) must not
+                    // spin forever — only snapshot.hasData was checked
+                    // before, so an error here left this picker showing an
+                    // infinite loading spinner with no way to notice
+                    // anything had actually gone wrong or retry. The raw
+                    // error is logged (never shown raw to the user — same
+                    // reasoning as the _submit() catch-alls above) and the
+                    // message/button are localized rather than hardcoded
+                    // Arabic, which would render even under an English
+                    // locale.
+                    if (snapshot.hasError) {
+                      AppLogger.e(
+                        'Failed to load platform admin owner picker users',
+                        snapshot.error,
+                        snapshot.stackTrace,
+                      );
+                      final l10n = AppLocalizations.of(context)!;
+                      return Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              l10n.platformAdminOwnerListLoadError,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            OutlinedButton(
+                              onPressed: () => setState(() {
+                                _availableUsers = ref
+                                    .read(platformAdminRepositoryProvider)
+                                    .getUsers();
+                              }),
+                              child: Text(l10n.commonRetry),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                     if (!snapshot.hasData) {
                       return const Padding(
                         padding: EdgeInsets.all(AppSpacing.md),
@@ -1794,6 +1889,18 @@ class _EditOrganizationDialogState
         setState(() {
           _submitting = false;
           _error = error.message;
+        });
+      }
+    } catch (error, stackTrace) {
+      // Same hardening as _CreateOrganizationDialog._submit() — see its
+      // comment. Any exception must reset _submitting, not just the
+      // specific HTTP-layer one, and the raw error is logged rather than
+      // shown to the user.
+      AppLogger.e('Unexpected error updating organization', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = AppLocalizations.of(context)!.platformAdminUnexpectedError;
         });
       }
     }
@@ -2224,6 +2331,25 @@ class _MembershipEditorDialogState
                   );
                 }),
                 DropdownButtonFormField<PlatformOrganization>(
+                  // Bug reported 2026-08-11: DropdownButtonFormField keeps
+                  // its selected value in its own internal FormFieldState,
+                  // separate from this widget's `items:` list. Picking an
+                  // organization here calls setState() to add it to
+                  // _memberships, which immediately filters that same
+                  // organization OUT of `items` below (already-added
+                  // orgs are excluded) — but without a key forcing a fresh
+                  // State, the field's retained value is now an object
+                  // matching zero entries in the rebuilt items list,
+                  // tripping Flutter's "exactly one item must match value"
+                  // assertion on every subsequent add/remove. Keying on the
+                  // current membership set forces Flutter to discard the
+                  // old State (and its stale value) and mount a fresh one
+                  // that starts unselected — which is also the correct UX,
+                  // since the just-added organization can no longer be
+                  // picked again anyway.
+                  key: ValueKey<String>(
+                    _memberships.map((m) => m.organizationId).join(','),
+                  ),
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'إضافة إلى مؤسسة',

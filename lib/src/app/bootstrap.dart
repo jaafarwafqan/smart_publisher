@@ -76,7 +76,23 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     () => runZonedGuarded(
       () async {
         WidgetsFlutterBinding.ensureInitialized();
-        LaravelApi.assertReleaseConfiguration();
+        try {
+          LaravelApi.assertReleaseConfiguration();
+        } on StateError catch (error) {
+          // A live visual review caught this: an incomplete/non-HTTPS
+          // release configuration made the whole app a permanent blank
+          // white screen with zero on-screen feedback — the StateError
+          // thrown here used to propagate straight to runZonedGuarded's
+          // handler below, which only logs, and runApp() was never called
+          // at all since this check runs before it. A misconfigured
+          // deployment must fail loud and visible, not silently render
+          // nothing. Deliberately self-contained (no l10n/network/DI
+          // dependency) since this exists specifically for the case where
+          // something about the app's own configuration is broken.
+          runApp(ReleaseConfigurationErrorApp(message: error.message));
+          StartupProfiler.instance.markReady();
+          return;
+        }
         // Required for DateFormat (used for locale-correct Arabic/English
         // date/month names, e.g. dashboard/recent-activity subtitles) —
         // without this, DateFormat throws for any non-English locale.
@@ -131,4 +147,67 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     ),
     traceId: bootstrapTraceId,
   );
+}
+
+/// Shown instead of the app itself when [LaravelApi.assertReleaseConfiguration]
+/// rejects a release build's endpoints — see bootstrap()'s catch block
+/// above. Deliberately a minimal, self-contained [MaterialApp]: no
+/// Riverpod ProviderScope, no localization delegate, no network/DI setup
+/// of any kind, since this exists precisely for the case where the app's
+/// own configuration can't be trusted. Bilingual (not ARB-driven) for the
+/// same reason.
+class ReleaseConfigurationErrorApp extends StatelessWidget {
+  const ReleaseConfigurationErrorApp({required this.message, super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFF1E1B2E),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(
+                  Icons.settings_suggest_outlined,
+                  color: Colors.amberAccent,
+                  size: 56,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Configuration error — إعداد غير صحيح',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'This build is missing valid HTTPS backend endpoints and '
+                  'cannot start. Contact the release/deployment team.\n'
+                  'هذه النسخة تفتقد لعناوين خادم صحيحة عبر HTTPS ولا يمكنها '
+                  'العمل. تواصل مع فريق النشر.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

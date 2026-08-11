@@ -73,6 +73,30 @@ final class RouteGuards {
       currentPlatformAdminProvider.future,
     );
     if (isPlatformAdmin) {
+      // Sprint (2026-08-10): the very first guarded navigation this session
+      // must always land the super_admin on the platform overview, never on
+      // whatever sub-route happens to be current — a stale deep link, a
+      // bookmark, or Flutter Web restoring the last browser URL on a hard
+      // reload, all of which reach this branch directly without ever
+      // passing through the splash-only redirect above (that one only
+      // fires when the path is exactly '/'). Once landed, this flag stays
+      // consumed for the rest of the session, so clicking further into
+      // /platform/* afterwards (e.g. the "إدارة المستخدمين" header button)
+      // is completely unaffected.
+      final hasLanded = ref.read(hasLandedSuperAdminSessionProvider);
+      if (!hasLanded) {
+        ref.read(hasLandedSuperAdminSessionProvider.notifier).state = true;
+        // Narrowly targets the deep-link bug itself: a /platform/* SUB-route
+        // (users, organizations, audit-log, ...). Anything else — the bare
+        // overview itself, oauthProviderSettingsPath, /dashboard, or any
+        // other URL — already reaches the correct outcome via the existing
+        // allowed-check below, so leave those alone here.
+        if (path != RouteNames.platformAdministrationPath &&
+            _isPlatformAdministrationRoute(path)) {
+          return RouteNames.platformAdministrationPath;
+        }
+      }
+
       // Sprint D (role/permission remediation): oauthProviderSettingsPath
       // lives outside the /platform prefix for historical reasons, but is
       // now exclusively super_admin-gated on the backend (see

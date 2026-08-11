@@ -71,17 +71,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       setState(() {
+        _submitting = false;
         _error = error is AuthSessionException
             ? error.message
             : error.toString().replaceFirst('Exception: ', '');
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
-      }
     }
+    // Deliberately no `finally`-style reset of _submitting on the success
+    // paths above: context.go()/context.push() only *start* navigation —
+    // GoRouter's async redirect (RouteGuards.guardPath) still has to
+    // resolve, which does real sequential network calls
+    // (currentPlatformAdminProvider, then currentOrganizationAccessProvider)
+    // before the new route actually replaces this screen. A prior version
+    // reset _submitting unconditionally here, so during that window the
+    // form re-enabled itself and looked like a fresh, unsubmitted login
+    // screen — confusing enough that a live tester read it as "login
+    // succeeds in the backend but the UI stays on the login page." Leaving
+    // the button in its loading state until this widget is actually
+    // disposed by the route change gives continuous, honest feedback
+    // instead.
   }
 
   @override

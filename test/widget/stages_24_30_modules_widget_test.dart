@@ -150,6 +150,15 @@ void main() {
   testWidgets('Production release screen renders', (tester) async {
     await pumpModule(tester, const ProductionReleaseScreen());
     expect(find.text('Production Release'), findsOneWidget);
-    expect(find.text('Readiness: 100%'), findsOneWidget);
+    // Every check defaults to unverified — there is no wiring to a real
+    // evidence source (CI run, deployment log, sign-off record) for any of
+    // them, so this must never read 100% just because the checklist items
+    // exist. See ProductionReleaseScreen._buildChecks's docblock.
+    expect(find.text('Readiness: 0%'), findsOneWidget);
+    // Only the items within the default test viewport are actually built by
+    // the ListView (same lazy-rendering limitation as the Settings screen
+    // test above) — this confirms the "unverified" status text is present
+    // at all, not an exhaustive per-item count.
+    expect(find.textContaining('Not verified'), findsWidgets);
   });
 }

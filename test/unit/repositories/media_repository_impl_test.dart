@@ -2,12 +2,23 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart';
+import 'package:smart_publisher/src/core/tenancy/active_organization_store.dart';
 import 'package:smart_publisher/src/features/media/data/media_repository_impl.dart';
 import 'package:smart_publisher/src/features/posts/domain/entities/media_entity.dart';
+import 'package:smart_publisher/src/offline/queue/outbox_entry.dart';
 import 'package:smart_publisher/src/offline/queue/outbox_store.dart';
 import 'package:smart_publisher/src/offline/sync/resumable_upload_manager.dart';
+import 'package:smart_publisher/src/offline/sync/sync_worker.dart';
 
 import '../../helpers/fake_network_client.dart';
+
+Never _offlineUploadFailure(String path, FormData formData) {
+  throw DioException(
+    requestOptions: RequestOptions(path: path),
+    type: DioExceptionType.connectionError,
+  );
+}
 
 void main() {
   group('MediaRepositoryImpl', () {
@@ -186,6 +197,87 @@ void main() {
         expect(item.collection, 'campaign');
         expect(item.tags, <String>['vacation', 'beach']);
         expect(item.thumbnailUrl, 'https://cdn.example.com/media/m5_thumb.jpg');
+      },
+    );
+
+    test(
+      'uploadMedia offline enqueues an outbox entry stamped with the active organization',
+      () async {
+        final orgStore = ActiveOrganizationStore(
+          storage: InMemoryStorageService(),
+        );
+        await orgStore.write(1);
+        final outbox = OutboxStore();
+        final client = FakeNetworkClient(uploadHandler: _offlineUploadFailure);
+        final repo = MediaRepositoryImpl(
+          networkClient: client,
+          outboxStore: outbox,
+          activeOrganizationStore: orgStore,
+        );
+
+        const media = MediaEntity(
+          id: 'm-org-1',
+          postId: 'p-org-1',
+          url: 'https://cdn.example.com/image.jpg',
+          mimeType: 'image/jpeg',
+          sizeInBytes: 100,
+        );
+
+        final result = await repo.uploadMedia(media);
+        expect(result.isSuccess, isTrue);
+
+        final due = await outbox.dueItems();
+        expect(due, hasLength(1));
+        expect(due.single.organizationId, 1);
+      },
+    );
+
+    test(
+      // Regression test for the P0 fix: media outbox entries used to be
+      // enqueued with no organizationId at all, so SyncWorker's org-mismatch
+      // guard (which only fires when organizationId is non-null) never
+      // protected them — a queued upload/compress/delete replayed into
+      // whichever organization happened to be active later, regardless of
+      // which org it was created under. See PostRepositoryImpl's identical,
+      // already-fixed pattern for posts.
+      'SyncWorker skips a media outbox entry queued under an organization the device has since switched away from',
+      () async {
+        final orgStore = ActiveOrganizationStore(
+          storage: InMemoryStorageService(),
+        );
+        await orgStore.write(1);
+        final outbox = OutboxStore();
+        final client = FakeNetworkClient(uploadHandler: _offlineUploadFailure);
+        final repo = MediaRepositoryImpl(
+          networkClient: client,
+          outboxStore: outbox,
+          activeOrganizationStore: orgStore,
+        );
+
+        const media = MediaEntity(
+          id: 'm-org-2',
+          postId: 'p-org-2',
+          url: 'https://cdn.example.com/image2.jpg',
+          mimeType: 'image/jpeg',
+          sizeInBytes: 100,
+        );
+        await repo.uploadMedia(media);
+
+        // Device switches to a different organization before the queued
+        // entry ever gets a chance to replay.
+        await orgStore.write(2);
+
+        var handlerCalled = false;
+        final worker = SyncWorker(outboxStore: outbox);
+        final processed = await worker
+            .runOnce(<OutboxOperation, OutboxSyncHandler>{
+              OutboxOperation.uploadMedia: (entry) async {
+                handlerCalled = true;
+              },
+            }, currentOrganizationId: orgStore.read);
+
+        expect(handlerCalled, isFalse);
+        expect(processed, 0);
       },
     );
 

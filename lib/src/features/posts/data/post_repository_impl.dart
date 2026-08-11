@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart' show Options;
+
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../../backend_contracts/v1/backend_contract_mapper_v1.dart';
 import '../../../backend_contracts/v1/posts_contract_v1.dart';
@@ -327,6 +329,14 @@ class PostRepositoryImpl extends PostRepository {
       final response = await networkClient!.post(
         LaravelEndpoints.posts,
         data: dto.toJson(),
+        // post.id is a stable, client-generated local id that never
+        // changes across a retry or an offline-outbox replay of this exact
+        // create attempt — sending it as the Idempotency-Key means a lost
+        // response after the server already committed (retry-after-error,
+        // or NetworkFailure re-queuing this same post below) returns the
+        // original post instead of silently creating a duplicate draft.
+        // See PostController::store()'s idempotency check.
+        options: Options(headers: {'Idempotency-Key': post.id}),
       );
       final createdPost = _parsePostResponse(response.data);
       return Success<PostEntity>(createdPost, message: 'Post created remotely');

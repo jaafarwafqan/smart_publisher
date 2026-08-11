@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../di/app_providers.dart';
@@ -80,3 +81,14 @@ final currentPlatformAdminProvider = FutureProvider<bool>((ref) async {
     return false;
   }
 });
+
+/// Sprint (2026-08-10): tracks whether a super_admin session has already
+/// been routed to its landing page (/platform) once this app process/tab
+/// has been running. Starts `false` for every fresh [ProviderContainer] —
+/// i.e. every real app boot or hard page reload on web, since Dart statics
+/// and provider state alike reset then — and flips to `true` the first
+/// time route_guards.dart consumes it. Deliberately a plain [StateProvider]
+/// (not persisted storage): the whole point is that it does NOT survive a
+/// reload, so a fresh entry always re-evaluates the landing page even if
+/// the browser's current URL is a stale deep link into /platform/*.
+final hasLandedSuperAdminSessionProvider = StateProvider<bool>((ref) => false);

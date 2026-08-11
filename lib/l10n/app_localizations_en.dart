@@ -89,6 +89,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginPasswordValidationError => 'Enter a valid password';
 
   @override
+  String get authInvalidCredentials => 'Invalid email or password.';
+
+  @override
+  String get authConnectionError =>
+      'Unable to reach the server. Check your connection.';
+
+  @override
+  String get authGenericFailure => 'Authentication failed. Please try again.';
+
+  @override
   String get loginButton => 'Login';
 
   @override
@@ -1810,6 +1820,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get releaseCheckSignoff => 'Stakeholder sign-off captured';
 
   @override
+  String get releaseChecksUnverifiedBanner =>
+      'No automated evidence source is connected to this screen yet — every check below is unverified until it\'s backed by a real CI run, deployment log, or sign-off record.';
+
+  @override
+  String get releaseCheckStatusUnverified => 'Not verified';
+
+  @override
   String get orgSwitcherAppBarTitle => 'Organizations';
 
   @override
@@ -1828,6 +1845,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String orgSwitcherSwitchedTo(String name) {
     return 'Switched to $name.';
+  }
+
+  @override
+  String orgSwitcherWelcomeTitle(String name) {
+    return 'Welcome, $name';
+  }
+
+  @override
+  String orgSwitcherWelcomeSubtitle(String appName) {
+    return 'Your $appName account is ready. One step left: join an organization to start publishing.';
   }
 
   @override
@@ -2216,4 +2243,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platformAdminGuideDialogTitle => 'Platform administrator guide';
+
+  @override
+  String get platformAdminUnexpectedError =>
+      'An unexpected error occurred. Please try again.';
+
+  @override
+  String get platformAdminOwnerListLoadError => 'Failed to load the user list.';
 }

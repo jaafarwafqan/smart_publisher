@@ -5,6 +5,19 @@ import '../../core/theme/app_duration.dart';
 
 enum AppAsyncState { loading, empty, content, error }
 
+/// Renders exactly one of [loading]/[empty]/[content]/[error] depending on
+/// [state] — but all four are still ordinary constructor arguments, which
+/// Dart evaluates **eagerly, every single build**, regardless of which one
+/// ends up displayed. A call site building `content` (or any of the
+/// others) from a value that's only valid in that state — most commonly
+/// `content: SomeWidget(data: snapshot.data!)` from a `FutureBuilder` —
+/// throws on every build where a *different* branch is actually selected
+/// (classically the very first frame, while still loading and
+/// `snapshot.data` is null). This is not hypothetical: exactly this
+/// pattern crashed every FutureBuilder-backed screen in
+/// platform_admin_screens.dart (fixed 2026-08-10). Guard any
+/// state-dependent argument yourself, e.g.
+/// `content: snapshot.hasData ? SomeWidget(data: snapshot.data!) : const SizedBox.shrink()`.
 class AppAsyncSwitcher extends StatelessWidget {
   const AppAsyncSwitcher({
     super.key,

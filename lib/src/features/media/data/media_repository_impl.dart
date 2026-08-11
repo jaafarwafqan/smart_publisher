@@ -1,10 +1,11 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart' show FormData, MultipartFile;
+import 'package:dio/dio.dart' show FormData, MultipartFile, Options;
 
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../../backend_contracts/v1/backend_contract_mapper_v1.dart';
 import '../../../backend_contracts/v1/media_contract_v1.dart';
+import '../../../core/tenancy/active_organization_store.dart';
 import '../../../media_engine/core/media_engine_exception.dart';
 import '../../../media_engine/media_engine.dart';
 import '../../../media_engine/upload/upload_manager.dart';
@@ -28,6 +29,7 @@ class MediaRepositoryImpl extends MediaRepository {
     UploadManager? uploadManager,
     OutboxStore? outboxStore,
     ResumableUploadManager? resumableUploadManager,
+    this.activeOrganizationStore,
   }) : uploadManager = uploadManager ?? UploadManager(),
        outboxStore = outboxStore ?? OutboxStore(),
        resumableUploadManager =
@@ -39,6 +41,11 @@ class MediaRepositoryImpl extends MediaRepository {
   final UploadManager uploadManager;
   final OutboxStore outboxStore;
   final ResumableUploadManager resumableUploadManager;
+  // Nullable so tests/callers that never queue offline work aren't forced to
+  // wire it up; when absent, newly-queued entries just get organizationId:
+  // null (replay is never blocked, matching pre-fix behavior for that case,
+  // same convention as PostRepositoryImpl).
+  final ActiveOrganizationStore? activeOrganizationStore;
   final Map<String, MediaEntity> _inMemoryStore = <String, MediaEntity>{};
 
   @override
@@ -84,6 +91,15 @@ class MediaRepositoryImpl extends MediaRepository {
         final response = await networkClient!.upload(
           LaravelEndpoints.mediaUpload,
           formData: FormData.fromMap(payload),
+          // preparedMedia.id is a stable, client-generated local id that
+          // never changes across a retry or an offline-outbox replay of
+          // this exact upload attempt — sending it as the Idempotency-Key
+          // means a lost response after the server already stored the file
+          // (upload()'s own auto-retry below, or NetworkFailure re-queuing
+          // this same media) returns the original attachment instead of
+          // storing the file a second time. See
+          // MediaLibraryController::store()'s idempotency check.
+          options: Options(headers: {'Idempotency-Key': preparedMedia.id}),
         );
 
         final data = _unwrapPayload(response.data) as Map<String, dynamic>;
@@ -405,11 +421,12 @@ class MediaRepositoryImpl extends MediaRepository {
   Future<void> _enqueueMediaOperation(
     OutboxOperation operation,
     MediaEntity media,
-  ) {
+  ) async {
     return outboxStore.enqueue(
       OutboxEntry(
         id: '${operation.name}:${media.id}:${DateTime.now().microsecondsSinceEpoch}',
         operation: operation,
+        organizationId: await activeOrganizationStore?.read(),
         payload: <String, dynamic>{
           'id': media.id,
           'post_id': media.postId,
@@ -427,11 +444,12 @@ class MediaRepositoryImpl extends MediaRepository {
     );
   }
 
-  Future<void> _enqueueDeleteOperation(String mediaId) {
+  Future<void> _enqueueDeleteOperation(String mediaId) async {
     return outboxStore.enqueue(
       OutboxEntry(
         id: 'deleteMedia:$mediaId:${DateTime.now().microsecondsSinceEpoch}',
         operation: OutboxOperation.deleteMedia,
+        organizationId: await activeOrganizationStore?.read(),
         payload: <String, dynamic>{'id': mediaId},
       ),
     );

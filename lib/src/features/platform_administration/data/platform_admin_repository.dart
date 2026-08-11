@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../../core/base/pagination.dart';
+import '../../../core/network/backend_error_message.dart';
 import '../../../core/network/laravel_api.dart';
 import '../../../core/network/network_client.dart';
 import '../../../shared/models/audit_log_entry.dart';
@@ -521,16 +522,17 @@ class PlatformAdminRepository {
   }
 
   PlatformAdminException _exception(DioException error) {
-    final raw = error.response?.data;
-    final map = raw is Map<String, dynamic> ? raw : const <String, dynamic>{};
-    final message = _stringValue(
-      map['message'],
-      fallback: 'تعذر تنفيذ طلب إدارة المنصة.',
-    );
-    return PlatformAdminException(
-      message,
-      statusCode: error.response?.statusCode,
-    );
+    final statusCode = error.response?.statusCode;
+    // Sprint (localization root-cause fix, 2026-08-10): this used to read
+    // only the generic top-level `message` — for a 422 that's always
+    // "Validation failed"/"فشل التحقق من صحة البيانات", never the actual
+    // field-specific reason (e.g. the create-organization dialog's
+    // password complexity error), which lived in `errors` and was
+    // silently discarded. See backend_error_message.dart's docblock.
+    final message =
+        extractBackendErrorMessage(error.response?.data, statusCode) ??
+        'تعذر تنفيذ طلب إدارة المنصة.';
+    return PlatformAdminException(message, statusCode: statusCode);
   }
 
   dynamic _unwrap(dynamic raw) {

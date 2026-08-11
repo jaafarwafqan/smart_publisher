@@ -11,8 +11,10 @@ import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
+import '../../../../shared/widgets/status_pill.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../auth/application/auth_session_controller.dart';
 import '../../application/current_organization_access.dart';
 import '../../domain/entities/organization_entity.dart';
 
@@ -27,6 +29,17 @@ class OrganizationSwitcherScreen extends ConsumerStatefulWidget {
 class _OrganizationSwitcherScreenState
     extends ConsumerState<OrganizationSwitcherScreen> {
   int? _switchingId;
+
+  // Sprint (2026-08-11): fetched once and reused by the empty-membership
+  // welcome header below — same source dashboard_screen.dart's own header
+  // already reads (local session state, no extra network round trip).
+  late final Future<AuthSession?> _sessionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionFuture = ref.read(authSessionControllerProvider).currentSession();
+  }
 
   Future<void> _switchTo(OrganizationEntity organization) async {
     final current = ref
@@ -149,6 +162,7 @@ class _OrganizationSwitcherScreenState
             switchingId: _switchingId,
             l10n: l10n,
             onSwitch: _switchTo,
+            sessionFuture: _sessionFuture,
           ),
         ),
       ),
@@ -163,6 +177,7 @@ class _OrganizationList extends StatelessWidget {
     required this.switchingId,
     required this.l10n,
     required this.onSwitch,
+    required this.sessionFuture,
   });
 
   final List<OrganizationEntity> organizations;
@@ -170,24 +185,52 @@ class _OrganizationList extends StatelessWidget {
   final int? switchingId;
   final AppLocalizations l10n;
   final ValueChanged<OrganizationEntity> onSwitch;
+  final Future<AuthSession?> sessionFuture;
 
   @override
   Widget build(BuildContext context) {
     if (organizations.isEmpty) {
-      return Center(
-        child: AppEmptyState(
-          title: l10n.orgSwitcherEmptyTitle,
-          message: l10n.orgSwitcherEmpty,
-          icon: Icons.business_outlined,
-          showCard: false,
-          // Not an error state — a self-registered account with no
-          // organization yet is expected and normal now (see Sprint A).
-          // The only account-level screen reachable without an
-          // organization is two-factor setup (route_guards.dart grants it
-          // to every authenticated user regardless of membership), so it
-          // stands in as the "manage my account" affordance here.
-          actionLabel: l10n.orgSwitcherEmptyAccountAction,
-          onAction: () => context.push(RouteNames.twoFactorSetupPath),
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            // Sprint (2026-08-11): a freshly self-registered account lands
+            // here with zero memberships — this used to be a bare "no
+            // organization" empty state with nothing recognizing the
+            // account that was just created. Guarded with hasData (not
+            // `snapshot.data!` eagerly — see AppAsyncSwitcher's docblock for
+            // why that pattern crashed platform_admin_screens.dart) so it
+            // simply doesn't render until the local session read resolves,
+            // which is near-instant since currentSession() reads storage
+            // only, no network round trip.
+            FutureBuilder<AuthSession?>(
+              future: sessionFuture,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  child: _WelcomeHeader(session: snapshot.data!, l10n: l10n),
+                );
+              },
+            ),
+            AppEmptyState(
+              title: l10n.orgSwitcherEmptyTitle,
+              message: l10n.orgSwitcherEmpty,
+              icon: Icons.business_outlined,
+              showCard: false,
+              // Not an error state — a self-registered account with no
+              // organization yet is expected and normal now (see Sprint A).
+              // The only account-level screen reachable without an
+              // organization is two-factor setup (route_guards.dart grants
+              // it to every authenticated user regardless of membership),
+              // so it stands in as the "manage my account" affordance here.
+              actionLabel: l10n.orgSwitcherEmptyAccountAction,
+              onAction: () => context.push(RouteNames.twoFactorSetupPath),
+            ),
+          ],
         ),
       );
     }
@@ -266,6 +309,86 @@ class _OrganizationList extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// Sprint (2026-08-11): mirrors dashboard_screen.dart's own gradient
+// _Header + StatusPill combination so a freshly registered account sees
+// the same "welcome, this is who you're signed in as" chrome it will see
+// again the moment it actually reaches the dashboard, rather than an
+// unrelated, less polished look-and-feel here.
+class _WelcomeHeader extends StatelessWidget {
+  const _WelcomeHeader({required this.session, required this.l10n});
+
+  final AuthSession session;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final name = session.user.name.trim().isEmpty
+        ? l10n.dashboardAuthenticatedUserFallback
+        : session.user.name;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: <Color>[colorScheme.primary, colorScheme.primaryContainer],
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            l10n.orgSwitcherWelcomeTitle(name),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(color: colorScheme.onPrimary),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.orgSwitcherWelcomeSubtitle(l10n.appName),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onPrimary.withValues(alpha: 0.9),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: <Widget>[
+              StatusPill(
+                icon: Icons.person_outline,
+                label: name,
+                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: colorScheme.onPrimary.withValues(alpha: 0.14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+              ),
+              StatusPill(
+                icon: Icons.mail_outline,
+                label: session.user.email.trim().isEmpty
+                    ? l10n.dashboardNoEmailFallback
+                    : session.user.email,
+                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: colorScheme.onPrimary.withValues(alpha: 0.14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -51,6 +51,12 @@ ProviderContainer _containerFor(
 }
 
 Future<String?> _redirect(ProviderContainer container, String path) {
+  // Real navigation always re-evaluates the guard fresh (GoRouter calls
+  // RouteGuards.guard() anew on every navigation event) — invalidate the
+  // family provider's cache first so a test can legitimately call the same
+  // path twice on one container and observe session state (like
+  // hasLandedSuperAdminSessionProvider) changing between the two calls.
+  container.invalidate(_guardRedirectProvider(path));
   return container.read(_guardRedirectProvider(path).future);
 }
 
@@ -174,6 +180,62 @@ void main() {
             reason: path,
           );
         }
+      },
+    );
+
+    test(
+      'a super_admin session lands on the platform overview on its first '
+      'navigation even when the current URL is a deep /platform/* sub-route',
+      () async {
+        // Regression coverage for the bug reported 2026-08-10: on a hard
+        // page reload (or a stale deep link/bookmark), Flutter Web's
+        // GoRouter evaluates the browser's actual current URL directly —
+        // never the splash-only redirect at path=='/' — so a super_admin
+        // whose browser happened to be showing /platform/users landed
+        // straight back on the Users screen instead of the system overview.
+        final noOrganization = OrganizationAccessState.noActiveOrganization(
+          memberships: const <OrganizationEntity>[],
+        );
+
+        final freshUsers = _containerFor(noOrganization, platformAdmin: true);
+        addTearDown(freshUsers.dispose);
+        expect(
+          await _redirect(freshUsers, RouteNames.platformUsersPath),
+          RouteNames.platformAdministrationPath,
+        );
+
+        final freshOrganizations = _containerFor(
+          noOrganization,
+          platformAdmin: true,
+        );
+        addTearDown(freshOrganizations.dispose);
+        expect(
+          await _redirect(
+            freshOrganizations,
+            RouteNames.platformOrganizationsPath,
+          ),
+          RouteNames.platformAdministrationPath,
+        );
+
+        // But once landed, further in-app navigation to the very same
+        // sub-route (e.g. clicking the "إدارة المستخدمين" header button)
+        // must go through untouched.
+        expect(
+          await _redirect(freshUsers, RouteNames.platformUsersPath),
+          isNull,
+        );
+
+        // And a fresh session that boots directly at the bare overview
+        // path never gets an extra redirect either.
+        final freshOverview = _containerFor(
+          noOrganization,
+          platformAdmin: true,
+        );
+        addTearDown(freshOverview.dispose);
+        expect(
+          await _redirect(freshOverview, RouteNames.platformAdministrationPath),
+          isNull,
+        );
       },
     );
 

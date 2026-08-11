@@ -29,6 +29,9 @@
   "loginPasswordLabel": "Password",
   "loginEmailValidationError": "Enter a valid email",
   "loginPasswordValidationError": "Enter a valid password",
+  "authInvalidCredentials": "Invalid email or password.",
+  "authConnectionError": "Unable to reach the server. Check your connection.",
+  "authGenericFailure": "Authentication failed. Please try again.",
   "loginButton": "Login",
   "loginForgotPasswordLink": "Forgot password?",
   "loginNoAccountPrompt": "Don't have an account?",
@@ -673,6 +676,8 @@
   "releaseCheckRollback": "Rollback strategy confirmed and tested",
   "releaseCheckCanaryApproved": "Canary release percentage approved",
   "releaseCheckSignoff": "Stakeholder sign-off captured",
+  "releaseChecksUnverifiedBanner": "No automated evidence source is connected to this screen yet — every check below is unverified until it's backed by a real CI run, deployment log, or sign-off record.",
+  "releaseCheckStatusUnverified": "Not verified",
 
   "orgSwitcherAppBarTitle": "Organizations",
   "orgSwitcherFailedToSwitch": "Failed to switch organizations.",
@@ -683,6 +688,18 @@
   "@orgSwitcherSwitchedTo": {
     "placeholders": {
       "name": {"type": "String"}
+    }
+  },
+  "orgSwitcherWelcomeTitle": "Welcome, {name}",
+  "@orgSwitcherWelcomeTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "orgSwitcherWelcomeSubtitle": "Your {appName} account is ready. One step left: join an organization to start publishing.",
+  "@orgSwitcherWelcomeSubtitle": {
+    "placeholders": {
+      "appName": {"type": "String"}
     }
   },
   "orgSwitcherEmptyTitle": "No organization yet",
@@ -843,5 +860,7 @@
   "userGuideNoOrganizationNotice": "You are not a member of any organization yet — some sections below will apply once you join one.",
 
   "platformAdminGuideButton": "Admin guide",
-  "platformAdminGuideDialogTitle": "Platform administrator guide"
+  "platformAdminGuideDialogTitle": "Platform administrator guide",
+  "platformAdminUnexpectedError": "An unexpected error occurred. Please try again.",
+  "platformAdminOwnerListLoadError": "Failed to load the user list."
 }

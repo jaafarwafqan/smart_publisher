@@ -89,6 +89,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loginPasswordValidationError => 'أدخل كلمة مرور صحيحة';
 
   @override
+  String get authInvalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+
+  @override
+  String get authConnectionError =>
+      'تعذّر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت.';
+
+  @override
+  String get authGenericFailure => 'فشلت المصادقة. يرجى المحاولة مرة أخرى.';
+
+  @override
   String get loginButton => 'تسجيل الدخول';
 
   @override
@@ -1792,6 +1803,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get releaseCheckSignoff => 'تم توثيق موافقة أصحاب المصلحة';
 
   @override
+  String get releaseChecksUnverifiedBanner =>
+      'لا يوجد مصدر أدلة آلي متصل بعد بهذه الشاشة — كل بند أدناه غير متحقق منه حتى يُدعم بتشغيل CI حقيقي أو سجل نشر أو وثيقة موافقة فعلية.';
+
+  @override
+  String get releaseCheckStatusUnverified => 'غير متحقق منه';
+
+  @override
   String get orgSwitcherAppBarTitle => 'المؤسسات';
 
   @override
@@ -1810,6 +1828,16 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String orgSwitcherSwitchedTo(String name) {
     return 'تم التبديل إلى $name.';
+  }
+
+  @override
+  String orgSwitcherWelcomeTitle(String name) {
+    return 'مرحبًا، $name';
+  }
+
+  @override
+  String orgSwitcherWelcomeSubtitle(String appName) {
+    return 'حسابك في $appName جاهز. لم يتبقَّ سوى الانضمام إلى مؤسسة لتبدأ النشر.';
   }
 
   @override
@@ -2196,4 +2224,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformAdminGuideDialogTitle => 'دليل مسؤول المنصة';
+
+  @override
+  String get platformAdminUnexpectedError =>
+      'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get platformAdminOwnerListLoadError => 'تعذّر تحميل قائمة المستخدمين.';
 }

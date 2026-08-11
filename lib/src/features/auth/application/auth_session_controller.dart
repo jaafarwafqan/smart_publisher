@@ -1,4 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart' show Locale;
+
+import 'package:smart_publisher/l10n/app_localizations.dart';
+import 'package:smart_publisher/l10n/app_localizations_ar.dart';
+import 'package:smart_publisher/l10n/app_localizations_en.dart';
 
 import '../../../backend_contracts/v1/account_contract_v1.dart';
 import '../../../backend_contracts/v1/api_envelope_v1.dart';
@@ -59,12 +64,21 @@ class AuthSessionController {
     required this.tokenLifecycleManager,
     required this.storageService,
     required this.authEventPublisher,
+    this.localeReader,
   });
 
   final NetworkClient networkClient;
   final TokenLifecycleManager tokenLifecycleManager;
   final StorageService storageService;
   final AuthEventPublisher authEventPublisher;
+  // Same convention as LocaleHeaderInterceptor: a plain Dart service class
+  // has no BuildContext to read AppLocalizations.of() from, so the current
+  // locale is threaded in as a callback instead. Nullable/defaults to
+  // English so tests that never wire this up keep working — only the 3
+  // client-synthesized fallback strings in _messageFromDio below are
+  // affected; every other message already comes pre-localized from the
+  // backend (see backend_error_message.dart's docblock).
+  final Locale Function()? localeReader;
 
   static const _userIdKey = 'auth.user.id';
   static const _userNameKey = 'auth.user.name';
@@ -433,12 +447,26 @@ class AuthSessionController {
       }
     }
 
+    final l10n = _localizations();
     if (error.response?.statusCode == 401) {
-      return 'Invalid email or password.';
+      return l10n.authInvalidCredentials;
     }
     if (error.type == DioExceptionType.connectionError) {
-      return 'Unable to reach the server. Check your connection.';
+      return l10n.authConnectionError;
     }
-    return 'Authentication failed. Please try again.';
+    return l10n.authGenericFailure;
+  }
+
+  // A live visual review caught this: a network-interruption error on the
+  // login screen showed hardcoded English text inside an otherwise-Arabic
+  // UI, because these 3 fallback strings (unlike every backend-sourced
+  // message above) were literal Dart strings with no locale awareness at
+  // all. AppLocalizationsEn/Ar can be constructed directly — no
+  // BuildContext needed, same as the generated class's own widget-facing
+  // delegate does internally — so this needs no async asset load.
+  AppLocalizations _localizations() {
+    return localeReader?.call().languageCode == 'ar'
+        ? AppLocalizationsAr()
+        : AppLocalizationsEn();
   }
 }

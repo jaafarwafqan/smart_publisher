@@ -73,88 +73,126 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
 
+    // A live visual review caught this: with the title living in a plain
+    // AppBar and the card vertically centered below it, desktop viewports
+    // left a large empty gap between them, reading as two disconnected
+    // pieces of UI rather than one form. Restructured to match
+    // LoginScreen/RegisterScreen exactly — gradient background, no
+    // opaque AppBar, title+subtitle as the first elements inside the same
+    // card as the form — so all three auth screens read as one continuous
+    // flow. A transparent AppBar is kept (title-less, back arrow only) so
+    // push()-based back navigation from the login screen still has an
+    // explicit on-screen affordance, without reintroducing the visual gap.
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.forgotPasswordTitle)),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                child: _submitted
-                    ? _SuccessState(
-                        l10n: l10n,
-                        onBackToLogin: () => context.go(RouteNames.loginPath),
-                      )
-                    : Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            Text(
-                              l10n.forgotPasswordSubtitle,
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
-                            TextFormField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                labelText: l10n.forgotPasswordEmailLabel,
-                                prefixIcon: const Icon(Icons.mail_outline),
-                              ),
-                              validator: (value) {
-                                final text = value?.trim() ?? '';
-                                if (text.isEmpty || !text.contains('@')) {
-                                  return l10n
-                                      .forgotPasswordEmailValidationError;
-                                }
-                                return null;
-                              },
-                              onFieldSubmitted: (_) =>
-                                  _submitting ? null : _submit(),
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            if (_error != null)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.md,
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      extendBodyBehindAppBar: true,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[colorScheme.primary, colorScheme.primaryContainer],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
+                    child: _submitted
+                        ? _SuccessState(
+                            l10n: l10n,
+                            onBackToLogin: () =>
+                                context.go(RouteNames.loginPath),
+                          )
+                        : Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: <Widget>[
+                                Text(
+                                  l10n.forgotPasswordTitle,
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                                child: Text(
-                                  _error!,
-                                  style: TextStyle(color: colorScheme.error),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  l10n.forgotPasswordSubtitle,
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
-                            FilledButton(
-                              onPressed: _submitting ? null : _submit,
-                              child: _submitting
-                                  ? const SizedBox(
-                                      width: AppIconSize.md,
-                                      height: AppIconSize.md,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
+                                const SizedBox(height: AppSpacing.xxl),
+                                TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.forgotPasswordEmailLabel,
+                                    prefixIcon: const Icon(Icons.mail_outline),
+                                  ),
+                                  validator: (value) {
+                                    final text = value?.trim() ?? '';
+                                    if (text.isEmpty || !text.contains('@')) {
+                                      return l10n
+                                          .forgotPasswordEmailValidationError;
+                                    }
+                                    return null;
+                                  },
+                                  onFieldSubmitted: (_) =>
+                                      _submitting ? null : _submit(),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                if (_error != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.md,
+                                    ),
+                                    child: Text(
+                                      _error!,
+                                      style: TextStyle(
+                                        color: colorScheme.error,
                                       ),
-                                    )
-                                  : Text(l10n.forgotPasswordSubmitButton),
+                                    ),
+                                  ),
+                                FilledButton(
+                                  onPressed: _submitting ? null : _submit,
+                                  child: _submitting
+                                      ? const SizedBox(
+                                          width: AppIconSize.md,
+                                          height: AppIconSize.md,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Text(l10n.forgotPasswordSubmitButton),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                TextButton(
+                                  onPressed: () => context.push(
+                                    RouteNames.resetPasswordPath,
+                                  ),
+                                  child: Text(l10n.forgotPasswordHaveTokenLink),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      context.go(RouteNames.loginPath),
+                                  child: Text(
+                                    l10n.forgotPasswordBackToLoginLink,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            TextButton(
-                              onPressed: () =>
-                                  context.push(RouteNames.resetPasswordPath),
-                              child: Text(l10n.forgotPasswordHaveTokenLink),
-                            ),
-                            TextButton(
-                              onPressed: () => context.go(RouteNames.loginPath),
-                              child: Text(l10n.forgotPasswordBackToLoginLink),
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
+                  ),
+                ),
               ),
             ),
           ),

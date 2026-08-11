@@ -254,6 +254,24 @@ abstract class AppLocalizations {
   /// **'أدخل كلمة مرور صحيحة'**
   String get loginPasswordValidationError;
 
+  /// No description provided for @authInvalidCredentials.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني أو كلمة المرور غير صحيحة.'**
+  String get authInvalidCredentials;
+
+  /// No description provided for @authConnectionError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت.'**
+  String get authConnectionError;
+
+  /// No description provided for @authGenericFailure.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشلت المصادقة. يرجى المحاولة مرة أخرى.'**
+  String get authGenericFailure;
+
   /// No description provided for @loginButton.
   ///
   /// In ar, this message translates to:
@@ -3272,6 +3290,18 @@ abstract class AppLocalizations {
   /// **'تم توثيق موافقة أصحاب المصلحة'**
   String get releaseCheckSignoff;
 
+  /// No description provided for @releaseChecksUnverifiedBanner.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد مصدر أدلة آلي متصل بعد بهذه الشاشة — كل بند أدناه غير متحقق منه حتى يُدعم بتشغيل CI حقيقي أو سجل نشر أو وثيقة موافقة فعلية.'**
+  String get releaseChecksUnverifiedBanner;
+
+  /// No description provided for @releaseCheckStatusUnverified.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير متحقق منه'**
+  String get releaseCheckStatusUnverified;
+
   /// No description provided for @orgSwitcherAppBarTitle.
   ///
   /// In ar, this message translates to:
@@ -3307,6 +3337,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم التبديل إلى {name}.'**
   String orgSwitcherSwitchedTo(String name);
+
+  /// No description provided for @orgSwitcherWelcomeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحبًا، {name}'**
+  String orgSwitcherWelcomeTitle(String name);
+
+  /// No description provided for @orgSwitcherWelcomeSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسابك في {appName} جاهز. لم يتبقَّ سوى الانضمام إلى مؤسسة لتبدأ النشر.'**
+  String orgSwitcherWelcomeSubtitle(String appName);
 
   /// No description provided for @orgSwitcherEmptyTitle.
   ///
@@ -3997,6 +4039,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'دليل مسؤول المنصة'**
   String get platformAdminGuideDialogTitle;
+
+  /// No description provided for @platformAdminUnexpectedError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'**
+  String get platformAdminUnexpectedError;
+
+  /// No description provided for @platformAdminOwnerListLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحميل قائمة المستخدمين.'**
+  String get platformAdminOwnerListLoadError;
 }
 
 class _AppLocalizationsDelegate

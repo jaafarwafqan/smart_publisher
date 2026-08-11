@@ -30,6 +30,9 @@
   "loginPasswordLabel": "كلمة المرور",
   "loginEmailValidationError": "أدخل بريدًا إلكترونيًا صحيحًا",
   "loginPasswordValidationError": "أدخل كلمة مرور صحيحة",
+  "authInvalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+  "authConnectionError": "تعذّر الوصول إلى الخادم. تحقق من اتصالك بالإنترنت.",
+  "authGenericFailure": "فشلت المصادقة. يرجى المحاولة مرة أخرى.",
   "loginButton": "تسجيل الدخول",
   "loginForgotPasswordLink": "نسيت كلمة المرور؟",
   "loginNoAccountPrompt": "ليس لديك حساب؟",
@@ -674,6 +677,8 @@
   "releaseCheckRollback": "تم تأكيد واختبار استراتيجية التراجع",
   "releaseCheckCanaryApproved": "تمت الموافقة على نسبة الإصدار التجريبي",
   "releaseCheckSignoff": "تم توثيق موافقة أصحاب المصلحة",
+  "releaseChecksUnverifiedBanner": "لا يوجد مصدر أدلة آلي متصل بعد بهذه الشاشة — كل بند أدناه غير متحقق منه حتى يُدعم بتشغيل CI حقيقي أو سجل نشر أو وثيقة موافقة فعلية.",
+  "releaseCheckStatusUnverified": "غير متحقق منه",
 
   "orgSwitcherAppBarTitle": "المؤسسات",
   "orgSwitcherFailedToSwitch": "فشل تبديل المؤسسة.",
@@ -684,6 +689,18 @@
   "@orgSwitcherSwitchedTo": {
     "placeholders": {
       "name": {"type": "String"}
+    }
+  },
+  "orgSwitcherWelcomeTitle": "مرحبًا، {name}",
+  "@orgSwitcherWelcomeTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "orgSwitcherWelcomeSubtitle": "حسابك في {appName} جاهز. لم يتبقَّ سوى الانضمام إلى مؤسسة لتبدأ النشر.",
+  "@orgSwitcherWelcomeSubtitle": {
+    "placeholders": {
+      "appName": {"type": "String"}
     }
   },
   "orgSwitcherEmptyTitle": "لا توجد مؤسسة بعد",
@@ -844,5 +861,7 @@
   "userGuideNoOrganizationNotice": "أنت لست عضوًا في أي مؤسسة بعد — بعض الأقسام أدناه ستنطبق عليك بعد انضمامك لمؤسسة.",
 
   "platformAdminGuideButton": "دليل الإدارة",
-  "platformAdminGuideDialogTitle": "دليل مسؤول المنصة"
+  "platformAdminGuideDialogTitle": "دليل مسؤول المنصة",
+  "platformAdminUnexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+  "platformAdminOwnerListLoadError": "تعذّر تحميل قائمة المستخدمين."
 }
