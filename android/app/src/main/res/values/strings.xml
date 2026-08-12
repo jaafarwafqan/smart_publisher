@@ -13,6 +13,6 @@
          will fail closed (not silently degrade) until it's set to a real
          value, since the Facebook SDK requires it non-empty at init. -->
     <string name="facebook_app_id">1712079496747110</string>
-    <string name="facebook_client_token">REPLACE_WITH_FACEBOOK_CLIENT_TOKEN_FROM_META_APP_DASHBOARD</string>
+    <string name="facebook_client_token">ecdc4ad6526a5316cc743e06459b9dd7</string>
     <string name="fb_login_protocol_scheme">fb1712079496747110</string>
 </resources>
