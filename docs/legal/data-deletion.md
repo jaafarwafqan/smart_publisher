@@ -26,6 +26,14 @@ retention.
 
 Only the authenticated account owner can create a request for that account.
 The requester can keep a copy of the returned request ID for support follow
-up.  The deployment operator must publish a real public support contact and
-the applicable response/retention timeline before inviting external testers;
-the source repository intentionally does not invent either value.
+up.  A user without app access can instead email
+<jaafarw.alkuby@uokufa.edu.iq> from their account's registered address; the
+operator verifies identity before processing.  Account data is retained for
+up to 30 days after a verified request (to allow it to be reversed in case of
+error), then permanently deleted or anonymised, except where a longer period
+is required by applicable law.
+
+2026-08-12: these instructions are now published at a real public HTTPS URL
+(`/legal/data-deletion` on the deployed backend) for Meta App Dashboard's
+User Data Deletion field — see [privacy_policy.md](privacy_policy.md)'s
+matching note. Keep both in sync on any future change.

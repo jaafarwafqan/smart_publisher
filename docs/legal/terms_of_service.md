@@ -20,12 +20,21 @@ records the outcome and may retry an eligible failure; it does not guarantee
 delivery or make a mock response look like a real post.
 
 Do not share access tokens, bot tokens, passwords, APK signing material, or
-provider secrets.  Report a suspected credential exposure to the deployment
-operator immediately so it can be rotated.
+provider secrets.  Report a suspected credential exposure to
+<jaafarw.alkuby@uokufa.edu.iq> immediately so it can be rotated.
 
 The deployment operator may suspend the beta or revoke access to protect
 users, providers, and data.  Any release rollback depends on a real,
 hosting-specific procedure maintained by that operator; this app has no
-automated rollback control.  A public operator identity, support contact, and
-governing-law terms still need to be supplied by the operator before a public
-release; this closed-beta document does not invent those facts.
+automated rollback control.
+
+## Operator, governing law, and contact
+
+Smart Publisher is operated by the **University of Kufa — College of
+Nursing, Iraq**. These terms are governed by the laws of the Republic of
+Iraq. Contact: <jaafarw.alkuby@uokufa.edu.iq>.
+
+2026-08-12: this document is now published at a real public HTTPS URL
+(`/legal/terms-of-service` on the deployed backend) for Meta App Dashboard —
+see [privacy_policy.md](privacy_policy.md)'s matching note. Keep both in
+sync on any future change.

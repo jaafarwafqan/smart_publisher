@@ -11,7 +11,7 @@ secrets, or APK signing credentials.  The operator can use the
 [incident runbook](../operations/incident_runbook.md) and the DLQ record to
 investigate safely.
 
-Before sending closed-beta invitations, the operator must replace this
-repository-only support path with a real monitored support email or HTTPS
-contact form and publish it alongside the privacy policy and terms.  That is
-an external launch prerequisite, not an implemented claim.
+Real, monitored support contact: <jaafarw.alkuby@uokufa.edu.iq>. Published
+alongside the privacy policy and terms at `/legal/privacy-policy`,
+`/legal/terms-of-service`, and `/legal/data-deletion` on the deployed
+backend (2026-08-12).

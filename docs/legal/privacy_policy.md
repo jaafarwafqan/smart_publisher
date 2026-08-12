@@ -30,10 +30,11 @@ providers in production or claim that a mock integration has published.
 
 ## Retention and security
 
-The deployment operator determines the retention period for operational data
-and backups.  Before public rollout, the operator must publish that period,
-the legal entity name, jurisdiction, and a reachable support contact at the
-same public URL configured in the provider dashboards.  Production traffic is
+Operational data is retained for as long as the account remains active.
+Following a verified deletion request, account data is retained for up to
+**30 days** (to allow the request to be reversed in case of error), then
+permanently deleted or anonymised — except where a longer period is required
+by applicable law (e.g. financial or audit records). Production traffic is
 TLS-only on Android; credentials must be supplied through a secret store, not
 committed configuration.
 
@@ -45,9 +46,17 @@ verify and process the request, including provider-token revocation and any
 required legal retention exceptions.  See that document for the exact
 endpoint and response behaviour.
 
-## Contact
+## Operator and contact
 
-The current source repository does not contain a real public support address.
-Publishing this policy to a public HTTPS URL and adding the operator's live
-support contact are mandatory external release gates before Meta App Review or
-tester invitations.
+Smart Publisher is operated by the **University of Kufa — College of
+Nursing, Iraq**. For any privacy question, request, or concern, contact
+<jaafarw.alkuby@uokufa.edu.iq>.
+
+2026-08-12: this policy, along with [terms of service](terms_of_service.md)
+and [data deletion instructions](data-deletion.md), is now published at real
+public HTTPS URLs (`/legal/privacy-policy`, `/legal/terms-of-service`,
+`/legal/data-deletion` on the deployed backend — see
+`resources/views/legal/*.blade.php` and `routes/web.php` in the backend
+repo) for Meta App Dashboard's Privacy Policy / Terms of Service / User Data
+Deletion fields. This document remains the internal source of truth those
+pages are filled in from — keep both in sync on any future change.
