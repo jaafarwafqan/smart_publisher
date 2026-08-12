@@ -6,6 +6,7 @@ import 'package:smart_publisher/src/core/di/app_providers.dart';
 import 'package:smart_publisher/src/features/platform_administration/presentation/screens/platform_admin_screens.dart';
 
 import '../../helpers/fake_network_client.dart';
+import '../../helpers/localized_test_app.dart';
 
 /// Regression coverage for the bug reported 2026-08-11: the "إدارة
 /// العضويات" (manage memberships) dialog's "إضافة إلى مؤسسة" dropdown is a
@@ -109,7 +110,16 @@ void main() {
           overrides: <Override>[
             networkClientProvider.overrideWithValue(_client()),
           ],
-          child: const MaterialApp(home: PlatformUsersScreen()),
+          child: const MaterialApp(
+            // This test asserts against literal Arabic copy (the screen's
+            // original, pre-l10n text), so the locale must be pinned rather
+            // than left to the English default testLocalizationsDelegates
+            // otherwise falls back to.
+            locale: Locale('ar'),
+            localizationsDelegates: testLocalizationsDelegates,
+            supportedLocales: testSupportedLocales,
+            home: PlatformUsersScreen(),
+          ),
         ),
       );
       await tester.pumpAndSettle();

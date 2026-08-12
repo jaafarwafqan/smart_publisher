@@ -20,6 +20,33 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="الناشر الذكي — إدارة النشر والجدولة عبر منصات التواصل الاجتماعي من مكان واحد.">
 
+  <!--
+    2026-08-12 audit finding: the deployed web build sent HSTS and
+    X-Content-Type-Options (edge/CDN defaults) but no CSP or
+    Referrer-Policy at all. Meta http-equiv tags are the only CSP
+    mechanism a static HTML file can set on its own — but the spec
+    explicitly ignores `frame-ancestors` (and `sandbox`/report
+    directives) when delivered this way, so clickjacking protection
+    (X-Frame-Options / frame-ancestors) still needs a real HTTP header
+    from the hosting layer — see render.yaml at the repo root for that.
+    connect-src includes both the local dev backend and the deployed
+    staging API so this same file works for `flutter run -d chrome` and
+    the built web app without per-environment templating.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    base-uri 'self';
+    form-action 'self';
+    object-src 'none';
+    script-src 'self' 'wasm-unsafe-eval' blob:;
+    style-src 'self' 'unsafe-inline';
+    font-src 'self' data:;
+    img-src 'self' data: blob: https:;
+    connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://smart-publisher-api-staging.onrender.com;
+  ">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">

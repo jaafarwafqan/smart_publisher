@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../shared/widgets/adaptive_card_grid.dart';
 import '../../../auth/domain/entities/account_entity.dart';
 import '../../application/account_operation_access.dart';
 import 'account_card.dart';
@@ -53,42 +54,32 @@ class AccountsGrid extends StatelessWidget {
     return DashboardSectionCard(
       title: l10n.accountsGridTitle,
       subtitle: l10n.accountsGridSubtitle,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 900
-              ? 3
-              : constraints.maxWidth >= 640
-              ? 2
-              : 1;
-          final spacing = 12.0;
-          final cardWidth =
-              (constraints.maxWidth - (spacing * (columns - 1))) / columns;
-
-          return Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            children: accounts
-                .map(
-                  (account) => SizedBox(
-                    width: cardWidth,
-                    child: AccountCard(
-                      account: account,
-                      onConnect: () => onConnect(account),
-                      onDisconnect: () => onDisconnect(account),
-                      onRefreshToken: () => onRefreshToken(account),
-                      onTestConnection: () => onTestConnection(account),
-                      onSyncPages: () => onSyncPages(account),
-                      onAddChannel: () => onAddChannel(account),
-                      onSaveSelection: (pageIds) =>
-                          onSaveSelection(account, pageIds),
-                      onDeletePage: (pageId) => onDeletePage(account, pageId),
-                      operationAccess: operationAccess,
-                    ),
-                  ),
-                )
-                .toList(growable: false),
-          );
-        },
+      // AdaptiveCardGrid caps columns at accounts.length, so a single
+      // connected account fills the row instead of floating alone with a
+      // large empty gap next to it (2026-08-12 audit finding).
+      child: AdaptiveCardGrid(
+        breakpoints: const <AdaptiveGridBreakpoint>[
+          AdaptiveGridBreakpoint(minWidth: 900, columns: 3),
+          AdaptiveGridBreakpoint(minWidth: 640, columns: 2),
+          AdaptiveGridBreakpoint(minWidth: 0, columns: 1),
+        ],
+        items: accounts
+            .map(
+              (account) => AccountCard(
+                account: account,
+                onConnect: () => onConnect(account),
+                onDisconnect: () => onDisconnect(account),
+                onRefreshToken: () => onRefreshToken(account),
+                onTestConnection: () => onTestConnection(account),
+                onSyncPages: () => onSyncPages(account),
+                onAddChannel: () => onAddChannel(account),
+                onSaveSelection: (pageIds) =>
+                    onSaveSelection(account, pageIds),
+                onDeletePage: (pageId) => onDeletePage(account, pageId),
+                operationAccess: operationAccess,
+              ),
+            )
+            .toList(growable: false),
       ),
     );
   }

@@ -959,6 +959,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get organizationMembersRemoveButton => 'Remove';
 
   @override
+  String organizationMembersRemoveTooltip(String name) {
+    return 'Remove $name';
+  }
+
+  @override
   String get auditLogAppBarTitle => 'Audit log';
 
   @override
@@ -2257,4 +2262,468 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platformAdminOwnerListLoadError => 'Failed to load the user list.';
+
+  @override
+  String get platformAdminRoleOwner => 'Organization owner';
+
+  @override
+  String get platformAdminRoleAdmin => 'Organization admin';
+
+  @override
+  String get platformAdminRoleManager => 'Manager';
+
+  @override
+  String get platformAdminRoleEditor => 'Editor';
+
+  @override
+  String get platformAdminRoleViewer => 'Viewer';
+
+  @override
+  String get platformAdminNotAvailable => 'Not available';
+
+  @override
+  String get platformAdminCreateOrgButton => 'Create organization';
+
+  @override
+  String get platformAdminGuideCreateOrgBody =>
+      'From \"Organizations\", tap \"Create organization\" — pick an existing owner or create a new one with a password of at least 12 characters.';
+
+  @override
+  String get platformAdminManageUsersButton => 'Manage system users';
+
+  @override
+  String get platformAdminGuideUsersBody =>
+      'From \"System users\": activate/deactivate an account, grant or revoke platform administrator access, and edit a user\'s memberships across organizations.';
+
+  @override
+  String get platformAdminOAuthSettingsButton => 'OAuth provider settings';
+
+  @override
+  String get platformAdminGuideOAuthBody =>
+      'App ID and App Secret for each provider — protected exclusively by the platform administrator permission, entirely separate from organization roles.';
+
+  @override
+  String get platformAdminAuditLogButton => 'Platform audit log';
+
+  @override
+  String get platformAdminGuideAuditBody =>
+      'Logs every sensitive administrative action (disabling an organization, changing an admin\'s role, editing OAuth settings) for later review.';
+
+  @override
+  String get platformAdminAboutSystemButton => 'About the system';
+
+  @override
+  String get platformAdminAppBarTitle => 'Platform administration';
+
+  @override
+  String get platformAdminManageUsersShortcut => 'Manage users';
+
+  @override
+  String get platformAdminRefreshTooltip => 'Refresh data';
+
+  @override
+  String get platformAdminOverviewTitle => 'Platform overview';
+
+  @override
+  String get platformAdminOverviewSubtitle =>
+      'Live data from the system via platform administration permissions.';
+
+  @override
+  String get platformAdminMetricOrgsTotal => 'Total organizations';
+
+  @override
+  String get platformAdminMetricOrgsActive => 'Active organizations';
+
+  @override
+  String get platformAdminMetricOrgsInactive => 'Inactive organizations';
+
+  @override
+  String get platformAdminMetricUsersTotal => 'Total users';
+
+  @override
+  String get platformAdminMetricUsersNew30d => 'New users (30 days)';
+
+  @override
+  String get platformAdminMetricOrgsWithoutOwner => 'Without an active owner';
+
+  @override
+  String get platformAdminManageOrgsButton => 'Manage organizations';
+
+  @override
+  String get platformAdminLatestOrgsTitle => 'Latest organizations';
+
+  @override
+  String get platformAdminNoRecentOrgsTitle => 'No recent organizations';
+
+  @override
+  String get platformAdminNoRecentOrgsMessage =>
+      'Organizations will appear here once created.';
+
+  @override
+  String get platformAdminLatestUsersTitle => 'Latest users';
+
+  @override
+  String get platformAdminNoRecentUsersTitle => 'No recent users';
+
+  @override
+  String get platformAdminNoRecentUsersMessage =>
+      'Newly created accounts will appear here.';
+
+  @override
+  String get platformAdminDisableOrgTitle => 'Disable organization';
+
+  @override
+  String get platformAdminEnableOrgTitle => 'Re-enable organization';
+
+  @override
+  String platformAdminDisableOrgMessage(String name) {
+    return '\"$name\" will be disabled. No data will be deleted.';
+  }
+
+  @override
+  String platformAdminEnableOrgMessage(String name) {
+    return '\"$name\" will be re-enabled.';
+  }
+
+  @override
+  String get platformAdminOrgDisabledMessage => 'Organization disabled.';
+
+  @override
+  String get platformAdminOrgEnabledMessage => 'Organization enabled.';
+
+  @override
+  String get platformAdminNoEligibleOwnerMessage =>
+      'No eligible member to take ownership — assign the owner role to a member first.';
+
+  @override
+  String platformAdminPrimaryOwnerAssignedMessage(String name) {
+    return 'Primary owner assigned: $name.';
+  }
+
+  @override
+  String get platformAdminOrgsAppBarTitle => 'Organizations';
+
+  @override
+  String get platformAdminSearchByNameOrOwnerHint => 'Search by name or owner';
+
+  @override
+  String get platformAdminSearchTooltip => 'Search';
+
+  @override
+  String get platformAdminFilterAllChip => 'All';
+
+  @override
+  String get platformAdminOrgActiveStatus => 'Active';
+
+  @override
+  String get platformAdminOrgInactiveStatus => 'Inactive';
+
+  @override
+  String get platformAdminNoMatchingOrgsTitle => 'No matching organizations';
+
+  @override
+  String get platformAdminNoMatchingOrgsMessage =>
+      'Try adjusting your search terms or create a new organization.';
+
+  @override
+  String get platformAdminOrgDetailAppBarTitle => 'Organization details';
+
+  @override
+  String get platformAdminActivateAccountTitle => 'Activate account';
+
+  @override
+  String get platformAdminDeactivateAccountTitle => 'Deactivate account';
+
+  @override
+  String platformAdminActivateAccountMessage(String email) {
+    return '$email\'s account will be activated.';
+  }
+
+  @override
+  String platformAdminDeactivateAccountMessage(String email) {
+    return '$email\'s account will be deactivated and its current sessions ended.';
+  }
+
+  @override
+  String get platformAdminAccountActivatedMessage => 'Account activated.';
+
+  @override
+  String get platformAdminAccountDeactivatedMessage => 'Account deactivated.';
+
+  @override
+  String get platformAdminGrantSuperAdminTitle =>
+      'Grant platform administrator';
+
+  @override
+  String get platformAdminRevokeSuperAdminTitle =>
+      'Revoke platform administrator';
+
+  @override
+  String platformAdminGrantSuperAdminMessage(String email) {
+    return '$email will be granted independent platform administration access.';
+  }
+
+  @override
+  String platformAdminRevokeSuperAdminMessage(String email) {
+    return '$email\'s access to platform administration will be revoked.';
+  }
+
+  @override
+  String get platformAdminSuperAdminGrantedMessage =>
+      'Platform administrator access granted.';
+
+  @override
+  String get platformAdminSuperAdminRevokedMessage =>
+      'Platform administrator access revoked.';
+
+  @override
+  String get platformAdminUsersAppBarTitle => 'System users';
+
+  @override
+  String get platformAdminAddUserButton => 'Add user';
+
+  @override
+  String get platformAdminSearchByNameOrEmailHint => 'Search by name or email';
+
+  @override
+  String get platformAdminActiveOnlyChip => 'Active only';
+
+  @override
+  String get platformAdminInactiveOnlyChip => 'Inactive only';
+
+  @override
+  String get platformAdminSuperAdminsChip => 'Platform administrators';
+
+  @override
+  String get platformAdminAllOrgsOption => 'All organizations';
+
+  @override
+  String get platformAdminAllRolesOption => 'All roles';
+
+  @override
+  String get platformAdminNoMatchingUsersTitle => 'No matching accounts';
+
+  @override
+  String get platformAdminNoMatchingUsersMessage =>
+      'Adjust the filters or add a new user.';
+
+  @override
+  String get platformAdminFilterByActionHint => 'Filter by action';
+
+  @override
+  String get platformAdminNoMatchingEventsTitle => 'No matching events';
+
+  @override
+  String get platformAdminNoMatchingEventsMessage =>
+      'Try adjusting the filters.';
+
+  @override
+  String get platformAdminViewAllButton => 'View all';
+
+  @override
+  String platformAdminOrgCountLabel(int count) {
+    return '$count organizations';
+  }
+
+  @override
+  String platformAdminUserCountLabel(int count) {
+    return '$count users';
+  }
+
+  @override
+  String get platformAdminEditOrgNameMenuItem => 'Edit organization name';
+
+  @override
+  String get platformAdminReactivateMenuItem => 'Re-activate';
+
+  @override
+  String get platformAdminPrimaryOwnerMissingLabel => 'No primary owner';
+
+  @override
+  String platformAdminMembersCountLabel(int count) {
+    return '$count members';
+  }
+
+  @override
+  String get platformAdminFixButton => 'Fix';
+
+  @override
+  String get platformAdminPrimaryOwnerMissingBannerBody =>
+      'An active Owner membership exists but has not been designated as the primary owner — this can affect governance, alerts, and ownership transfer.';
+
+  @override
+  String platformAdminOrgSummaryLine(String owner, int count, String date) {
+    return '$owner · $count members · created $date';
+  }
+
+  @override
+  String platformAdminLastActivityLabel(String date) {
+    return 'Last activity: $date';
+  }
+
+  @override
+  String get platformAdminMembersSectionTitle => 'Members and roles';
+
+  @override
+  String get platformAdminNoMembersTitle => 'No members';
+
+  @override
+  String get platformAdminNoMembersMessage =>
+      'No memberships recorded for this organization.';
+
+  @override
+  String get platformAdminSocialAccountsSectionTitle =>
+      'Connected social accounts';
+
+  @override
+  String get platformAdminNoSocialAccountsTitle => 'No connected accounts';
+
+  @override
+  String get platformAdminNoSocialAccountsMessage =>
+      'No access tokens or secrets are shown here.';
+
+  @override
+  String get platformAdminUnnamedAccountFallback => 'Account';
+
+  @override
+  String get platformAdminUnnamedFallback => 'Unnamed';
+
+  @override
+  String get platformAdminPostsSummarySectionTitle => 'Posts summary';
+
+  @override
+  String get platformAdminNoPostsTitle => 'No posts';
+
+  @override
+  String get platformAdminNoPostsMessage =>
+      'A status summary will appear once posts exist.';
+
+  @override
+  String get platformAdminEditUserDataMenuItem => 'Edit details';
+
+  @override
+  String get platformAdminManageMembershipsMenuItem => 'Manage memberships';
+
+  @override
+  String get platformAdminNoOrgLabel => 'No organization';
+
+  @override
+  String get platformAdminSuperAdminBadge => 'Platform administrator';
+
+  @override
+  String get platformAdminActiveLabel => 'Active';
+
+  @override
+  String get platformAdminInactiveLabel => 'Inactive';
+
+  @override
+  String get platformAdminPreviousPageButton => 'Previous';
+
+  @override
+  String platformAdminPageIndicator(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get platformAdminUnauthorizedTitle => 'You are not authorized';
+
+  @override
+  String get platformAdminLoadErrorTitle => 'Failed to load data';
+
+  @override
+  String get platformAdminForbiddenMessage =>
+      'The server denied access. Make sure the account has platform administrator permission.';
+
+  @override
+  String get platformAdminGenericLoadErrorMessage =>
+      'Failed to connect to platform administration data. Please try again.';
+
+  @override
+  String get platformAdminOrgNameLabel => 'Organization name';
+
+  @override
+  String get platformAdminOrgNameRequiredError =>
+      'Organization name is required.';
+
+  @override
+  String get platformAdminNewOwnerSegment => 'New owner';
+
+  @override
+  String get platformAdminExistingOwnerSegment => 'Existing owner';
+
+  @override
+  String get platformAdminOwnerFieldLabel => 'Organization owner';
+
+  @override
+  String get platformAdminSelectActiveOwnerError => 'Select an active owner.';
+
+  @override
+  String get platformAdminNewOwnerNameLabel => 'Owner name';
+
+  @override
+  String get platformAdminNewOwnerNameRequiredError =>
+      'Owner name is required.';
+
+  @override
+  String get platformAdminNewOwnerEmailLabel => 'Owner email';
+
+  @override
+  String get platformAdminValidEmailRequiredError =>
+      'Enter a valid email address.';
+
+  @override
+  String get platformAdminValidEmailShortError => 'Enter a valid email.';
+
+  @override
+  String get platformAdminNewOwnerPasswordLabel =>
+      'Owner password (at least 12 characters)';
+
+  @override
+  String get platformAdminPasswordMinLengthError =>
+      'Enter a password of at least 12 characters.';
+
+  @override
+  String get platformAdminCreateOrgSubmitButton => 'Create organization';
+
+  @override
+  String get platformAdminNameLabel => 'Name';
+
+  @override
+  String get platformAdminNameRequiredError => 'Name is required.';
+
+  @override
+  String get platformAdminEmailLabel => 'Email';
+
+  @override
+  String get platformAdminPasswordLabel => 'Password (at least 12 characters)';
+
+  @override
+  String get platformAdminNoOrgOption => 'No organization';
+
+  @override
+  String get platformAdminAddButtonShort => 'Add';
+
+  @override
+  String get platformAdminEditUserDialogTitle => 'Edit user details';
+
+  @override
+  String platformAdminMembershipsDialogTitle(String name) {
+    return '$name\'s memberships';
+  }
+
+  @override
+  String get platformAdminMembershipsHint =>
+      'Changing an owner\'s role or removing their membership requires at least one active owner to remain; the server enforces this as the final check.';
+
+  @override
+  String get platformAdminRemoveMembershipTooltip => 'Remove membership';
+
+  @override
+  String get platformAdminAddToOrgLabel => 'Add to an organization';
+
+  @override
+  String get platformAdminSaveMembershipsButton => 'Save memberships';
+
+  @override
+  String get platformAdminConfirmActionButton => 'Confirm action';
 }

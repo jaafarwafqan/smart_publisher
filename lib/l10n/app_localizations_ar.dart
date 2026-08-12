@@ -951,6 +951,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get organizationMembersRemoveButton => 'حذف';
 
   @override
+  String organizationMembersRemoveTooltip(String name) {
+    return 'إزالة $name';
+  }
+
+  @override
   String get auditLogAppBarTitle => 'سجل التدقيق';
 
   @override
@@ -2238,4 +2243,464 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformAdminOwnerListLoadError => 'تعذّر تحميل قائمة المستخدمين.';
+
+  @override
+  String get platformAdminRoleOwner => 'مالك المؤسسة';
+
+  @override
+  String get platformAdminRoleAdmin => 'مدير المؤسسة';
+
+  @override
+  String get platformAdminRoleManager => 'مشرف';
+
+  @override
+  String get platformAdminRoleEditor => 'محرر';
+
+  @override
+  String get platformAdminRoleViewer => 'مشاهد';
+
+  @override
+  String get platformAdminNotAvailable => 'غير متاح';
+
+  @override
+  String get platformAdminCreateOrgButton => 'إنشاء مؤسسة';
+
+  @override
+  String get platformAdminGuideCreateOrgBody =>
+      'من «المؤسسات»، اضغط «إنشاء مؤسسة» — اختر مالكًا موجودًا أو أنشئ مالكًا جديدًا بكلمة مرور لا تقل عن 12 حرفًا.';
+
+  @override
+  String get platformAdminManageUsersButton => 'إدارة مستخدمي النظام';
+
+  @override
+  String get platformAdminGuideUsersBody =>
+      'من «مستخدمو النظام»: تفعيل/تعطيل حساب، منح أو سحب صلاحية مسؤول المنصة، وتعديل عضويات المستخدم عبر المؤسسات.';
+
+  @override
+  String get platformAdminOAuthSettingsButton => 'إعدادات مزوّدي OAuth';
+
+  @override
+  String get platformAdminGuideOAuthBody =>
+      'App ID وApp Secret لكل مزوّد — محمية حصريًا بصلاحية مسؤول المنصة، منفصلة تمامًا عن أدوار المؤسسات.';
+
+  @override
+  String get platformAdminAuditLogButton => 'سجل تدقيق المنصة';
+
+  @override
+  String get platformAdminGuideAuditBody =>
+      'يسجّل كل إجراء إداري حساس (تعطيل مؤسسة، تغيير دور مسؤول، تعديل إعدادات OAuth) قابلاً للمراجعة لاحقًا.';
+
+  @override
+  String get platformAdminAboutSystemButton => 'حول النظام';
+
+  @override
+  String get platformAdminAppBarTitle => 'إدارة المنصة';
+
+  @override
+  String get platformAdminManageUsersShortcut => 'إدارة المستخدمين';
+
+  @override
+  String get platformAdminRefreshTooltip => 'تحديث البيانات';
+
+  @override
+  String get platformAdminOverviewTitle => 'نظرة عامة على المنصة';
+
+  @override
+  String get platformAdminOverviewSubtitle =>
+      'بيانات مباشرة من النظام عبر صلاحيات إدارة المنصة.';
+
+  @override
+  String get platformAdminMetricOrgsTotal => 'إجمالي المؤسسات';
+
+  @override
+  String get platformAdminMetricOrgsActive => 'المؤسسات النشطة';
+
+  @override
+  String get platformAdminMetricOrgsInactive => 'المؤسسات المعطلة';
+
+  @override
+  String get platformAdminMetricUsersTotal => 'إجمالي المستخدمين';
+
+  @override
+  String get platformAdminMetricUsersNew30d => 'مستخدمون جدد (30 يوماً)';
+
+  @override
+  String get platformAdminMetricOrgsWithoutOwner => 'بلا مالك فعّال';
+
+  @override
+  String get platformAdminManageOrgsButton => 'إدارة المؤسسات';
+
+  @override
+  String get platformAdminLatestOrgsTitle => 'أحدث المؤسسات';
+
+  @override
+  String get platformAdminNoRecentOrgsTitle => 'لا توجد مؤسسات حديثة';
+
+  @override
+  String get platformAdminNoRecentOrgsMessage =>
+      'ستظهر المؤسسات هنا بعد إنشائها.';
+
+  @override
+  String get platformAdminLatestUsersTitle => 'أحدث المستخدمين';
+
+  @override
+  String get platformAdminNoRecentUsersTitle => 'لا يوجد مستخدمون حديثون';
+
+  @override
+  String get platformAdminNoRecentUsersMessage =>
+      'ستظهر الحسابات المنشأة حديثاً هنا.';
+
+  @override
+  String get platformAdminDisableOrgTitle => 'تعطيل المؤسسة';
+
+  @override
+  String get platformAdminEnableOrgTitle => 'إعادة تفعيل المؤسسة';
+
+  @override
+  String platformAdminDisableOrgMessage(String name) {
+    return 'سيتم تعطيل «$name». لن تُحذف أي بيانات.';
+  }
+
+  @override
+  String platformAdminEnableOrgMessage(String name) {
+    return 'سيتم إعادة تفعيل «$name».';
+  }
+
+  @override
+  String get platformAdminOrgDisabledMessage => 'تم تعطيل المؤسسة.';
+
+  @override
+  String get platformAdminOrgEnabledMessage => 'تم تفعيل المؤسسة.';
+
+  @override
+  String get platformAdminNoEligibleOwnerMessage =>
+      'لا يوجد عضو مؤهل لتولي الملكية — عيّن دور المالك لأحد الأعضاء أولاً.';
+
+  @override
+  String platformAdminPrimaryOwnerAssignedMessage(String name) {
+    return 'تم تعيين المالك الأساسي: $name.';
+  }
+
+  @override
+  String get platformAdminOrgsAppBarTitle => 'المؤسسات';
+
+  @override
+  String get platformAdminSearchByNameOrOwnerHint => 'ابحث بالاسم أو المالك';
+
+  @override
+  String get platformAdminSearchTooltip => 'بحث';
+
+  @override
+  String get platformAdminFilterAllChip => 'الكل';
+
+  @override
+  String get platformAdminOrgActiveStatus => 'نشطة';
+
+  @override
+  String get platformAdminOrgInactiveStatus => 'معطلة';
+
+  @override
+  String get platformAdminNoMatchingOrgsTitle => 'لا توجد مؤسسات مطابقة';
+
+  @override
+  String get platformAdminNoMatchingOrgsMessage =>
+      'جرّب تعديل كلمات البحث أو أنشئ مؤسسة جديدة.';
+
+  @override
+  String get platformAdminOrgDetailAppBarTitle => 'تفاصيل المؤسسة';
+
+  @override
+  String get platformAdminActivateAccountTitle => 'تفعيل الحساب';
+
+  @override
+  String get platformAdminDeactivateAccountTitle => 'تعطيل الحساب';
+
+  @override
+  String platformAdminActivateAccountMessage(String email) {
+    return 'سيتم تفعيل حساب $email.';
+  }
+
+  @override
+  String platformAdminDeactivateAccountMessage(String email) {
+    return 'سيتم تعطيل حساب $email وإنهاء جلساته الحالية.';
+  }
+
+  @override
+  String get platformAdminAccountActivatedMessage => 'تم تفعيل الحساب.';
+
+  @override
+  String get platformAdminAccountDeactivatedMessage => 'تم تعطيل الحساب.';
+
+  @override
+  String get platformAdminGrantSuperAdminTitle => 'منح مسؤول المنصة';
+
+  @override
+  String get platformAdminRevokeSuperAdminTitle => 'سحب مسؤول المنصة';
+
+  @override
+  String platformAdminGrantSuperAdminMessage(String email) {
+    return 'سيُمنح $email صلاحية مستقلة لإدارة المنصة.';
+  }
+
+  @override
+  String platformAdminRevokeSuperAdminMessage(String email) {
+    return 'سيُسحب وصول $email إلى إدارة المنصة.';
+  }
+
+  @override
+  String get platformAdminSuperAdminGrantedMessage =>
+      'تم منح صلاحية مسؤول المنصة.';
+
+  @override
+  String get platformAdminSuperAdminRevokedMessage =>
+      'تم سحب صلاحية مسؤول المنصة.';
+
+  @override
+  String get platformAdminUsersAppBarTitle => 'مستخدمو النظام';
+
+  @override
+  String get platformAdminAddUserButton => 'إضافة مستخدم';
+
+  @override
+  String get platformAdminSearchByNameOrEmailHint =>
+      'ابحث بالاسم أو البريد الإلكتروني';
+
+  @override
+  String get platformAdminActiveOnlyChip => 'النشطون فقط';
+
+  @override
+  String get platformAdminInactiveOnlyChip => 'المعطّلون فقط';
+
+  @override
+  String get platformAdminSuperAdminsChip => 'مسؤولو المنصة';
+
+  @override
+  String get platformAdminAllOrgsOption => 'كل المؤسسات';
+
+  @override
+  String get platformAdminAllRolesOption => 'كل الأدوار';
+
+  @override
+  String get platformAdminNoMatchingUsersTitle => 'لا توجد حسابات مطابقة';
+
+  @override
+  String get platformAdminNoMatchingUsersMessage =>
+      'عدّل الفلاتر أو أضف مستخدماً جديداً.';
+
+  @override
+  String get platformAdminFilterByActionHint => 'تصفية حسب الإجراء';
+
+  @override
+  String get platformAdminNoMatchingEventsTitle => 'لا توجد أحداث مطابقة';
+
+  @override
+  String get platformAdminNoMatchingEventsMessage => 'جرّب تعديل الفلاتر.';
+
+  @override
+  String get platformAdminViewAllButton => 'عرض الكل';
+
+  @override
+  String platformAdminOrgCountLabel(int count) {
+    return '$count مؤسسة';
+  }
+
+  @override
+  String platformAdminUserCountLabel(int count) {
+    return '$count مستخدم';
+  }
+
+  @override
+  String get platformAdminEditOrgNameMenuItem => 'تعديل اسم المؤسسة';
+
+  @override
+  String get platformAdminReactivateMenuItem => 'إعادة التفعيل';
+
+  @override
+  String get platformAdminPrimaryOwnerMissingLabel => 'لا يوجد مالك أساسي';
+
+  @override
+  String platformAdminMembersCountLabel(int count) {
+    return '$count أعضاء';
+  }
+
+  @override
+  String get platformAdminFixButton => 'إصلاح';
+
+  @override
+  String get platformAdminPrimaryOwnerMissingBannerBody =>
+      'توجد عضوية Owner نشطة لكن لم تُعيَّن كمالك أساسي — قد يؤثر هذا في الحوكمة والتنبيهات ونقل الملكية.';
+
+  @override
+  String platformAdminOrgSummaryLine(String owner, int count, String date) {
+    return '$owner · $count أعضاء · أنشئت $date';
+  }
+
+  @override
+  String platformAdminLastActivityLabel(String date) {
+    return 'آخر نشاط: $date';
+  }
+
+  @override
+  String get platformAdminMembersSectionTitle => 'الأعضاء والأدوار';
+
+  @override
+  String get platformAdminNoMembersTitle => 'لا يوجد أعضاء';
+
+  @override
+  String get platformAdminNoMembersMessage =>
+      'لا توجد عضويات مسجلة لهذه المؤسسة.';
+
+  @override
+  String get platformAdminSocialAccountsSectionTitle =>
+      'الحسابات الاجتماعية المرتبطة';
+
+  @override
+  String get platformAdminNoSocialAccountsTitle => 'لا توجد حسابات مرتبطة';
+
+  @override
+  String get platformAdminNoSocialAccountsMessage =>
+      'لا تظهر هنا أي رموز وصول أو أسرار.';
+
+  @override
+  String get platformAdminUnnamedAccountFallback => 'حساب';
+
+  @override
+  String get platformAdminUnnamedFallback => 'غير مسمى';
+
+  @override
+  String get platformAdminPostsSummarySectionTitle => 'ملخص المنشورات';
+
+  @override
+  String get platformAdminNoPostsTitle => 'لا توجد منشورات';
+
+  @override
+  String get platformAdminNoPostsMessage =>
+      'سيظهر ملخص الحالات عند توفر منشورات.';
+
+  @override
+  String get platformAdminEditUserDataMenuItem => 'تعديل البيانات';
+
+  @override
+  String get platformAdminManageMembershipsMenuItem => 'إدارة العضويات';
+
+  @override
+  String get platformAdminNoOrgLabel => 'بلا مؤسسة';
+
+  @override
+  String get platformAdminSuperAdminBadge => 'مسؤول المنصة';
+
+  @override
+  String get platformAdminActiveLabel => 'نشط';
+
+  @override
+  String get platformAdminInactiveLabel => 'معطل';
+
+  @override
+  String get platformAdminPreviousPageButton => 'السابق';
+
+  @override
+  String platformAdminPageIndicator(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get platformAdminUnauthorizedTitle => 'غير مصرح لك';
+
+  @override
+  String get platformAdminLoadErrorTitle => 'تعذر تحميل البيانات';
+
+  @override
+  String get platformAdminForbiddenMessage =>
+      'تم رفض الوصول من الخادم. تأكد من أن للحساب صلاحية مسؤول المنصة.';
+
+  @override
+  String get platformAdminGenericLoadErrorMessage =>
+      'تعذر الاتصال ببيانات إدارة المنصة. حاول مجدداً.';
+
+  @override
+  String get platformAdminOrgNameLabel => 'اسم المؤسسة';
+
+  @override
+  String get platformAdminOrgNameRequiredError => 'اسم المؤسسة مطلوب.';
+
+  @override
+  String get platformAdminNewOwnerSegment => 'مالك جديد';
+
+  @override
+  String get platformAdminExistingOwnerSegment => 'مالك موجود';
+
+  @override
+  String get platformAdminOwnerFieldLabel => 'مالك المؤسسة';
+
+  @override
+  String get platformAdminSelectActiveOwnerError => 'اختر مالكاً فعّالاً.';
+
+  @override
+  String get platformAdminNewOwnerNameLabel => 'اسم المالك';
+
+  @override
+  String get platformAdminNewOwnerNameRequiredError => 'اسم المالك مطلوب.';
+
+  @override
+  String get platformAdminNewOwnerEmailLabel => 'بريد المالك الإلكتروني';
+
+  @override
+  String get platformAdminValidEmailRequiredError =>
+      'أدخل بريداً إلكترونياً صحيحاً.';
+
+  @override
+  String get platformAdminValidEmailShortError => 'أدخل بريداً صحيحاً.';
+
+  @override
+  String get platformAdminNewOwnerPasswordLabel =>
+      'كلمة مرور المالك (12 حرفاً على الأقل)';
+
+  @override
+  String get platformAdminPasswordMinLengthError =>
+      'أدخل كلمة مرور من 12 حرفاً على الأقل.';
+
+  @override
+  String get platformAdminCreateOrgSubmitButton => 'إنشاء المؤسسة';
+
+  @override
+  String get platformAdminNameLabel => 'الاسم';
+
+  @override
+  String get platformAdminNameRequiredError => 'الاسم مطلوب.';
+
+  @override
+  String get platformAdminEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get platformAdminPasswordLabel => 'كلمة المرور (12 حرفاً على الأقل)';
+
+  @override
+  String get platformAdminNoOrgOption => 'بدون مؤسسة';
+
+  @override
+  String get platformAdminAddButtonShort => 'إضافة';
+
+  @override
+  String get platformAdminEditUserDialogTitle => 'تعديل بيانات المستخدم';
+
+  @override
+  String platformAdminMembershipsDialogTitle(String name) {
+    return 'عضويات $name';
+  }
+
+  @override
+  String get platformAdminMembershipsHint =>
+      'تغيير دور مالك أو إزالة عضويته يتطلب بقاء مالك فعّال واحد على الأقل؛ الخادم يتحقق من ذلك نهائياً.';
+
+  @override
+  String get platformAdminRemoveMembershipTooltip => 'إزالة العضوية';
+
+  @override
+  String get platformAdminAddToOrgLabel => 'إضافة إلى مؤسسة';
+
+  @override
+  String get platformAdminSaveMembershipsButton => 'حفظ العضويات';
+
+  @override
+  String get platformAdminConfirmActionButton => 'تأكيد الإجراء';
 }

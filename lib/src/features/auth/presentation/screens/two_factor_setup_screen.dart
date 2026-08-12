@@ -524,7 +524,11 @@ class _CopyableField extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(icon: const Icon(Icons.copy_outlined), onPressed: onCopy),
+          IconButton(
+            tooltip: AppLocalizations.of(context)!.twoFactorSetupCopyTooltip,
+            icon: const Icon(Icons.copy_outlined),
+            onPressed: onCopy,
+          ),
         ],
       ),
     );

@@ -1784,6 +1784,12 @@ abstract class AppLocalizations {
   /// **'حذف'**
   String get organizationMembersRemoveButton;
 
+  /// No description provided for @organizationMembersRemoveTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة {name}'**
+  String organizationMembersRemoveTooltip(String name);
+
   /// No description provided for @auditLogAppBarTitle.
   ///
   /// In ar, this message translates to:
@@ -4063,6 +4069,822 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذّر تحميل قائمة المستخدمين.'**
   String get platformAdminOwnerListLoadError;
+
+  /// No description provided for @platformAdminRoleOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك المؤسسة'**
+  String get platformAdminRoleOwner;
+
+  /// No description provided for @platformAdminRoleAdmin.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدير المؤسسة'**
+  String get platformAdminRoleAdmin;
+
+  /// No description provided for @platformAdminRoleManager.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشرف'**
+  String get platformAdminRoleManager;
+
+  /// No description provided for @platformAdminRoleEditor.
+  ///
+  /// In ar, this message translates to:
+  /// **'محرر'**
+  String get platformAdminRoleEditor;
+
+  /// No description provided for @platformAdminRoleViewer.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاهد'**
+  String get platformAdminRoleViewer;
+
+  /// No description provided for @platformAdminNotAvailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير متاح'**
+  String get platformAdminNotAvailable;
+
+  /// No description provided for @platformAdminCreateOrgButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء مؤسسة'**
+  String get platformAdminCreateOrgButton;
+
+  /// No description provided for @platformAdminGuideCreateOrgBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'من «المؤسسات»، اضغط «إنشاء مؤسسة» — اختر مالكًا موجودًا أو أنشئ مالكًا جديدًا بكلمة مرور لا تقل عن 12 حرفًا.'**
+  String get platformAdminGuideCreateOrgBody;
+
+  /// No description provided for @platformAdminManageUsersButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة مستخدمي النظام'**
+  String get platformAdminManageUsersButton;
+
+  /// No description provided for @platformAdminGuideUsersBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'من «مستخدمو النظام»: تفعيل/تعطيل حساب، منح أو سحب صلاحية مسؤول المنصة، وتعديل عضويات المستخدم عبر المؤسسات.'**
+  String get platformAdminGuideUsersBody;
+
+  /// No description provided for @platformAdminOAuthSettingsButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعدادات مزوّدي OAuth'**
+  String get platformAdminOAuthSettingsButton;
+
+  /// No description provided for @platformAdminGuideOAuthBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'App ID وApp Secret لكل مزوّد — محمية حصريًا بصلاحية مسؤول المنصة، منفصلة تمامًا عن أدوار المؤسسات.'**
+  String get platformAdminGuideOAuthBody;
+
+  /// No description provided for @platformAdminAuditLogButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل تدقيق المنصة'**
+  String get platformAdminAuditLogButton;
+
+  /// No description provided for @platformAdminGuideAuditBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يسجّل كل إجراء إداري حساس (تعطيل مؤسسة، تغيير دور مسؤول، تعديل إعدادات OAuth) قابلاً للمراجعة لاحقًا.'**
+  String get platformAdminGuideAuditBody;
+
+  /// No description provided for @platformAdminAboutSystemButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'حول النظام'**
+  String get platformAdminAboutSystemButton;
+
+  /// No description provided for @platformAdminAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة المنصة'**
+  String get platformAdminAppBarTitle;
+
+  /// No description provided for @platformAdminManageUsersShortcut.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة المستخدمين'**
+  String get platformAdminManageUsersShortcut;
+
+  /// No description provided for @platformAdminRefreshTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث البيانات'**
+  String get platformAdminRefreshTooltip;
+
+  /// No description provided for @platformAdminOverviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نظرة عامة على المنصة'**
+  String get platformAdminOverviewTitle;
+
+  /// No description provided for @platformAdminOverviewSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات مباشرة من النظام عبر صلاحيات إدارة المنصة.'**
+  String get platformAdminOverviewSubtitle;
+
+  /// No description provided for @platformAdminMetricOrgsTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المؤسسات'**
+  String get platformAdminMetricOrgsTotal;
+
+  /// No description provided for @platformAdminMetricOrgsActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'المؤسسات النشطة'**
+  String get platformAdminMetricOrgsActive;
+
+  /// No description provided for @platformAdminMetricOrgsInactive.
+  ///
+  /// In ar, this message translates to:
+  /// **'المؤسسات المعطلة'**
+  String get platformAdminMetricOrgsInactive;
+
+  /// No description provided for @platformAdminMetricUsersTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المستخدمين'**
+  String get platformAdminMetricUsersTotal;
+
+  /// No description provided for @platformAdminMetricUsersNew30d.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستخدمون جدد (30 يوماً)'**
+  String get platformAdminMetricUsersNew30d;
+
+  /// No description provided for @platformAdminMetricOrgsWithoutOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلا مالك فعّال'**
+  String get platformAdminMetricOrgsWithoutOwner;
+
+  /// No description provided for @platformAdminManageOrgsButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة المؤسسات'**
+  String get platformAdminManageOrgsButton;
+
+  /// No description provided for @platformAdminLatestOrgsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحدث المؤسسات'**
+  String get platformAdminLatestOrgsTitle;
+
+  /// No description provided for @platformAdminNoRecentOrgsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مؤسسات حديثة'**
+  String get platformAdminNoRecentOrgsTitle;
+
+  /// No description provided for @platformAdminNoRecentOrgsMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستظهر المؤسسات هنا بعد إنشائها.'**
+  String get platformAdminNoRecentOrgsMessage;
+
+  /// No description provided for @platformAdminLatestUsersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحدث المستخدمين'**
+  String get platformAdminLatestUsersTitle;
+
+  /// No description provided for @platformAdminNoRecentUsersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد مستخدمون حديثون'**
+  String get platformAdminNoRecentUsersTitle;
+
+  /// No description provided for @platformAdminNoRecentUsersMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستظهر الحسابات المنشأة حديثاً هنا.'**
+  String get platformAdminNoRecentUsersMessage;
+
+  /// No description provided for @platformAdminDisableOrgTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعطيل المؤسسة'**
+  String get platformAdminDisableOrgTitle;
+
+  /// No description provided for @platformAdminEnableOrgTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة تفعيل المؤسسة'**
+  String get platformAdminEnableOrgTitle;
+
+  /// No description provided for @platformAdminDisableOrgMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم تعطيل «{name}». لن تُحذف أي بيانات.'**
+  String platformAdminDisableOrgMessage(String name);
+
+  /// No description provided for @platformAdminEnableOrgMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم إعادة تفعيل «{name}».'**
+  String platformAdminEnableOrgMessage(String name);
+
+  /// No description provided for @platformAdminOrgDisabledMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تعطيل المؤسسة.'**
+  String get platformAdminOrgDisabledMessage;
+
+  /// No description provided for @platformAdminOrgEnabledMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل المؤسسة.'**
+  String get platformAdminOrgEnabledMessage;
+
+  /// No description provided for @platformAdminNoEligibleOwnerMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد عضو مؤهل لتولي الملكية — عيّن دور المالك لأحد الأعضاء أولاً.'**
+  String get platformAdminNoEligibleOwnerMessage;
+
+  /// No description provided for @platformAdminPrimaryOwnerAssignedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تعيين المالك الأساسي: {name}.'**
+  String platformAdminPrimaryOwnerAssignedMessage(String name);
+
+  /// No description provided for @platformAdminOrgsAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المؤسسات'**
+  String get platformAdminOrgsAppBarTitle;
+
+  /// No description provided for @platformAdminSearchByNameOrOwnerHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث بالاسم أو المالك'**
+  String get platformAdminSearchByNameOrOwnerHint;
+
+  /// No description provided for @platformAdminSearchTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'بحث'**
+  String get platformAdminSearchTooltip;
+
+  /// No description provided for @platformAdminFilterAllChip.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get platformAdminFilterAllChip;
+
+  /// No description provided for @platformAdminOrgActiveStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشطة'**
+  String get platformAdminOrgActiveStatus;
+
+  /// No description provided for @platformAdminOrgInactiveStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'معطلة'**
+  String get platformAdminOrgInactiveStatus;
+
+  /// No description provided for @platformAdminNoMatchingOrgsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد مؤسسات مطابقة'**
+  String get platformAdminNoMatchingOrgsTitle;
+
+  /// No description provided for @platformAdminNoMatchingOrgsMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب تعديل كلمات البحث أو أنشئ مؤسسة جديدة.'**
+  String get platformAdminNoMatchingOrgsMessage;
+
+  /// No description provided for @platformAdminOrgDetailAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل المؤسسة'**
+  String get platformAdminOrgDetailAppBarTitle;
+
+  /// No description provided for @platformAdminActivateAccountTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل الحساب'**
+  String get platformAdminActivateAccountTitle;
+
+  /// No description provided for @platformAdminDeactivateAccountTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعطيل الحساب'**
+  String get platformAdminDeactivateAccountTitle;
+
+  /// No description provided for @platformAdminActivateAccountMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم تفعيل حساب {email}.'**
+  String platformAdminActivateAccountMessage(String email);
+
+  /// No description provided for @platformAdminDeactivateAccountMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم تعطيل حساب {email} وإنهاء جلساته الحالية.'**
+  String platformAdminDeactivateAccountMessage(String email);
+
+  /// No description provided for @platformAdminAccountActivatedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل الحساب.'**
+  String get platformAdminAccountActivatedMessage;
+
+  /// No description provided for @platformAdminAccountDeactivatedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تعطيل الحساب.'**
+  String get platformAdminAccountDeactivatedMessage;
+
+  /// No description provided for @platformAdminGrantSuperAdminTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'منح مسؤول المنصة'**
+  String get platformAdminGrantSuperAdminTitle;
+
+  /// No description provided for @platformAdminRevokeSuperAdminTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سحب مسؤول المنصة'**
+  String get platformAdminRevokeSuperAdminTitle;
+
+  /// No description provided for @platformAdminGrantSuperAdminMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيُمنح {email} صلاحية مستقلة لإدارة المنصة.'**
+  String platformAdminGrantSuperAdminMessage(String email);
+
+  /// No description provided for @platformAdminRevokeSuperAdminMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيُسحب وصول {email} إلى إدارة المنصة.'**
+  String platformAdminRevokeSuperAdminMessage(String email);
+
+  /// No description provided for @platformAdminSuperAdminGrantedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم منح صلاحية مسؤول المنصة.'**
+  String get platformAdminSuperAdminGrantedMessage;
+
+  /// No description provided for @platformAdminSuperAdminRevokedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم سحب صلاحية مسؤول المنصة.'**
+  String get platformAdminSuperAdminRevokedMessage;
+
+  /// No description provided for @platformAdminUsersAppBarTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستخدمو النظام'**
+  String get platformAdminUsersAppBarTitle;
+
+  /// No description provided for @platformAdminAddUserButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مستخدم'**
+  String get platformAdminAddUserButton;
+
+  /// No description provided for @platformAdminSearchByNameOrEmailHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث بالاسم أو البريد الإلكتروني'**
+  String get platformAdminSearchByNameOrEmailHint;
+
+  /// No description provided for @platformAdminActiveOnlyChip.
+  ///
+  /// In ar, this message translates to:
+  /// **'النشطون فقط'**
+  String get platformAdminActiveOnlyChip;
+
+  /// No description provided for @platformAdminInactiveOnlyChip.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعطّلون فقط'**
+  String get platformAdminInactiveOnlyChip;
+
+  /// No description provided for @platformAdminSuperAdminsChip.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسؤولو المنصة'**
+  String get platformAdminSuperAdminsChip;
+
+  /// No description provided for @platformAdminAllOrgsOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل المؤسسات'**
+  String get platformAdminAllOrgsOption;
+
+  /// No description provided for @platformAdminAllRolesOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل الأدوار'**
+  String get platformAdminAllRolesOption;
+
+  /// No description provided for @platformAdminNoMatchingUsersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد حسابات مطابقة'**
+  String get platformAdminNoMatchingUsersTitle;
+
+  /// No description provided for @platformAdminNoMatchingUsersMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدّل الفلاتر أو أضف مستخدماً جديداً.'**
+  String get platformAdminNoMatchingUsersMessage;
+
+  /// No description provided for @platformAdminFilterByActionHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية حسب الإجراء'**
+  String get platformAdminFilterByActionHint;
+
+  /// No description provided for @platformAdminNoMatchingEventsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد أحداث مطابقة'**
+  String get platformAdminNoMatchingEventsTitle;
+
+  /// No description provided for @platformAdminNoMatchingEventsMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب تعديل الفلاتر.'**
+  String get platformAdminNoMatchingEventsMessage;
+
+  /// No description provided for @platformAdminViewAllButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الكل'**
+  String get platformAdminViewAllButton;
+
+  /// No description provided for @platformAdminOrgCountLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} مؤسسة'**
+  String platformAdminOrgCountLabel(int count);
+
+  /// No description provided for @platformAdminUserCountLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} مستخدم'**
+  String platformAdminUserCountLabel(int count);
+
+  /// No description provided for @platformAdminEditOrgNameMenuItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل اسم المؤسسة'**
+  String get platformAdminEditOrgNameMenuItem;
+
+  /// No description provided for @platformAdminReactivateMenuItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة التفعيل'**
+  String get platformAdminReactivateMenuItem;
+
+  /// No description provided for @platformAdminPrimaryOwnerMissingLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد مالك أساسي'**
+  String get platformAdminPrimaryOwnerMissingLabel;
+
+  /// No description provided for @platformAdminMembersCountLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أعضاء'**
+  String platformAdminMembersCountLabel(int count);
+
+  /// No description provided for @platformAdminFixButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إصلاح'**
+  String get platformAdminFixButton;
+
+  /// No description provided for @platformAdminPrimaryOwnerMissingBannerBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'توجد عضوية Owner نشطة لكن لم تُعيَّن كمالك أساسي — قد يؤثر هذا في الحوكمة والتنبيهات ونقل الملكية.'**
+  String get platformAdminPrimaryOwnerMissingBannerBody;
+
+  /// No description provided for @platformAdminOrgSummaryLine.
+  ///
+  /// In ar, this message translates to:
+  /// **'{owner} · {count} أعضاء · أنشئت {date}'**
+  String platformAdminOrgSummaryLine(String owner, int count, String date);
+
+  /// No description provided for @platformAdminLastActivityLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر نشاط: {date}'**
+  String platformAdminLastActivityLabel(String date);
+
+  /// No description provided for @platformAdminMembersSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأعضاء والأدوار'**
+  String get platformAdminMembersSectionTitle;
+
+  /// No description provided for @platformAdminNoMembersTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد أعضاء'**
+  String get platformAdminNoMembersTitle;
+
+  /// No description provided for @platformAdminNoMembersMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد عضويات مسجلة لهذه المؤسسة.'**
+  String get platformAdminNoMembersMessage;
+
+  /// No description provided for @platformAdminSocialAccountsSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحسابات الاجتماعية المرتبطة'**
+  String get platformAdminSocialAccountsSectionTitle;
+
+  /// No description provided for @platformAdminNoSocialAccountsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد حسابات مرتبطة'**
+  String get platformAdminNoSocialAccountsTitle;
+
+  /// No description provided for @platformAdminNoSocialAccountsMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تظهر هنا أي رموز وصول أو أسرار.'**
+  String get platformAdminNoSocialAccountsMessage;
+
+  /// No description provided for @platformAdminUnnamedAccountFallback.
+  ///
+  /// In ar, this message translates to:
+  /// **'حساب'**
+  String get platformAdminUnnamedAccountFallback;
+
+  /// No description provided for @platformAdminUnnamedFallback.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مسمى'**
+  String get platformAdminUnnamedFallback;
+
+  /// No description provided for @platformAdminPostsSummarySectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص المنشورات'**
+  String get platformAdminPostsSummarySectionTitle;
+
+  /// No description provided for @platformAdminNoPostsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد منشورات'**
+  String get platformAdminNoPostsTitle;
+
+  /// No description provided for @platformAdminNoPostsMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيظهر ملخص الحالات عند توفر منشورات.'**
+  String get platformAdminNoPostsMessage;
+
+  /// No description provided for @platformAdminEditUserDataMenuItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل البيانات'**
+  String get platformAdminEditUserDataMenuItem;
+
+  /// No description provided for @platformAdminManageMembershipsMenuItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة العضويات'**
+  String get platformAdminManageMembershipsMenuItem;
+
+  /// No description provided for @platformAdminNoOrgLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلا مؤسسة'**
+  String get platformAdminNoOrgLabel;
+
+  /// No description provided for @platformAdminSuperAdminBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسؤول المنصة'**
+  String get platformAdminSuperAdminBadge;
+
+  /// No description provided for @platformAdminActiveLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشط'**
+  String get platformAdminActiveLabel;
+
+  /// No description provided for @platformAdminInactiveLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'معطل'**
+  String get platformAdminInactiveLabel;
+
+  /// No description provided for @platformAdminPreviousPageButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'السابق'**
+  String get platformAdminPreviousPageButton;
+
+  /// No description provided for @platformAdminPageIndicator.
+  ///
+  /// In ar, this message translates to:
+  /// **'{current} / {total}'**
+  String platformAdminPageIndicator(int current, int total);
+
+  /// No description provided for @platformAdminUnauthorizedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مصرح لك'**
+  String get platformAdminUnauthorizedTitle;
+
+  /// No description provided for @platformAdminLoadErrorTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل البيانات'**
+  String get platformAdminLoadErrorTitle;
+
+  /// No description provided for @platformAdminForbiddenMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم رفض الوصول من الخادم. تأكد من أن للحساب صلاحية مسؤول المنصة.'**
+  String get platformAdminForbiddenMessage;
+
+  /// No description provided for @platformAdminGenericLoadErrorMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر الاتصال ببيانات إدارة المنصة. حاول مجدداً.'**
+  String get platformAdminGenericLoadErrorMessage;
+
+  /// No description provided for @platformAdminOrgNameLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المؤسسة'**
+  String get platformAdminOrgNameLabel;
+
+  /// No description provided for @platformAdminOrgNameRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المؤسسة مطلوب.'**
+  String get platformAdminOrgNameRequiredError;
+
+  /// No description provided for @platformAdminNewOwnerSegment.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك جديد'**
+  String get platformAdminNewOwnerSegment;
+
+  /// No description provided for @platformAdminExistingOwnerSegment.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك موجود'**
+  String get platformAdminExistingOwnerSegment;
+
+  /// No description provided for @platformAdminOwnerFieldLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مالك المؤسسة'**
+  String get platformAdminOwnerFieldLabel;
+
+  /// No description provided for @platformAdminSelectActiveOwnerError.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مالكاً فعّالاً.'**
+  String get platformAdminSelectActiveOwnerError;
+
+  /// No description provided for @platformAdminNewOwnerNameLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المالك'**
+  String get platformAdminNewOwnerNameLabel;
+
+  /// No description provided for @platformAdminNewOwnerNameRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المالك مطلوب.'**
+  String get platformAdminNewOwnerNameRequiredError;
+
+  /// No description provided for @platformAdminNewOwnerEmailLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'بريد المالك الإلكتروني'**
+  String get platformAdminNewOwnerEmailLabel;
+
+  /// No description provided for @platformAdminValidEmailRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريداً إلكترونياً صحيحاً.'**
+  String get platformAdminValidEmailRequiredError;
+
+  /// No description provided for @platformAdminValidEmailShortError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريداً صحيحاً.'**
+  String get platformAdminValidEmailShortError;
+
+  /// No description provided for @platformAdminNewOwnerPasswordLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة مرور المالك (12 حرفاً على الأقل)'**
+  String get platformAdminNewOwnerPasswordLabel;
+
+  /// No description provided for @platformAdminPasswordMinLengthError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل كلمة مرور من 12 حرفاً على الأقل.'**
+  String get platformAdminPasswordMinLengthError;
+
+  /// No description provided for @platformAdminCreateOrgSubmitButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء المؤسسة'**
+  String get platformAdminCreateOrgSubmitButton;
+
+  /// No description provided for @platformAdminNameLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم'**
+  String get platformAdminNameLabel;
+
+  /// No description provided for @platformAdminNameRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم مطلوب.'**
+  String get platformAdminNameRequiredError;
+
+  /// No description provided for @platformAdminEmailLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get platformAdminEmailLabel;
+
+  /// No description provided for @platformAdminPasswordLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور (12 حرفاً على الأقل)'**
+  String get platformAdminPasswordLabel;
+
+  /// No description provided for @platformAdminNoOrgOption.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون مؤسسة'**
+  String get platformAdminNoOrgOption;
+
+  /// No description provided for @platformAdminAddButtonShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة'**
+  String get platformAdminAddButtonShort;
+
+  /// No description provided for @platformAdminEditUserDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل بيانات المستخدم'**
+  String get platformAdminEditUserDialogTitle;
+
+  /// No description provided for @platformAdminMembershipsDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'عضويات {name}'**
+  String platformAdminMembershipsDialogTitle(String name);
+
+  /// No description provided for @platformAdminMembershipsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير دور مالك أو إزالة عضويته يتطلب بقاء مالك فعّال واحد على الأقل؛ الخادم يتحقق من ذلك نهائياً.'**
+  String get platformAdminMembershipsHint;
+
+  /// No description provided for @platformAdminRemoveMembershipTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة العضوية'**
+  String get platformAdminRemoveMembershipTooltip;
+
+  /// No description provided for @platformAdminAddToOrgLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة إلى مؤسسة'**
+  String get platformAdminAddToOrgLabel;
+
+  /// No description provided for @platformAdminSaveMembershipsButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ العضويات'**
+  String get platformAdminSaveMembershipsButton;
+
+  /// No description provided for @platformAdminConfirmActionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد الإجراء'**
+  String get platformAdminConfirmActionButton;
 }
 
 class _AppLocalizationsDelegate

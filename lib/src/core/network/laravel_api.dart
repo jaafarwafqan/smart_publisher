@@ -199,6 +199,8 @@ final class LaravelEndpoints {
       LaravelApi.versioned('/admin/organizations/$id');
   static String platformAdminOrganizationStatus(String id) =>
       LaravelApi.versioned('/admin/organizations/$id/status');
+  static String platformAdminOrganizationReconcilePrimaryOwner(String id) =>
+      LaravelApi.versioned('/admin/organizations/$id/reconcile-primary-owner');
   static final String platformAdminAuditLogs = LaravelApi.versioned(
     '/admin/audit-logs',
   );

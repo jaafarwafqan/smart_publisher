@@ -13,6 +13,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../features/organizations/application/current_organization_access.dart';
 import '../../../../features/organizations/presentation/screens/organization_audit_log_screen.dart';
 import '../../../../shared/models/audit_log_entry.dart';
+import '../../../../shared/widgets/adaptive_card_grid.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
@@ -27,19 +28,19 @@ const _membershipRoles = <String>[
   'viewer',
 ];
 
-String _roleLabel(String role) {
+String _roleLabel(String role, AppLocalizations l10n) {
   return switch (role) {
-    'owner' => 'مالك المؤسسة',
-    'admin' => 'مدير المؤسسة',
-    'manager' => 'مشرف',
-    'editor' => 'محرر',
-    'viewer' => 'مشاهد',
+    'owner' => l10n.platformAdminRoleOwner,
+    'admin' => l10n.platformAdminRoleAdmin,
+    'manager' => l10n.platformAdminRoleManager,
+    'editor' => l10n.platformAdminRoleEditor,
+    'viewer' => l10n.platformAdminRoleViewer,
     _ => role,
   };
 }
 
-String _formatDate(DateTime? date) {
-  if (date == null) return 'غير متاح';
+String _formatDate(DateTime? date, AppLocalizations l10n) {
+  if (date == null) return l10n.platformAdminNotAvailable;
   return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
 }
 
@@ -81,13 +82,14 @@ class _PlatformAdministrationScreenState
   }
 
   void _showPlatformAdminGuide(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (dialogContext) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          title: const Text('دليل مسؤول المنصة'),
-          content: const SizedBox(
+          title: Text(l10n.platformAdminGuideDialogTitle),
+          content: SizedBox(
             width: 480,
             child: SingleChildScrollView(
               child: Column(
@@ -95,24 +97,20 @@ class _PlatformAdministrationScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   _AdminGuidePoint(
-                    title: 'إنشاء مؤسسة',
-                    body:
-                        'من «المؤسسات»، اضغط «إنشاء مؤسسة» — اختر مالكًا موجودًا أو أنشئ مالكًا جديدًا بكلمة مرور لا تقل عن 12 حرفًا.',
+                    title: l10n.platformAdminCreateOrgButton,
+                    body: l10n.platformAdminGuideCreateOrgBody,
                   ),
                   _AdminGuidePoint(
-                    title: 'إدارة مستخدمي النظام',
-                    body:
-                        'من «مستخدمو النظام»: تفعيل/تعطيل حساب، منح أو سحب صلاحية مسؤول المنصة، وتعديل عضويات المستخدم عبر المؤسسات.',
+                    title: l10n.platformAdminManageUsersButton,
+                    body: l10n.platformAdminGuideUsersBody,
                   ),
                   _AdminGuidePoint(
-                    title: 'إعدادات مزوّدي OAuth',
-                    body:
-                        'App ID وApp Secret لكل مزوّد — محمية حصريًا بصلاحية مسؤول المنصة، منفصلة تمامًا عن أدوار المؤسسات.',
+                    title: l10n.platformAdminOAuthSettingsButton,
+                    body: l10n.platformAdminGuideOAuthBody,
                   ),
                   _AdminGuidePoint(
-                    title: 'سجل تدقيق المنصة',
-                    body:
-                        'يسجّل كل إجراء إداري حساس (تعطيل مؤسسة، تغيير دور مسؤول، تعديل إعدادات OAuth) قابلاً للمراجعة لاحقًا.',
+                    title: l10n.platformAdminAuditLogButton,
+                    body: l10n.platformAdminGuideAuditBody,
                   ),
                 ],
               ),
@@ -121,11 +119,11 @@ class _PlatformAdministrationScreenState
           actions: <Widget>[
             TextButton(
               onPressed: () => context.push(RouteNames.aboutPath),
-              child: const Text('حول النظام'),
+              child: Text(l10n.platformAdminAboutSystemButton),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('إغلاق'),
+              child: Text(l10n.commonClose),
             ),
           ],
         ),
@@ -135,11 +133,12 @@ class _PlatformAdministrationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('إدارة المنصة'),
+          title: Text(l10n.platformAdminAppBarTitle),
           actions: <Widget>[
             // A direct one-click shortcut to /platform/users right next to
             // the header title — the existing "إدارة مستخدمي النظام" quick
@@ -153,10 +152,10 @@ class _PlatformAdministrationScreenState
               ),
               onPressed: () => context.push(RouteNames.platformUsersPath),
               icon: const Icon(Icons.manage_accounts_outlined),
-              label: const Text('إدارة المستخدمين'),
+              label: Text(l10n.platformAdminManageUsersShortcut),
             ),
             IconButton(
-              tooltip: 'تحديث البيانات',
+              tooltip: l10n.platformAdminRefreshTooltip,
               onPressed: _reload,
               icon: const Icon(Icons.refresh),
             ),
@@ -167,12 +166,12 @@ class _PlatformAdministrationScreenState
             // content, per the explicit instruction not to route them into
             // the organization-scoped guide automatically.
             IconButton(
-              tooltip: 'دليل الإدارة',
+              tooltip: l10n.platformAdminGuideButton,
               onPressed: () => _showPlatformAdminGuide(context),
               icon: const Icon(Icons.help_outline),
             ),
             IconButton(
-              tooltip: 'تسجيل الخروج',
+              tooltip: l10n.logoutTooltip,
               onPressed: _logout,
               icon: const Icon(Icons.logout),
             ),
@@ -220,6 +219,7 @@ class _PlatformDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -229,46 +229,53 @@ class _PlatformDashboardContent extends StatelessWidget {
       ),
       children: <Widget>[
         Text(
-          'نظرة عامة على المنصة',
+          l10n.platformAdminOverviewTitle,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'بيانات مباشرة من النظام عبر صلاحيات إدارة المنصة.',
+          l10n.platformAdminOverviewSubtitle,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.lg),
-        Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
-          children: <Widget>[
+        // Fixed at 3 columns on desktop so the 6 metrics below form two
+        // equal rows rather than "4 then 2" wasting half the trailing row
+        // (2026-08-12 audit finding) — AdaptiveCardGrid still steps down to
+        // 2/1 columns on narrower widths.
+        AdaptiveCardGrid(
+          breakpoints: const <AdaptiveGridBreakpoint>[
+            AdaptiveGridBreakpoint(minWidth: 720, columns: 3),
+            AdaptiveGridBreakpoint(minWidth: 480, columns: 2),
+            AdaptiveGridBreakpoint(minWidth: 0, columns: 1),
+          ],
+          items: <Widget>[
             _MetricCard(
-              'إجمالي المؤسسات',
+              l10n.platformAdminMetricOrgsTotal,
               data.organizationsTotal,
               Icons.domain_outlined,
             ),
             _MetricCard(
-              'المؤسسات النشطة',
+              l10n.platformAdminMetricOrgsActive,
               data.organizationsActive,
               Icons.verified_outlined,
             ),
             _MetricCard(
-              'المؤسسات المعطلة',
+              l10n.platformAdminMetricOrgsInactive,
               data.organizationsInactive,
               Icons.pause_circle_outline,
             ),
             _MetricCard(
-              'إجمالي المستخدمين',
+              l10n.platformAdminMetricUsersTotal,
               data.usersTotal,
               Icons.people_outline,
             ),
             _MetricCard(
-              'مستخدمون جدد (30 يوماً)',
+              l10n.platformAdminMetricUsersNew30d,
               data.usersLast30Days,
               Icons.person_add_alt_1_outlined,
             ),
             _MetricCard(
-              'بلا مالك فعّال',
+              l10n.platformAdminMetricOrgsWithoutOwner,
               data.organizationsWithoutActiveOwner,
               Icons.warning_amber_outlined,
               danger: data.organizationsWithoutActiveOwner > 0,
@@ -284,12 +291,12 @@ class _PlatformDashboardContent extends StatelessWidget {
               onPressed: () =>
                   context.push(RouteNames.platformOrganizationsPath),
               icon: const Icon(Icons.domain_add_outlined),
-              label: const Text('إدارة المؤسسات'),
+              label: Text(l10n.platformAdminManageOrgsButton),
             ),
             OutlinedButton.icon(
               onPressed: () => context.push(RouteNames.platformUsersPath),
               icon: const Icon(Icons.manage_accounts_outlined),
-              label: const Text('إدارة مستخدمي النظام'),
+              label: Text(l10n.platformAdminManageUsersButton),
             ),
             // Sprint D (role/permission remediation): App ID/App Secret for
             // every organization's shared OAuth providers is now
@@ -301,25 +308,25 @@ class _PlatformDashboardContent extends StatelessWidget {
               onPressed: () =>
                   context.push(RouteNames.oauthProviderSettingsPath),
               icon: const Icon(Icons.vpn_key_outlined),
-              label: const Text('إعدادات مزوّدي OAuth'),
+              label: Text(l10n.platformAdminOAuthSettingsButton),
             ),
             OutlinedButton.icon(
               onPressed: () => context.push(RouteNames.platformAuditLogPath),
               icon: const Icon(Icons.fact_check_outlined),
-              label: const Text('سجل تدقيق المنصة'),
+              label: Text(l10n.platformAdminAuditLogButton),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
         _SectionTitle(
-          title: 'أحدث المؤسسات',
+          title: l10n.platformAdminLatestOrgsTitle,
           onViewAll: () => context.push(RouteNames.platformOrganizationsPath),
         ),
         if (data.latestOrganizations.isEmpty)
-          const AppEmptyState(
+          AppEmptyState(
             compact: true,
-            title: 'لا توجد مؤسسات حديثة',
-            message: 'ستظهر المؤسسات هنا بعد إنشائها.',
+            title: l10n.platformAdminNoRecentOrgsTitle,
+            message: l10n.platformAdminNoRecentOrgsMessage,
           )
         else
           ...data.latestOrganizations.map(
@@ -335,14 +342,14 @@ class _PlatformDashboardContent extends StatelessWidget {
           ),
         const SizedBox(height: AppSpacing.xl),
         _SectionTitle(
-          title: 'أحدث المستخدمين',
+          title: l10n.platformAdminLatestUsersTitle,
           onViewAll: () => context.push(RouteNames.platformUsersPath),
         ),
         if (data.latestUsers.isEmpty)
-          const AppEmptyState(
+          AppEmptyState(
             compact: true,
-            title: 'لا يوجد مستخدمون حديثون',
-            message: 'ستظهر الحسابات المنشأة حديثاً هنا.',
+            title: l10n.platformAdminNoRecentUsersTitle,
+            message: l10n.platformAdminNoRecentUsersMessage,
           )
         else
           ...data.latestUsers.map((user) => _UserTile(user: user)),
@@ -392,13 +399,16 @@ class _PlatformOrganizationsScreenState
   }
 
   Future<void> _setStatus(PlatformOrganization organization) async {
+    final l10n = AppLocalizations.of(context)!;
     final nextStatus = organization.isActive ? 'inactive' : 'active';
     final confirmed = await _confirm(
       context,
-      title: nextStatus == 'inactive' ? 'تعطيل المؤسسة' : 'إعادة تفعيل المؤسسة',
+      title: nextStatus == 'inactive'
+          ? l10n.platformAdminDisableOrgTitle
+          : l10n.platformAdminEnableOrgTitle,
       message: nextStatus == 'inactive'
-          ? 'سيتم تعطيل «${organization.name}». لن تُحذف أي بيانات.'
-          : 'سيتم إعادة تفعيل «${organization.name}».',
+          ? l10n.platformAdminDisableOrgMessage(organization.name)
+          : l10n.platformAdminEnableOrgMessage(organization.name),
       destructive: nextStatus == 'inactive',
     );
     if (confirmed != true) return;
@@ -408,10 +418,33 @@ class _PlatformOrganizationsScreenState
           .updateOrganizationStatus(organization.id, nextStatus);
       if (mounted) {
         _message(
-          nextStatus == 'inactive' ? 'تم تعطيل المؤسسة.' : 'تم تفعيل المؤسسة.',
+          nextStatus == 'inactive'
+              ? l10n.platformAdminOrgDisabledMessage
+              : l10n.platformAdminOrgEnabledMessage,
         );
         _reload(page: _page);
       }
+    } on PlatformAdminException catch (error) {
+      if (mounted) _message(error.message, danger: true);
+    }
+  }
+
+  Future<void> _fixPrimaryOwner(PlatformOrganization organization) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final fixed = await ref
+          .read(platformAdminRepositoryProvider)
+          .reconcilePrimaryOwner(organization.id);
+      if (!mounted) return;
+      _message(
+        fixed.primaryOwnerMissing
+            ? l10n.platformAdminNoEligibleOwnerMessage
+            : l10n.platformAdminPrimaryOwnerAssignedMessage(
+                fixed.primaryOwner?.name ?? '',
+              ),
+        danger: fixed.primaryOwnerMissing,
+      );
+      _reload(page: _page);
     } on PlatformAdminException catch (error) {
       if (mounted) _message(error.message, danger: true);
     }
@@ -446,14 +479,15 @@ class _PlatformOrganizationsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('المؤسسات')),
+        appBar: AppBar(title: Text(l10n.platformAdminOrgsAppBarTitle)),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _createOrganization,
           icon: const Icon(Icons.add_business_outlined),
-          label: const Text('إنشاء مؤسسة'),
+          label: Text(l10n.platformAdminCreateOrgButton),
         ),
         body: AdaptiveContentWidth(
           child: Column(
@@ -466,10 +500,10 @@ class _PlatformOrganizationsScreenState
                       controller: _searchController,
                       onSubmitted: (_) => _reload(),
                       decoration: InputDecoration(
-                        labelText: 'ابحث بالاسم أو المالك',
+                        labelText: l10n.platformAdminSearchByNameOrOwnerHint,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: IconButton(
-                          tooltip: 'بحث',
+                          tooltip: l10n.platformAdminSearchTooltip,
                           onPressed: _reload,
                           icon: const Icon(Icons.search),
                         ),
@@ -480,12 +514,18 @@ class _PlatformOrganizationsScreenState
                       alignment: AlignmentDirectional.centerStart,
                       child: SegmentedButton<String>(
                         showSelectedIcon: false,
-                        segments: const <ButtonSegment<String>>[
-                          ButtonSegment(value: 'all', label: Text('الكل')),
-                          ButtonSegment(value: 'active', label: Text('نشطة')),
+                        segments: <ButtonSegment<String>>[
+                          ButtonSegment(
+                            value: 'all',
+                            label: Text(l10n.platformAdminFilterAllChip),
+                          ),
+                          ButtonSegment(
+                            value: 'active',
+                            label: Text(l10n.platformAdminOrgActiveStatus),
+                          ),
                           ButtonSegment(
                             value: 'inactive',
-                            label: Text('معطلة'),
+                            label: Text(l10n.platformAdminOrgInactiveStatus),
                           ),
                         ],
                         selected: <String>{_status},
@@ -518,9 +558,9 @@ class _PlatformOrganizationsScreenState
                         onRetry: _reload,
                       ),
                       empty: AppEmptyState(
-                        title: 'لا توجد مؤسسات مطابقة',
-                        message: 'جرّب تعديل كلمات البحث أو أنشئ مؤسسة جديدة.',
-                        actionLabel: 'إنشاء مؤسسة',
+                        title: l10n.platformAdminNoMatchingOrgsTitle,
+                        message: l10n.platformAdminNoMatchingOrgsMessage,
+                        actionLabel: l10n.platformAdminCreateOrgButton,
                         onAction: _createOrganization,
                       ),
                       content: snapshot.hasData
@@ -528,6 +568,7 @@ class _PlatformOrganizationsScreenState
                               page: snapshot.data!,
                               onStatus: _setStatus,
                               onEdit: _editOrganization,
+                              onFixPrimaryOwner: _fixPrimaryOwner,
                               onPage: (page) => _reload(page: page),
                             )
                           : const SizedBox.shrink(),
@@ -572,12 +613,41 @@ class _PlatformOrganizationDetailScreenState
 
   void _reload() => setState(() => _details = _load());
 
+  Future<void> _fixPrimaryOwner() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final fixed = await ref
+          .read(platformAdminRepositoryProvider)
+          .reconcilePrimaryOwner(widget.organizationId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: fixed.primaryOwnerMissing ? AppColors.error : null,
+          content: Text(
+            fixed.primaryOwnerMissing
+                ? l10n.platformAdminNoEligibleOwnerMessage
+                : l10n.platformAdminPrimaryOwnerAssignedMessage(
+                    fixed.primaryOwner?.name ?? '',
+                  ),
+          ),
+        ),
+      );
+      _reload();
+    } on PlatformAdminException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(backgroundColor: AppColors.error, content: Text(error.message)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('تفاصيل المؤسسة')),
+        appBar: AppBar(title: Text(l10n.platformAdminOrgDetailAppBarTitle)),
         body: AdaptiveContentWidth(
           child: FutureBuilder<PlatformOrganizationDetails>(
             future: _details,
@@ -596,7 +666,10 @@ class _PlatformOrganizationDetailScreenState
                 ),
                 empty: const SizedBox.shrink(),
                 content: snapshot.hasData
-                    ? _OrganizationDetailsContent(details: snapshot.data!)
+                    ? _OrganizationDetailsContent(
+                        details: snapshot.data!,
+                        onFixPrimaryOwner: _fixPrimaryOwner,
+                      )
                     : const SizedBox.shrink(),
               );
             },
@@ -669,13 +742,16 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
   }
 
   Future<void> _changeStatus(PlatformUser user) async {
+    final l10n = AppLocalizations.of(context)!;
     final next = !user.isActive;
     final confirmed = await _confirm(
       context,
-      title: next ? 'تفعيل الحساب' : 'تعطيل الحساب',
+      title: next
+          ? l10n.platformAdminActivateAccountTitle
+          : l10n.platformAdminDeactivateAccountTitle,
       message: next
-          ? 'سيتم تفعيل حساب ${user.email}.'
-          : 'سيتم تعطيل حساب ${user.email} وإنهاء جلساته الحالية.',
+          ? l10n.platformAdminActivateAccountMessage(user.email)
+          : l10n.platformAdminDeactivateAccountMessage(user.email),
       destructive: !next,
     );
     if (confirmed != true) return;
@@ -683,18 +759,23 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
       () => ref
           .read(platformAdminRepositoryProvider)
           .updateUserStatus(user.id, next),
-      next ? 'تم تفعيل الحساب.' : 'تم تعطيل الحساب.',
+      next
+          ? l10n.platformAdminAccountActivatedMessage
+          : l10n.platformAdminAccountDeactivatedMessage,
     );
   }
 
   Future<void> _changePlatformRole(PlatformUser user) async {
+    final l10n = AppLocalizations.of(context)!;
     final next = !user.isSuperAdmin;
     final confirmed = await _confirm(
       context,
-      title: next ? 'منح مسؤول المنصة' : 'سحب مسؤول المنصة',
+      title: next
+          ? l10n.platformAdminGrantSuperAdminTitle
+          : l10n.platformAdminRevokeSuperAdminTitle,
       message: next
-          ? 'سيُمنح ${user.email} صلاحية مستقلة لإدارة المنصة.'
-          : 'سيُسحب وصول ${user.email} إلى إدارة المنصة.',
+          ? l10n.platformAdminGrantSuperAdminMessage(user.email)
+          : l10n.platformAdminRevokeSuperAdminMessage(user.email),
       destructive: !next,
     );
     if (confirmed != true) return;
@@ -702,7 +783,9 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
       () => ref
           .read(platformAdminRepositoryProvider)
           .updatePlatformRole(user.id, next),
-      next ? 'تم منح صلاحية مسؤول المنصة.' : 'تم سحب صلاحية مسؤول المنصة.',
+      next
+          ? l10n.platformAdminSuperAdminGrantedMessage
+          : l10n.platformAdminSuperAdminRevokedMessage,
     );
   }
 
@@ -747,14 +830,15 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('مستخدمو النظام')),
+        appBar: AppBar(title: Text(l10n.platformAdminUsersAppBarTitle)),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _createUser,
           icon: const Icon(Icons.person_add_alt_1_outlined),
-          label: const Text('إضافة مستخدم'),
+          label: Text(l10n.platformAdminAddUserButton),
         ),
         body: AdaptiveContentWidth(
           child: Column(
@@ -767,10 +851,10 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                       controller: _searchController,
                       onSubmitted: (_) => _reload(),
                       decoration: InputDecoration(
-                        labelText: 'ابحث بالاسم أو البريد الإلكتروني',
+                        labelText: l10n.platformAdminSearchByNameOrEmailHint,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: IconButton(
-                          tooltip: 'بحث',
+                          tooltip: l10n.platformAdminSearchTooltip,
                           onPressed: _reload,
                           icon: const Icon(Icons.search),
                         ),
@@ -782,7 +866,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                       runSpacing: AppSpacing.sm,
                       children: <Widget>[
                         FilterChip(
-                          label: const Text('النشطون فقط'),
+                          label: Text(l10n.platformAdminActiveOnlyChip),
                           selected: _isActive == true,
                           onSelected: (selected) {
                             setState(() => _isActive = selected ? true : null);
@@ -790,7 +874,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                           },
                         ),
                         FilterChip(
-                          label: const Text('المعطّلون فقط'),
+                          label: Text(l10n.platformAdminInactiveOnlyChip),
                           selected: _isActive == false,
                           onSelected: (selected) {
                             setState(() => _isActive = selected ? false : null);
@@ -798,7 +882,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                           },
                         ),
                         FilterChip(
-                          label: const Text('مسؤولو المنصة'),
+                          label: Text(l10n.platformAdminSuperAdminsChip),
                           selected: _isSuperAdmin == true,
                           onSelected: (selected) {
                             setState(
@@ -824,9 +908,11 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                             DropdownButton<int>(
                               value: _organizationFilter,
                               items: <DropdownMenuItem<int>>[
-                                const DropdownMenuItem(
+                                DropdownMenuItem(
                                   value: -1,
-                                  child: Text('كل المؤسسات'),
+                                  child: Text(
+                                    l10n.platformAdminAllOrgsOption,
+                                  ),
                                 ),
                                 ...snapshot.data!.items.map(
                                   (organization) => DropdownMenuItem(
@@ -844,14 +930,16 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                             DropdownButton<String>(
                               value: _membershipRoleFilter,
                               items: <DropdownMenuItem<String>>[
-                                const DropdownMenuItem(
+                                DropdownMenuItem(
                                   value: 'all',
-                                  child: Text('كل الأدوار'),
+                                  child: Text(
+                                    l10n.platformAdminAllRolesOption,
+                                  ),
                                 ),
                                 ..._membershipRoles.map(
                                   (role) => DropdownMenuItem(
                                     value: role,
-                                    child: Text(_roleLabel(role)),
+                                    child: Text(_roleLabel(role, l10n)),
                                   ),
                                 ),
                               ],
@@ -888,9 +976,9 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                         onRetry: _reload,
                       ),
                       empty: AppEmptyState(
-                        title: 'لا توجد حسابات مطابقة',
-                        message: 'عدّل الفلاتر أو أضف مستخدماً جديداً.',
-                        actionLabel: 'إضافة مستخدم',
+                        title: l10n.platformAdminNoMatchingUsersTitle,
+                        message: l10n.platformAdminNoMatchingUsersMessage,
+                        actionLabel: l10n.platformAdminAddUserButton,
                         onAction: _createUser,
                       ),
                       content: snapshot.hasData
@@ -968,10 +1056,11 @@ class _PlatformAuditLogScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('سجل تدقيق المنصة')),
+        appBar: AppBar(title: Text(l10n.platformAdminAuditLogButton)),
         body: AdaptiveContentWidth(
           child: Column(
             children: <Widget>[
@@ -983,10 +1072,10 @@ class _PlatformAuditLogScreenState
                       controller: _actionController,
                       onSubmitted: (_) => _reload(),
                       decoration: InputDecoration(
-                        labelText: 'تصفية حسب الإجراء',
+                        labelText: l10n.platformAdminFilterByActionHint,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: IconButton(
-                          tooltip: 'بحث',
+                          tooltip: l10n.platformAdminSearchTooltip,
                           onPressed: _reload,
                           icon: const Icon(Icons.search),
                         ),
@@ -1004,9 +1093,9 @@ class _PlatformAuditLogScreenState
                           child: DropdownButton<int>(
                             value: _organizationFilter,
                             items: <DropdownMenuItem<int>>[
-                              const DropdownMenuItem(
+                              DropdownMenuItem(
                                 value: -1,
-                                child: Text('كل المؤسسات'),
+                                child: Text(l10n.platformAdminAllOrgsOption),
                               ),
                               ...snapshot.data!.items.map(
                                 (organization) => DropdownMenuItem(
@@ -1046,10 +1135,10 @@ class _PlatformAuditLogScreenState
                         error: snapshot.error,
                         onRetry: _reload,
                       ),
-                      empty: const AppEmptyState(
+                      empty: AppEmptyState(
                         icon: Icons.fact_check_outlined,
-                        title: 'لا توجد أحداث مطابقة',
-                        message: 'جرّب تعديل الفلاتر.',
+                        title: l10n.platformAdminNoMatchingEventsTitle,
+                        message: l10n.platformAdminNoMatchingEventsMessage,
                       ),
                       content: ListView(
                         padding: const EdgeInsets.fromLTRB(
@@ -1119,32 +1208,33 @@ class _MetricCard extends StatelessWidget {
     final color = danger
         ? Theme.of(context).colorScheme.error
         : Theme.of(context).colorScheme.primary;
-    return SizedBox(
-      width: 220,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
-            children: <Widget>[
-              Icon(icon, color: color),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      value.toString(),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineSmall?.copyWith(color: color),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(label, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+    // Width now comes from the enclosing AdaptiveCardGrid, which sizes
+    // every card in a row equally rather than this card carrying its own
+    // fixed width (that fixed width was what produced "4 then 2" rows
+    // with wasted trailing space — see the call site).
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: <Widget>[
+            Icon(icon, color: color),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    value.toString(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineSmall?.copyWith(color: color),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(label, style: Theme.of(context).textTheme.bodySmall),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1162,7 +1252,10 @@ class _SectionTitle extends StatelessWidget {
       Expanded(
         child: Text(title, style: Theme.of(context).textTheme.titleLarge),
       ),
-      TextButton(onPressed: onViewAll, child: const Text('عرض الكل')),
+      TextButton(
+        onPressed: onViewAll,
+        child: Text(AppLocalizations.of(context)!.platformAdminViewAllButton),
+      ),
     ],
   );
 }
@@ -1172,62 +1265,70 @@ class _OrganizationList extends StatelessWidget {
     required this.page,
     required this.onStatus,
     required this.onEdit,
+    required this.onFixPrimaryOwner,
     required this.onPage,
   });
   final PlatformPage<PlatformOrganization> page;
   final ValueChanged<PlatformOrganization> onStatus;
   final ValueChanged<PlatformOrganization> onEdit;
+  final ValueChanged<PlatformOrganization> onFixPrimaryOwner;
   final ValueChanged<int> onPage;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(
-      AppSpacing.lg,
-      0,
-      AppSpacing.lg,
-      AppSpacing.xxl,
-    ),
-    children: <Widget>[
-      Text(
-        '${page.total} مؤسسة',
-        style: Theme.of(context).textTheme.labelLarge,
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.xxl,
       ),
-      const SizedBox(height: AppSpacing.sm),
-      ...page.items.map(
-        (organization) => _OrganizationTile(
-          organization: organization,
-          onTap: () => context.push(
-            RouteNames.platformOrganizationDetailPath.replaceFirst(
-              ':id',
-              organization.id.toString(),
+      children: <Widget>[
+        Text(
+          l10n.platformAdminOrgCountLabel(page.total),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...page.items.map(
+          (organization) => _OrganizationTile(
+            organization: organization,
+            onTap: () => context.push(
+              RouteNames.platformOrganizationDetailPath.replaceFirst(
+                ':id',
+                organization.id.toString(),
+              ),
+            ),
+            onFixPrimaryOwner: () => onFixPrimaryOwner(organization),
+            actions: PopupMenuButton<String>(
+              onSelected: (action) {
+                if (action == 'edit') {
+                  onEdit(organization);
+                } else {
+                  onStatus(organization);
+                }
+              },
+              itemBuilder: (_) => <PopupMenuEntry<String>>[
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(l10n.platformAdminEditOrgNameMenuItem),
+                ),
+                PopupMenuItem(
+                  value: 'status',
+                  child: Text(
+                    organization.isActive
+                        ? l10n.platformAdminDisableOrgTitle
+                        : l10n.platformAdminReactivateMenuItem,
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: PopupMenuButton<String>(
-            onSelected: (action) {
-              if (action == 'edit') {
-                onEdit(organization);
-              } else {
-                onStatus(organization);
-              }
-            },
-            itemBuilder: (_) => <PopupMenuEntry<String>>[
-              const PopupMenuItem(
-                value: 'edit',
-                child: Text('تعديل اسم المؤسسة'),
-              ),
-              PopupMenuItem(
-                value: 'status',
-                child: Text(
-                  organization.isActive ? 'تعطيل المؤسسة' : 'إعادة التفعيل',
-                ),
-              ),
-            ],
-          ),
         ),
-      ),
-      _Pagination(page: page, onPage: onPage),
-    ],
-  );
+        _Pagination(page: page, onPage: onPage),
+      ],
+    );
+  }
 }
 
 class _OrganizationTile extends StatelessWidget {
@@ -1235,54 +1336,145 @@ class _OrganizationTile extends StatelessWidget {
     required this.organization,
     required this.onTap,
     this.actions,
+    this.onFixPrimaryOwner,
   });
   final PlatformOrganization organization;
   final VoidCallback onTap;
   final Widget? actions;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-    child: ListTile(
-      onTap: onTap,
-      leading: CircleAvatar(
-        child: Icon(
-          organization.isActive
-              ? Icons.domain_outlined
-              : Icons.domain_disabled_outlined,
-        ),
-      ),
-      title: Text(organization.name),
-      subtitle: Text(
-        '${organization.primaryOwner?.name ?? 'لا يوجد مالك فعّال'} · ${organization.membersCount} أعضاء · أنشئت ${_formatDate(organization.createdAt)}',
-      ),
-      trailing: actions == null
-          ? StatusPill(
-              label: organization.isActive ? 'نشطة' : 'معطلة',
-              tone: organization.isActive ? PillTone.success : PillTone.danger,
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                StatusPill(
-                  label: organization.isActive ? 'نشطة' : 'معطلة',
-                  tone: organization.isActive
-                      ? PillTone.success
-                      : PillTone.danger,
-                ),
-                actions!,
-              ],
-            ),
-    ),
-  );
-}
-
-class _OrganizationDetailsContent extends StatelessWidget {
-  const _OrganizationDetailsContent({required this.details});
-  final PlatformOrganizationDetails details;
+  // Null on the read-only dashboard summary tile — the warning still shows
+  // there, just without an action button.
+  final VoidCallback? onFixPrimaryOwner;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final statusLabel = organization.isActive
+        ? l10n.platformAdminOrgActiveStatus
+        : l10n.platformAdminOrgInactiveStatus;
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: ListTile(
+        onTap: onTap,
+        leading: CircleAvatar(
+          child: Icon(
+            organization.isActive
+                ? Icons.domain_outlined
+                : Icons.domain_disabled_outlined,
+          ),
+        ),
+        title: Text(organization.name),
+        subtitle: organization.primaryOwnerMissing
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      '${l10n.platformAdminPrimaryOwnerMissingLabel} · '
+                      '${l10n.platformAdminMembersCountLabel(organization.membersCount)}',
+                      style: TextStyle(color: AppColors.warning),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (onFixPrimaryOwner != null)
+                    TextButton(
+                      onPressed: onFixPrimaryOwner,
+                      child: Text(l10n.platformAdminFixButton),
+                    ),
+                ],
+              )
+            : Text(
+                l10n.platformAdminOrgSummaryLine(
+                  organization.primaryOwner?.name ?? '—',
+                  organization.membersCount,
+                  _formatDate(organization.createdAt, l10n),
+                ),
+              ),
+        trailing: actions == null
+            ? StatusPill(
+                label: statusLabel,
+                tone: organization.isActive
+                    ? PillTone.success
+                    : PillTone.danger,
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  StatusPill(
+                    label: statusLabel,
+                    tone: organization.isActive
+                        ? PillTone.success
+                        : PillTone.danger,
+                  ),
+                  actions!,
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+/// Replaces the vague "لا يوجد مالك فعّال" fallback text the 2026-08-12
+/// audit flagged with an explicit, actionable alert: what's wrong, and a
+/// button that calls the reconcile-primary-owner endpoint right from here.
+class _PrimaryOwnerMissingBanner extends StatelessWidget {
+  const _PrimaryOwnerMissingBanner({required this.onFix});
+  final VoidCallback onFix;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.warning_amber_rounded, color: AppColors.warning),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  l10n.platformAdminPrimaryOwnerMissingLabel,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(l10n.platformAdminPrimaryOwnerMissingBannerBody),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          FilledButton(
+            onPressed: onFix,
+            child: Text(l10n.platformAdminFixButton),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrganizationDetailsContent extends StatelessWidget {
+  const _OrganizationDetailsContent({
+    required this.details,
+    required this.onFixPrimaryOwner,
+  });
+  final PlatformOrganizationDetails details;
+  final VoidCallback onFixPrimaryOwner;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final organization = details.organization;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1291,29 +1483,41 @@ class _OrganizationDetailsContent extends StatelessWidget {
           organization.name,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
+        if (organization.primaryOwnerMissing) ...<Widget>[
+          const SizedBox(height: AppSpacing.sm),
+          _PrimaryOwnerMissingBanner(onFix: onFixPrimaryOwner),
+        ],
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
           children: <Widget>[
             StatusPill(
-              label: organization.isActive ? 'نشطة' : 'معطلة',
+              label: organization.isActive
+                  ? l10n.platformAdminOrgActiveStatus
+                  : l10n.platformAdminOrgInactiveStatus,
               tone: organization.isActive ? PillTone.success : PillTone.danger,
             ),
-            StatusPill(label: '${organization.membersCount} أعضاء'),
             StatusPill(
-              label: 'آخر نشاط: ${_formatDate(organization.lastActivityAt)}',
+              label: l10n.platformAdminMembersCountLabel(
+                organization.membersCount,
+              ),
+            ),
+            StatusPill(
+              label: l10n.platformAdminLastActivityLabel(
+                _formatDate(organization.lastActivityAt, l10n),
+              ),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
         _DetailSection(
-          title: 'الأعضاء والأدوار',
+          title: l10n.platformAdminMembersSectionTitle,
           child: details.members.isEmpty
-              ? const AppEmptyState(
+              ? AppEmptyState(
                   compact: true,
-                  title: 'لا يوجد أعضاء',
-                  message: 'لا توجد عضويات مسجلة لهذه المؤسسة.',
+                  title: l10n.platformAdminNoMembersTitle,
+                  message: l10n.platformAdminNoMembersMessage,
                 )
               : Column(
                   children: details.members
@@ -1330,7 +1534,7 @@ class _OrganizationDetailsContent extends StatelessWidget {
                           title: Text(member.user.name),
                           subtitle: Text(member.user.email),
                           trailing: StatusPill(
-                            label: _roleLabel(member.role),
+                            label: _roleLabel(member.role, l10n),
                             tone: member.status == 'active'
                                 ? PillTone.neutral
                                 : PillTone.warning,
@@ -1342,12 +1546,12 @@ class _OrganizationDetailsContent extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         _DetailSection(
-          title: 'الحسابات الاجتماعية المرتبطة',
+          title: l10n.platformAdminSocialAccountsSectionTitle,
           child: details.socialAccounts.isEmpty
-              ? const AppEmptyState(
+              ? AppEmptyState(
                   compact: true,
-                  title: 'لا توجد حسابات مرتبطة',
-                  message: 'لا تظهر هنا أي رموز وصول أو أسرار.',
+                  title: l10n.platformAdminNoSocialAccountsTitle,
+                  message: l10n.platformAdminNoSocialAccountsMessage,
                 )
               : Wrap(
                   spacing: AppSpacing.sm,
@@ -1356,7 +1560,8 @@ class _OrganizationDetailsContent extends StatelessWidget {
                       .map(
                         (account) => StatusPill(
                           label:
-                              '${account['provider'] ?? 'حساب'} · ${account['account_name'] ?? account['account_username'] ?? 'غير مسمى'}',
+                              '${account['provider'] ?? l10n.platformAdminUnnamedAccountFallback} · '
+                              '${account['account_name'] ?? account['account_username'] ?? l10n.platformAdminUnnamedFallback}',
                           tone: account['is_active'] == true
                               ? PillTone.success
                               : PillTone.warning,
@@ -1367,12 +1572,12 @@ class _OrganizationDetailsContent extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         _DetailSection(
-          title: 'ملخص المنشورات',
+          title: l10n.platformAdminPostsSummarySectionTitle,
           child: details.postsSummary.isEmpty
-              ? const AppEmptyState(
+              ? AppEmptyState(
                   compact: true,
-                  title: 'لا توجد منشورات',
-                  message: 'سيظهر ملخص الحالات عند توفر منشورات.',
+                  title: l10n.platformAdminNoPostsTitle,
+                  message: l10n.platformAdminNoPostsMessage,
                 )
               : Wrap(
                   spacing: AppSpacing.sm,
@@ -1428,62 +1633,74 @@ class _UserList extends StatelessWidget {
   final ValueChanged<int> onPage;
 
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(
-      AppSpacing.lg,
-      0,
-      AppSpacing.lg,
-      AppSpacing.xxl,
-    ),
-    children: <Widget>[
-      Text(
-        '${page.total} مستخدم',
-        style: Theme.of(context).textTheme.labelLarge,
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.xxl,
       ),
-      const SizedBox(height: AppSpacing.sm),
-      ...page.items.map(
-        (user) => _UserTile(
-          user: user,
-          actions: PopupMenuButton<String>(
-            onSelected: (action) {
-              switch (action) {
-                case 'edit':
-                  onEdit(user);
-                  break;
-                case 'memberships':
-                  onMemberships(user);
-                  break;
-                case 'status':
-                  onStatus(user);
-                  break;
-                case 'role':
-                  onPlatformRole(user);
-                  break;
-              }
-            },
-            itemBuilder: (_) => <PopupMenuEntry<String>>[
-              const PopupMenuItem(value: 'edit', child: Text('تعديل البيانات')),
-              const PopupMenuItem(
-                value: 'memberships',
-                child: Text('إدارة العضويات'),
-              ),
-              PopupMenuItem(
-                value: 'role',
-                child: Text(
-                  user.isSuperAdmin ? 'سحب مسؤول المنصة' : 'منح مسؤول المنصة',
+      children: <Widget>[
+        Text(
+          l10n.platformAdminUserCountLabel(page.total),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...page.items.map(
+          (user) => _UserTile(
+            user: user,
+            actions: PopupMenuButton<String>(
+              onSelected: (action) {
+                switch (action) {
+                  case 'edit':
+                    onEdit(user);
+                    break;
+                  case 'memberships':
+                    onMemberships(user);
+                    break;
+                  case 'status':
+                    onStatus(user);
+                    break;
+                  case 'role':
+                    onPlatformRole(user);
+                    break;
+                }
+              },
+              itemBuilder: (_) => <PopupMenuEntry<String>>[
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(l10n.platformAdminEditUserDataMenuItem),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'status',
-                child: Text(user.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'),
-              ),
-            ],
+                PopupMenuItem(
+                  value: 'memberships',
+                  child: Text(l10n.platformAdminManageMembershipsMenuItem),
+                ),
+                PopupMenuItem(
+                  value: 'role',
+                  child: Text(
+                    user.isSuperAdmin
+                        ? l10n.platformAdminRevokeSuperAdminTitle
+                        : l10n.platformAdminGrantSuperAdminTitle,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'status',
+                  child: Text(
+                    user.isActive
+                        ? l10n.platformAdminDeactivateAccountTitle
+                        : l10n.platformAdminActivateAccountTitle,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      _Pagination(page: page, onPage: onPage),
-    ],
-  );
+        _Pagination(page: page, onPage: onPage),
+      ],
+    );
+  }
 }
 
 class _UserTile extends StatelessWidget {
@@ -1492,34 +1709,42 @@ class _UserTile extends StatelessWidget {
   final Widget? actions;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-    child: ListTile(
-      leading: CircleAvatar(
-        child: Text(user.name.isEmpty ? '?' : user.name.substring(0, 1)),
-      ),
-      title: Text(user.name),
-      subtitle: Text(
-        '${user.email}\n${user.memberships.isEmpty ? 'بلا مؤسسة' : user.memberships.map((membership) => '${membership.organizationName} (${_roleLabel(membership.role)})').join(' · ')}',
-      ),
-      isThreeLine: user.memberships.isNotEmpty,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          if (user.isSuperAdmin)
-            const Padding(
-              padding: EdgeInsetsDirectional.only(end: AppSpacing.xs),
-              child: StatusPill(label: 'مسؤول المنصة', tone: PillTone.warning),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Text(user.name.isEmpty ? '?' : user.name.substring(0, 1)),
+        ),
+        title: Text(user.name),
+        subtitle: Text(
+          '${user.email}\n${user.memberships.isEmpty ? l10n.platformAdminNoOrgLabel : user.memberships.map((membership) => '${membership.organizationName} (${_roleLabel(membership.role, l10n)})').join(' · ')}',
+        ),
+        isThreeLine: user.memberships.isNotEmpty,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            if (user.isSuperAdmin)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: AppSpacing.xs),
+                child: StatusPill(
+                  label: l10n.platformAdminSuperAdminBadge,
+                  tone: PillTone.warning,
+                ),
+              ),
+            StatusPill(
+              label: user.isActive
+                  ? l10n.platformAdminActiveLabel
+                  : l10n.platformAdminInactiveLabel,
+              tone: user.isActive ? PillTone.success : PillTone.danger,
             ),
-          StatusPill(
-            label: user.isActive ? 'نشط' : 'معطل',
-            tone: user.isActive ? PillTone.success : PillTone.danger,
-          ),
-          if (actions case final Widget actions) actions,
-        ],
+            if (actions case final Widget actions) actions,
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _Pagination<T> extends StatelessWidget {
@@ -1530,6 +1755,7 @@ class _Pagination<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (page.lastPage <= 1) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.lg),
       child: Row(
@@ -1540,18 +1766,20 @@ class _Pagination<T> extends StatelessWidget {
                 ? () => onPage(page.currentPage - 1)
                 : null,
             icon: const Icon(Icons.chevron_right),
-            label: const Text('السابق'),
+            label: Text(l10n.platformAdminPreviousPageButton),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Text('${page.currentPage} / ${page.lastPage}'),
+            child: Text(
+              l10n.platformAdminPageIndicator(page.currentPage, page.lastPage),
+            ),
           ),
           OutlinedButton.icon(
             onPressed: page.currentPage < page.lastPage
                 ? () => onPage(page.currentPage + 1)
                 : null,
             icon: const Icon(Icons.chevron_left),
-            label: const Text('التالي'),
+            label: Text(l10n.commonNext),
           ),
         ],
       ),
@@ -1566,6 +1794,7 @@ class _PlatformErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isForbidden =
         error is PlatformAdminException &&
         (error as PlatformAdminException).isForbidden;
@@ -1574,11 +1803,13 @@ class _PlatformErrorState extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: AppEmptyState(
           icon: isForbidden ? Icons.lock_outline : Icons.cloud_off_outlined,
-          title: isForbidden ? 'غير مصرح لك' : 'تعذر تحميل البيانات',
+          title: isForbidden
+              ? l10n.platformAdminUnauthorizedTitle
+              : l10n.platformAdminLoadErrorTitle,
           message: isForbidden
-              ? 'تم رفض الوصول من الخادم. تأكد من أن للحساب صلاحية مسؤول المنصة.'
-              : 'تعذر الاتصال ببيانات إدارة المنصة. حاول مجدداً.',
-          actionLabel: isForbidden ? null : 'إعادة المحاولة',
+              ? l10n.platformAdminForbiddenMessage
+              : l10n.platformAdminGenericLoadErrorMessage,
+          actionLabel: isForbidden ? null : l10n.commonRetry,
           onAction: isForbidden ? null : onRetry,
         ),
       ),
@@ -1680,8 +1911,10 @@ class _CreateOrganizationDialogState
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('إنشاء مؤسسة'),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+    title: Text(l10n.platformAdminCreateOrgButton),
     content: SizedBox(
       width: 480,
       child: Form(
@@ -1692,16 +1925,24 @@ class _CreateOrganizationDialogState
             children: <Widget>[
               TextFormField(
                 controller: _name,
-                decoration: const InputDecoration(labelText: 'اسم المؤسسة'),
+                decoration: InputDecoration(
+                  labelText: l10n.platformAdminOrgNameLabel,
+                ),
                 validator: (value) => value == null || value.trim().isEmpty
-                    ? 'اسم المؤسسة مطلوب.'
+                    ? l10n.platformAdminOrgNameRequiredError
                     : null,
               ),
               const SizedBox(height: AppSpacing.md),
               SegmentedButton<bool>(
-                segments: const <ButtonSegment<bool>>[
-                  ButtonSegment(value: false, label: Text('مالك جديد')),
-                  ButtonSegment(value: true, label: Text('مالك موجود')),
+                segments: <ButtonSegment<bool>>[
+                  ButtonSegment(
+                    value: false,
+                    label: Text(l10n.platformAdminNewOwnerSegment),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text(l10n.platformAdminExistingOwnerSegment),
+                  ),
                 ],
                 selected: <bool>{_useExistingOwner},
                 onSelectionChanged: (value) =>
@@ -1728,7 +1969,6 @@ class _CreateOrganizationDialogState
                         snapshot.error,
                         snapshot.stackTrace,
                       );
-                      final l10n = AppLocalizations.of(context)!;
                       return Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         child: Column(
@@ -1765,8 +2005,8 @@ class _CreateOrganizationDialogState
                     return DropdownButtonFormField<PlatformUser>(
                       initialValue: _selectedOwner,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'مالك المؤسسة',
+                      decoration: InputDecoration(
+                        labelText: l10n.platformAdminOwnerFieldLabel,
                       ),
                       items: users
                           .map(
@@ -1781,39 +2021,42 @@ class _CreateOrganizationDialogState
                           .toList(growable: false),
                       onChanged: (value) =>
                           setState(() => _selectedOwner = value),
-                      validator: (value) =>
-                          value == null ? 'اختر مالكاً فعّالاً.' : null,
+                      validator: (value) => value == null
+                          ? l10n.platformAdminSelectActiveOwnerError
+                          : null,
                     );
                   },
                 )
               else ...<Widget>[
                 TextFormField(
                   controller: _ownerName,
-                  decoration: const InputDecoration(labelText: 'اسم المالك'),
+                  decoration: InputDecoration(
+                    labelText: l10n.platformAdminNewOwnerNameLabel,
+                  ),
                   validator: (value) => value == null || value.trim().isEmpty
-                      ? 'اسم المالك مطلوب.'
+                      ? l10n.platformAdminNewOwnerNameRequiredError
                       : null,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 TextFormField(
                   controller: _ownerEmail,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'بريد المالك الإلكتروني',
+                  decoration: InputDecoration(
+                    labelText: l10n.platformAdminNewOwnerEmailLabel,
                   ),
                   validator: (value) => value == null || !value.contains('@')
-                      ? 'أدخل بريداً إلكترونياً صحيحاً.'
+                      ? l10n.platformAdminValidEmailRequiredError
                       : null,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 TextFormField(
                   controller: _ownerPassword,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'كلمة مرور المالك (12 حرفاً على الأقل)',
+                  decoration: InputDecoration(
+                    labelText: l10n.platformAdminNewOwnerPasswordLabel,
                   ),
                   validator: (value) => value == null || value.length < 12
-                      ? 'أدخل كلمة مرور من 12 حرفاً على الأقل.'
+                      ? l10n.platformAdminPasswordMinLengthError
                       : null,
                 ),
               ],
@@ -1832,7 +2075,7 @@ class _CreateOrganizationDialogState
     actions: <Widget>[
       TextButton(
         onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: const Text('إلغاء'),
+        child: Text(l10n.commonCancel),
       ),
       FilledButton(
         onPressed: _submitting ? null : _submit,
@@ -1841,10 +2084,11 @@ class _CreateOrganizationDialogState
                 dimension: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Text('إنشاء المؤسسة'),
+            : Text(l10n.platformAdminCreateOrgSubmitButton),
       ),
     ],
   );
+  }
 }
 
 class _EditOrganizationDialog extends ConsumerStatefulWidget {
@@ -1873,7 +2117,10 @@ class _EditOrganizationDialogState
 
   Future<void> _submit() async {
     if (_name.text.trim().isEmpty) {
-      setState(() => _error = 'اسم المؤسسة مطلوب.');
+      setState(
+        () => _error =
+            AppLocalizations.of(context)!.platformAdminOrgNameRequiredError,
+      );
       return;
     }
     setState(() {
@@ -1913,8 +2160,10 @@ class _EditOrganizationDialogState
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('تعديل اسم المؤسسة'),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+    title: Text(l10n.platformAdminEditOrgNameMenuItem),
     content: SizedBox(
       width: 440,
       child: Column(
@@ -1923,7 +2172,9 @@ class _EditOrganizationDialogState
           TextField(
             controller: _name,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'اسم المؤسسة'),
+            decoration: InputDecoration(
+              labelText: l10n.platformAdminOrgNameLabel,
+            ),
           ),
           if (_error != null)
             Padding(
@@ -1939,14 +2190,15 @@ class _EditOrganizationDialogState
     actions: <Widget>[
       TextButton(
         onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: const Text('إلغاء'),
+        child: Text(l10n.commonCancel),
       ),
       FilledButton(
         onPressed: _submitting ? null : _submit,
-        child: const Text('حفظ'),
+        child: Text(l10n.commonSave),
       ),
     ],
   );
+  }
 }
 
 class _CreateUserDialog extends ConsumerStatefulWidget {
@@ -2010,8 +2262,10 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('إضافة مستخدم'),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+    title: Text(l10n.platformAdminAddUserButton),
     content: SizedBox(
       width: 440,
       child: Form(
@@ -2021,28 +2275,31 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
           children: <Widget>[
             TextFormField(
               controller: _name,
-              decoration: const InputDecoration(labelText: 'الاسم'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'الاسم مطلوب.' : null,
+              decoration: InputDecoration(labelText: l10n.platformAdminNameLabel),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? l10n.platformAdminNameRequiredError
+                  : null,
             ),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminEmailLabel,
+              ),
               validator: (value) => value == null || !value.contains('@')
-                  ? 'أدخل بريداً صحيحاً.'
+                  ? l10n.platformAdminValidEmailShortError
                   : null,
             ),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'كلمة المرور (12 حرفاً على الأقل)',
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminPasswordLabel,
               ),
               validator: (value) => value == null || value.length < 12
-                  ? 'أدخل كلمة مرور من 12 حرفاً على الأقل.'
+                  ? l10n.platformAdminPasswordMinLengthError
                   : null,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -2060,9 +2317,9 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
                     DropdownButton<int>(
                       value: _organizationId,
                       items: <DropdownMenuItem<int>>[
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: -1,
-                          child: Text('بدون مؤسسة'),
+                          child: Text(l10n.platformAdminNoOrgOption),
                         ),
                         ...snapshot.data!.items.map(
                           (organization) => DropdownMenuItem(
@@ -2085,7 +2342,7 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
                             .map(
                               (role) => DropdownMenuItem(
                                 value: role,
-                                child: Text(_roleLabel(role)),
+                                child: Text(_roleLabel(role, l10n)),
                               ),
                             )
                             .toList(growable: false),
@@ -2115,7 +2372,7 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
     actions: <Widget>[
       TextButton(
         onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: const Text('إلغاء'),
+        child: Text(l10n.commonCancel),
       ),
       FilledButton(
         onPressed: _submitting ? null : _submit,
@@ -2124,10 +2381,11 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
                 dimension: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Text('إضافة'),
+            : Text(l10n.platformAdminAddButtonShort),
       ),
     ],
   );
+  }
 }
 
 class _EditUserDialog extends ConsumerStatefulWidget {
@@ -2178,8 +2436,10 @@ class _EditUserDialogState extends ConsumerState<_EditUserDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('تعديل بيانات المستخدم'),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+    title: Text(l10n.platformAdminEditUserDialogTitle),
     content: SizedBox(
       width: 440,
       child: Column(
@@ -2187,13 +2447,15 @@ class _EditUserDialogState extends ConsumerState<_EditUserDialog> {
         children: <Widget>[
           TextField(
             controller: _name,
-            decoration: const InputDecoration(labelText: 'الاسم'),
+            decoration: InputDecoration(labelText: l10n.platformAdminNameLabel),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _email,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
+            decoration: InputDecoration(
+              labelText: l10n.platformAdminEmailLabel,
+            ),
           ),
           if (_error != null)
             Padding(
@@ -2209,14 +2471,15 @@ class _EditUserDialogState extends ConsumerState<_EditUserDialog> {
     actions: <Widget>[
       TextButton(
         onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: const Text('إلغاء'),
+        child: Text(l10n.commonCancel),
       ),
       FilledButton(
         onPressed: _submitting ? null : _submit,
-        child: const Text('حفظ'),
+        child: Text(l10n.commonSave),
       ),
     ],
   );
+  }
 }
 
 class _MembershipEditorDialog extends ConsumerStatefulWidget {
@@ -2264,8 +2527,10 @@ class _MembershipEditorDialogState
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text('عضويات ${widget.user.name}'),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+    title: Text(l10n.platformAdminMembershipsDialogTitle(widget.user.name)),
     content: SizedBox(
       width: 600,
       child: FutureBuilder<PlatformPage<PlatformOrganization>>(
@@ -2282,9 +2547,7 @@ class _MembershipEditorDialogState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const Text(
-                  'تغيير دور مالك أو إزالة عضويته يتطلب بقاء مالك فعّال واحد على الأقل؛ الخادم يتحقق من ذلك نهائياً.',
-                ),
+                Text(l10n.platformAdminMembershipsHint),
                 const SizedBox(height: AppSpacing.md),
                 ..._memberships.asMap().entries.map((entry) {
                   final index = entry.key;
@@ -2302,7 +2565,7 @@ class _MembershipEditorDialogState
                                 .map(
                                   (role) => DropdownMenuItem(
                                     value: role,
-                                    child: Text(_roleLabel(role)),
+                                    child: Text(_roleLabel(role, l10n)),
                                   ),
                                 )
                                 .toList(growable: false),
@@ -2323,7 +2586,7 @@ class _MembershipEditorDialogState
                                   ),
                           ),
                           IconButton(
-                            tooltip: 'إزالة العضوية',
+                            tooltip: l10n.platformAdminRemoveMembershipTooltip,
                             onPressed: () =>
                                 setState(() => _memberships.removeAt(index)),
                             icon: const Icon(
@@ -2357,8 +2620,8 @@ class _MembershipEditorDialogState
                     _memberships.map((m) => m.organizationId).join(','),
                   ),
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'إضافة إلى مؤسسة',
+                  decoration: InputDecoration(
+                    labelText: l10n.platformAdminAddToOrgLabel,
                   ),
                   items: organizations
                       .where(
@@ -2411,7 +2674,7 @@ class _MembershipEditorDialogState
     actions: <Widget>[
       TextButton(
         onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: const Text('إلغاء'),
+        child: Text(l10n.commonCancel),
       ),
       FilledButton(
         onPressed: _submitting ? null : _submit,
@@ -2420,10 +2683,11 @@ class _MembershipEditorDialogState
                 dimension: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Text('حفظ العضويات'),
+            : Text(l10n.platformAdminSaveMembershipsButton),
       ),
     ],
   );
+  }
 }
 
 Future<bool?> _confirm(
@@ -2434,22 +2698,29 @@ Future<bool?> _confirm(
 }) {
   return showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('إلغاء'),
-        ),
-        FilledButton(
-          style: destructive
-              ? FilledButton.styleFrom(backgroundColor: AppColors.error)
-              : null,
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(destructive ? 'تأكيد الإجراء' : 'تأكيد'),
-        ),
-      ],
-    ),
+    builder: (context) {
+      final l10n = AppLocalizations.of(context)!;
+      return AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            style: destructive
+                ? FilledButton.styleFrom(backgroundColor: AppColors.error)
+                : null,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              destructive
+                  ? l10n.platformAdminConfirmActionButton
+                  : l10n.commonConfirm,
+            ),
+          ),
+        ],
+      );
+    },
   );
 }

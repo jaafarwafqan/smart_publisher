@@ -18,6 +18,7 @@ import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/web/current_uri.dart';
 import '../../../../core/web/facebook_oauth_callback.dart';
+import '../../../../shared/widgets/adaptive_card_grid.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/status_pill.dart';
@@ -1181,26 +1182,12 @@ class _StatTileRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth >= 900
-            ? (constraints.maxWidth - 36) / 4
-            : constraints.maxWidth >= 640
-            ? (constraints.maxWidth - 18) / 2
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
-          children: stats
-              .map(
-                (stat) => SizedBox(
-                  width: cardWidth,
-                  child: DashboardStatCard(stat: stat),
-                ),
-              )
-              .toList(growable: false),
-        );
-      },
+    return AdaptiveCardGrid(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      items: stats
+          .map((stat) => DashboardStatCard(stat: stat))
+          .toList(growable: false),
     );
   }
 }

@@ -84,26 +84,28 @@ void main() {
       await _openCreateOrganizationDialog(tester);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'اسم المؤسسة'),
+        find.widgetWithText(TextFormField, 'Organization name'),
         'Test Org',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'اسم المالك'),
+        find.widgetWithText(TextFormField, 'Owner name'),
         'Owner Name',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'بريد المالك الإلكتروني'),
+        find.widgetWithText(TextFormField, 'Owner email'),
         'owner@example.com',
       );
       await tester.enterText(
         find.widgetWithText(
           TextFormField,
-          'كلمة مرور المالك (12 حرفاً على الأقل)',
+          'Owner password (at least 12 characters)',
         ),
         'a-long-enough-password',
       );
 
-      await tester.tap(find.widgetWithText(FilledButton, 'إنشاء المؤسسة'));
+      await tester.tap(
+        find.widgetWithText(FilledButton, 'Create organization'),
+      );
       await tester.pump();
       // Loading state must show immediately after tapping, before the
       // delayed rejection above resolves.
@@ -115,7 +117,7 @@ void main() {
       // stuck showing its spinner forever.
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(
-        find.widgetWithText(FilledButton, 'إنشاء المؤسسة'),
+        find.widgetWithText(FilledButton, 'Create organization'),
         findsOneWidget,
       );
 
@@ -182,7 +184,7 @@ void main() {
       // Switch to "existing owner" — the users future was already kicked
       // off in initState() regardless of this toggle, so its failure is
       // already resolved by the time this renders.
-      await tester.tap(find.text('مالك موجود'));
+      await tester.tap(find.text('Existing owner'));
       await tester.pumpAndSettle();
 
       expect(find.text('Failed to load the user list.'), findsOneWidget);

@@ -6,6 +6,7 @@ import 'package:smart_publisher/src/core/di/app_providers.dart';
 import 'package:smart_publisher/src/features/platform_administration/presentation/screens/platform_admin_screens.dart';
 
 import '../../helpers/fake_network_client.dart';
+import '../../helpers/localized_test_app.dart';
 
 /// Regression coverage for the bug reported 2026-08-10: every
 /// FutureBuilder-backed screen in platform_admin_screens.dart passed
@@ -74,7 +75,11 @@ void main() {
             overrides: <Override>[
               networkClientProvider.overrideWithValue(_client()),
             ],
-            child: const MaterialApp(home: PlatformAdministrationScreen()),
+            child: const MaterialApp(
+              localizationsDelegates: testLocalizationsDelegates,
+              supportedLocales: testSupportedLocales,
+              home: PlatformAdministrationScreen(),
+            ),
           ),
         );
         await tester.pump();
@@ -93,7 +98,11 @@ void main() {
             overrides: <Override>[
               networkClientProvider.overrideWithValue(_client()),
             ],
-            child: const MaterialApp(home: PlatformOrganizationsScreen()),
+            child: const MaterialApp(
+              localizationsDelegates: testLocalizationsDelegates,
+              supportedLocales: testSupportedLocales,
+              home: PlatformOrganizationsScreen(),
+            ),
           ),
         );
         await tester.pump();
@@ -112,7 +121,11 @@ void main() {
             overrides: <Override>[
               networkClientProvider.overrideWithValue(_client()),
             ],
-            child: const MaterialApp(home: PlatformUsersScreen()),
+            child: const MaterialApp(
+              localizationsDelegates: testLocalizationsDelegates,
+              supportedLocales: testSupportedLocales,
+              home: PlatformUsersScreen(),
+            ),
           ),
         );
         await tester.pump();
@@ -154,6 +167,8 @@ void main() {
               ),
             ],
             child: const MaterialApp(
+              localizationsDelegates: testLocalizationsDelegates,
+              supportedLocales: testSupportedLocales,
               home: PlatformOrganizationDetailScreen(organizationId: 1),
             ),
           ),

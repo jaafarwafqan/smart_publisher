@@ -27,6 +27,7 @@ class PlatformOrganization {
     required this.membersCount,
     required this.createdAt,
     this.primaryOwner,
+    this.primaryOwnerMissing = false,
     this.lastActivityAt,
   });
 
@@ -36,6 +37,10 @@ class PlatformOrganization {
   final int membersCount;
   final DateTime? createdAt;
   final PlatformOwner? primaryOwner;
+  // Explicit signal from the backend rather than inferred from
+  // primaryOwner == null, so "not requested" and "actually missing" can
+  // never be conflated in the UI.
+  final bool primaryOwnerMissing;
   final DateTime? lastActivityAt;
 
   bool get isActive => status == 'active';
@@ -51,6 +56,7 @@ class PlatformOrganization {
       primaryOwner: owner is Map<String, dynamic>
           ? PlatformOwner.fromJson(owner)
           : null,
+      primaryOwnerMissing: json['primary_owner_missing'] == true,
       lastActivityAt: _dateValue(json['last_activity_at']),
     );
   }
@@ -335,6 +341,19 @@ class PlatformAdminRepository {
       LaravelEndpoints.platformAdminOrganizationStatus(id.toString()),
       data: <String, dynamic>{'status': status},
     );
+  }
+
+  /// Re-derives the primary owner from current membership data. Returns the
+  /// organization still missing a primary owner (rather than throwing) when
+  /// no eligible owner membership exists — the caller decides how to
+  /// message that.
+  Future<PlatformOrganization> reconcilePrimaryOwner(int id) async {
+    final response = await _post(
+      LaravelEndpoints.platformAdminOrganizationReconcilePrimaryOwner(
+        id.toString(),
+      ),
+    );
+    return PlatformOrganization.fromJson(_map(_unwrap(response.data)));
   }
 
   Future<void> updateOrganization({

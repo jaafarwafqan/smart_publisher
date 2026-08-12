@@ -466,6 +466,9 @@ class _OrganizationMembersScreenState
                           Text(_roleLabel(member.role, l10n)),
                         if (canRemove && !isSelf)
                           IconButton(
+                            tooltip: l10n.organizationMembersRemoveTooltip(
+                              member.name,
+                            ),
                             icon: const Icon(Icons.person_remove_outlined),
                             onPressed: () => _confirmRemove(member),
                           ),
