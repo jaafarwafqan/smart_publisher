@@ -134,6 +134,25 @@ class OAuthCallbackRequestDtoV1 {
   }
 }
 
+/// Android/iOS native sign-in (flutter_facebook_auth) — POSTs the SDK's
+/// own real access token directly, no ?code=/state to exchange (see
+/// AccountRepository.connectFacebookNative). The backend never trusts this
+/// at face value: FacebookOAuthProvider::verifyNativeToken() re-verifies it
+/// against Meta's own /debug_token endpoint server-side before persisting.
+class NativeConnectRequestDtoV1 {
+  const NativeConnectRequestDtoV1({
+    required this.provider,
+    required this.accessToken,
+  });
+
+  final String provider;
+  final String accessToken;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{'provider': provider, 'access_token': accessToken};
+  }
+}
+
 class ConnectSocialAccountRequestDtoV1 {
   const ConnectSocialAccountRequestDtoV1({
     required this.provider,

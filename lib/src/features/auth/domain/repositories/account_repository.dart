@@ -83,6 +83,18 @@ abstract class AccountRepository extends BaseRepository<AccountEntity> {
     required String state,
   });
 
+  /// Android/iOS only: completes a native Facebook sign-in (the
+  /// flutter_facebook_auth SDK, not a browser redirect) by handing its own
+  /// real access token to the backend for independent server-side
+  /// re-verification against Meta's /debug_token — never trust a
+  /// client-asserted token at face value. Distinct from
+  /// [beginFacebookOAuth]/[completeFacebookOAuth], which remain unchanged
+  /// for web/desktop.
+  Future<AppResult<AccountEntity>> connectFacebookNative({
+    required String userId,
+    required String accessToken,
+  });
+
   /// Starts the real WhatsApp OAuth redirect flow — WhatsApp Business
   /// connects via Facebook Login under the hood, same as [beginFacebookOAuth].
   Future<AppResult<String>> beginWhatsAppOAuth({

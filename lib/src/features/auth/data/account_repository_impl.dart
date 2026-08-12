@@ -340,6 +340,44 @@ class AccountRepositoryImpl extends AccountRepository {
     );
   }
 
+  @override
+  Future<AppResult<AccountEntity>> connectFacebookNative({
+    required String userId,
+    required String accessToken,
+  }) async {
+    if (networkClient == null) {
+      return Failure<AccountEntity>(
+        'Connecting Facebook requires a connection.',
+      );
+    }
+
+    return execute(
+      () async {
+        final response = await networkClient!.post(
+          LaravelEndpoints.socialAccountsNativeConnect(userId),
+          data: NativeConnectRequestDtoV1(
+            provider: 'facebook',
+            accessToken: accessToken,
+          ).toJson(),
+        );
+        final payload = _unwrapPayload(response.data);
+        if (payload is! Map<String, dynamic>) {
+          throw StateError('Invalid Facebook native sign-in response.');
+        }
+        final linked = _toEntity(SocialAccountResponseDtoV1.fromJson(payload));
+        final existing = _localAccounts.values
+            .where((a) => a.platform == linked.platform)
+            .firstOrNull;
+        final accountId = existing?.id ?? linked.id;
+        final updated = linked.copyWith(id: accountId);
+        _localAccounts[accountId] = updated;
+        return updated;
+      },
+      operation: 'accounts.facebook.native_connect',
+      fallbackMessage: 'Failed to complete Facebook sign-in',
+    );
+  }
+
   static const List<String> _whatsappOAuthScopes = <String>[
     'whatsapp_business_messaging',
     'whatsapp_business_management',

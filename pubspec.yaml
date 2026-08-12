@@ -35,6 +35,10 @@ dependencies:
   fl_chart: ^0.69.0
   emoji_picker_flutter: ^4.5.3
 
+  # Native social sign-in (Android/iOS only — web/desktop keep the existing
+  # browser-based OAuth flow in dashboard_screen.dart unchanged).
+  flutter_facebook_auth: ^7.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

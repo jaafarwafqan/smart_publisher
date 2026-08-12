@@ -35,6 +35,7 @@ import '../../features/analytics/domain/repositories/analytics_repository.dart';
 import '../../features/auth/data/account_repository_impl.dart';
 import '../../features/auth/application/auth_event_publisher.dart';
 import '../../features/auth/application/auth_session_controller.dart';
+import '../../features/auth/application/facebook_native_login_service.dart';
 import '../../features/auth/application/two_factor_controller.dart';
 import '../../features/auth/domain/repositories/account_repository.dart';
 import '../../features/administration/data/system_settings_repository_impl.dart';
@@ -284,6 +285,11 @@ final twoFactorControllerProvider = Provider<TwoFactorController>((ref) {
 final accountRepositoryProvider = Provider<AccountRepository>((ref) {
   return AccountRepositoryImpl(networkClient: ref.read(networkClientProvider));
 });
+
+final facebookNativeLoginServiceProvider =
+    Provider<FacebookNativeLoginService>((ref) {
+      return const FacebookNativeLoginService();
+    });
 
 final systemSettingsRepositoryProvider = Provider<SystemSettingsRepository>((
   ref,

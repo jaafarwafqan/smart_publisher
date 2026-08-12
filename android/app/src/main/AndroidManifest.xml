@@ -43,6 +43,28 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Facebook Login SDK (native sign-in, Android/iOS only — see
+             values/strings.xml for facebook_app_id/facebook_client_token). -->
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+        <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
+        <activity android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="Smart Publisher"/>
+        <!-- The SDK's own browser-based fallback when the real Facebook app
+             isn't installed (edge case from the spec: "app not installed ->
+             fall back to browser") — distinct from, and tried before, Smart
+             Publisher's own manual OAuth fallback in the Dart code. -->
+        <activity
+            android:name="com.facebook.CustomTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="@string/fb_login_protocol_scheme"/>
+            </intent-filter>
+        </activity>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -54,5 +76,9 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Package visibility (Android 11+): lets the Facebook SDK detect
+             whether the real Facebook app is installed, to decide between a
+             native handoff and the CustomTabActivity browser fallback above. -->
+        <package android:name="com.facebook.katana"/>
     </queries>
 </manifest>

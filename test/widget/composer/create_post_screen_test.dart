@@ -147,6 +147,12 @@ class _FakeAccountRepository extends AccountRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<AppResult<AccountEntity>> connectFacebookNative({
+    required String userId,
+    required String accessToken,
+  }) => throw UnimplementedError();
+
+  @override
   Future<AppResult<String>> beginWhatsAppOAuth({
     required String userId,
     required String redirectUri,

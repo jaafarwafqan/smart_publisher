@@ -104,6 +104,84 @@ void main() {
     );
   });
 
+  group('Integration - Facebook native sign-in (AccountRepositoryImpl)', () {
+    /// Android/iOS only (flutter_facebook_auth) — distinct from
+    /// beginFacebookOAuth/completeFacebookOAuth above, which stay the
+    /// browser-redirect flow for web/desktop.
+    test(
+      'connectFacebookNative posts provider/access_token and maps the connected account',
+      () async {
+        String? sentPath;
+        Map<String, dynamic>? sentPayload;
+
+        final repository = AccountRepositoryImpl(
+          networkClient: FakeNetworkClient(
+            postHandler: (path, data) async {
+              sentPath = path;
+              sentPayload = data as Map<String, dynamic>;
+              return Response<dynamic>(
+                requestOptions: RequestOptions(path: path),
+                statusCode: 200,
+                data: <String, dynamic>{
+                  'success': true,
+                  'data': <String, dynamic>{
+                    'id': '99',
+                    'provider': 'facebook',
+                    'provider_account_id': 'fb-native-user-1',
+                    'account_name': 'Native Login User',
+                    'status': 'connected',
+                    'discovery_mode': 'auto',
+                  },
+                },
+              );
+            },
+          ),
+        );
+
+        final result = await repository.connectFacebookNative(
+          userId: _userId,
+          accessToken: 'sdk-issued-token',
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(sentPath, contains('/social-accounts/native-connect'));
+        expect(sentPayload!['provider'], 'facebook');
+        expect(sentPayload!['access_token'], 'sdk-issued-token');
+        expect(result.data!.platform, 'facebook');
+        expect(result.data!.remoteId, '99');
+        expect(result.data!.discoveryMode, 'auto');
+      },
+    );
+
+    test(
+      'connectFacebookNative surfaces a failure when the backend rejects the token (e.g. wrong-app token)',
+      () async {
+        final repository = AccountRepositoryImpl(
+          networkClient: FakeNetworkClient(
+            postHandler: (path, data) async {
+              return Response<dynamic>(
+                requestOptions: RequestOptions(path: path),
+                statusCode: 422,
+                data: <String, dynamic>{
+                  'success': false,
+                  'message':
+                      'Facebook rejected this sign-in: this access token was not issued for this application.',
+                },
+              );
+            },
+          ),
+        );
+
+        final result = await repository.connectFacebookNative(
+          userId: _userId,
+          accessToken: 'foreign-app-token',
+        );
+
+        expect(result.isSuccess, isFalse);
+      },
+    );
+  });
+
   group('Integration - WhatsApp OAuth (AccountRepositoryImpl)', () {
     test(
       'beginWhatsAppOAuth posts provider=whatsapp and whatsapp-specific scopes',

@@ -23,6 +23,7 @@ import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/status_pill.dart';
 import '../../../analytics/domain/entities/analytics_summary_entity.dart';
 import '../../../auth/application/auth_session_controller.dart';
+import '../../../auth/application/facebook_native_login_service.dart';
 import '../../../auth/domain/entities/account_entity.dart';
 import '../../../notifications/domain/entities/notification_entity.dart';
 import '../../../organizations/application/current_organization_access.dart';
@@ -189,7 +190,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
     if (account.platform == 'facebook') {
-      await _connectViaOAuth(account, 'facebook');
+      await _connectFacebook(account);
       return;
     }
     if (account.platform == 'whatsapp') {
@@ -246,6 +247,75 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   String _platformLabel(String provider) =>
       provider == 'whatsapp' ? 'WhatsApp' : 'Facebook';
+
+  /// Android/iOS only: tries the native flutter_facebook_auth SDK flow
+  /// first (a real Facebook Login, potentially skipping straight to a
+  /// consent/page-picker screen if the Facebook app is already installed
+  /// and signed in — 2FA, if Meta requires it, happens inside that real
+  /// app, never something this method sees or could bypass). Web/desktop,
+  /// and any native-flow failure unrelated to the user's own answer, fall
+  /// through to the existing browser-redirect flow unchanged.
+  Future<void> _connectFacebook(AccountEntity account) async {
+    final nativeLogin = ref.read(facebookNativeLoginServiceProvider);
+    if (nativeLogin.isSupportedOnThisPlatform) {
+      final result = await nativeLogin.login();
+      switch (result) {
+        case FacebookNativeLoginSuccess(:final accessToken):
+          await _completeFacebookNativeConnect(accessToken);
+          return;
+        case FacebookNativeLoginCancelled():
+          if (!mounted) {
+            return;
+          }
+          _showFeedback(
+            AppLocalizations.of(
+              context,
+            )!.platformConnectionCancelled(_platformLabel('facebook')),
+          );
+          return;
+        case FacebookNativeLoginFailed():
+          // Covers both spec edge cases at once: the real Facebook app
+          // isn't installed and the SDK's own browser fallback also
+          // failed, or some other SDK-level breakdown — either way, Smart
+          // Publisher's own browser OAuth flow below is a real, working
+          // fallback, not a degraded one.
+          break;
+      }
+    }
+
+    await _connectViaOAuth(account, 'facebook');
+  }
+
+  Future<void> _completeFacebookNativeConnect(String accessToken) async {
+    final userId = await _currentUserId();
+    if (userId == null || !mounted) {
+      return;
+    }
+
+    final result = await ref
+        .read(accountRepositoryProvider)
+        .connectFacebookNative(userId: userId, accessToken: accessToken);
+    if (!mounted) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    if (result.isSuccess) {
+      unawaited(_refreshDashboard());
+      _showFeedback(l10n.platformConnectedSuccess(_platformLabel('facebook')));
+      return;
+    }
+
+    // The backend independently rejected the token server-side (wrong app,
+    // expired, disabled provider) — clear the SDK's own cached session so
+    // the next attempt starts from a real consent prompt instead of
+    // silently retrying with the same already-rejected token.
+    await ref.read(facebookNativeLoginServiceProvider).logOut();
+    _showFeedback(
+      result.message ??
+          l10n.platformConnectionStartFailed(_platformLabel('facebook')),
+    );
+  }
 
   Future<void> _connectViaOAuth(AccountEntity account, String provider) async {
     final userId = await _currentUserId();

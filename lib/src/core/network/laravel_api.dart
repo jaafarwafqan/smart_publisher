@@ -152,6 +152,8 @@ final class LaravelEndpoints {
       LaravelApi.versioned('/users/$userId/social-accounts/authorize');
   static String socialAccountsCallback(String userId) =>
       LaravelApi.versioned('/users/$userId/social-accounts/callback');
+  static String socialAccountsNativeConnect(String userId) =>
+      LaravelApi.versioned('/users/$userId/social-accounts/native-connect');
   static String socialPages(String userId, String socialAccountId) =>
       LaravelApi.versioned(
         '/users/$userId/social-accounts/$socialAccountId/pages',
