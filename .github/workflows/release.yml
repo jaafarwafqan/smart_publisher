@@ -31,7 +31,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: "3.44.6"
 
       - name: Release source hardening
         run: dart scripts/ci/check_release_hardening.dart
@@ -71,7 +71,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: "3.44.6"
 
       - name: Install dependencies
         run: flutter pub get
