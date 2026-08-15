@@ -1,13 +1,62 @@
 # Known Issues & Incomplete Features — Smart Publisher
 
-**Last updated:** 2026-07-30
+**Last updated:** 2026-08-15
 **Purpose:** A single, current-as-of-today source of truth for "what's real, what's fake, and what's missing." This project has been through multiple audit rounds (see `ROUND1_CTO_AUDIT.md`, `ROUND2_CTO_AUDIT.md`, `PRODUCTION_READINESS_AUDIT.md`) — this document consolidates their outcomes plus everything found and fixed since, so a new reader doesn't have to reconstruct history from four long reports. Where a historical report and this document disagree, **this document is current**; the historical reports are point-in-time snapshots kept for audit trail, not living status.
+
+For test counts and CI status specifically, `docs/testing/STATUS.md` is the
+single source of truth, not this file — it's re-verified more often than
+this document's prose is edited.
 
 Severity key: 🔴 P0 (blocks production/trust) · 🟠 P1 (real gap, should fix soon) · 🟡 P2 (edge case / rough edge) · ⚪ Deliberate scope decision (not a bug)
 
 ---
 
-## Current launch-hardening override (2026-07-30)
+## Current launch-hardening override (2026-08-15)
+
+Supersedes the 2026-07-30 override below where they disagree:
+
+- A real staging deployment exists on Render (backend, frontend, separate
+  queue worker and scheduler, Aiven MySQL, Cloudflare R2 object storage) —
+  first stood up 2026-08-11/12. "No web/backend deployment" in the
+  2026-07-30 section below is superseded; a real one exists, though it is
+  **not continuously kept current** — see the staging-currency gap below.
+- A real Facebook Page publish has succeeded and was live-verified against
+  the real Meta API (2026-08-12, the page-token fix). One loose end: the
+  live test post on the "قلوب تنتظر النور" page was never deleted —
+  Render's free plan has no SSH, a debug delete endpoint or manual deletion
+  is still needed.
+- Public legal pages (Privacy Policy, Terms, Data Deletion) are real and
+  live at `/legal/*` on the staging backend, with the real operator
+  identity, support contact, and retention period filled in — no longer a
+  placeholder or an open item.
+- **Staging currency gap:** the platform-admin fixes, primary-owner
+  invariant, ARB localization pass, and CSP meta tags from external report
+  #3 (also 2026-08-15) are committed locally on `main` but **not yet
+  deployed to the Render staging environment described above.** Anyone
+  testing against the live staging URL right now is not exercising that
+  work. Deploy both repos' latest `main` and re-run the staging smoke test
+  before treating those fixes as live.
+- **Database-backed service topology is source-complete but not staging
+  evidence.** The latest backend source deliberately uses MySQL for cache,
+  sessions, and queues and removes Redis/Horizon. It still needs the normal
+  staging deployment, minutely Scheduler verification, and measured queue-lag
+  observation before it can be treated as live.
+- Native Facebook Login (`flutter_facebook_auth`) backend endpoint is
+  deployed and live-smoke-tested against the real Meta API. The Flutter
+  side is code-complete and unit/widget-tested (see `docs/testing/STATUS.md`
+  for current counts) but has **not** been run on a real Android/iOS device
+  — no device or macOS toolchain is available in this sandbox.
+- CI coverage gates (`--min=0` and an unenforced Flutter `lcov.info` upload)
+  were replaced with real floors on 2026-08-15 — see
+  `.github/workflows/ci.yml` in both repos. These are deliberately
+  conservative starting floors, not final targets; see the ratchet plan in
+  each workflow file's comments.
+- A GitHub Actions Combined Status / Workflow Run for the latest commit on
+  either repo has **not** been independently checked as part of this
+  session's work — do not treat local `flutter test` / `php artisan test`
+  re-runs as equivalent to a verified CI pass. See `docs/testing/STATUS.md`.
+
+## Prior launch-hardening override (2026-07-30)
 
 The historical entries below are retained as audit evidence.  Where they
 contradict this section, this section is authoritative:
@@ -94,11 +143,13 @@ These were real, confirmed bugs at some point in this project's history. They ar
    any broader rollout.
 6. **Production observability is an external deployment requirement.** Source
    configuration is not evidence of an active monitoring/alerting service.
-7. **Closed-beta evidence is incomplete until an operator records it.** The
-   remaining blockers are listed at the top of this document and in the
-   release checklist: MySQL/InnoDB staging verification, a signed Firebase
-   distribution, real provider runs, Meta approval, public legal/support
-   URLs, and a tested hosting-specific rollback.
+7. **Closed-beta evidence is incomplete until an operator records it.** As of
+   the 2026-08-15 override above: a real staging deployment exists, a real
+   Facebook Page publish has been live-verified, and public legal/support
+   URLs are live — those three are done, not remaining blockers. Still
+   remaining: a signed Firebase-distributed AAB, Meta App Review/approval,
+   a real-device run of native Facebook Login, and a tested
+   hosting-specific rollback procedure. See the release checklist.
 
 ## 🟡 Environment-dependent findings — need real-topology verification
 

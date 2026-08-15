@@ -7,9 +7,15 @@ Telegram and Facebook Pages. Instagram, WhatsApp, LinkedIn, X, and other
 providers are visible as `Coming soon` and are rejected server-side in
 production; the product must never fabricate a publish outcome for them.
 
-**Status (2026-07-30): launch hardening is in progress.** This repository is
-not evidence that external provider approval, real staging credentials, or a
-signed distribution artifact exist. The concrete gates are in
+**Status (2026-08-15): launch hardening is in progress.** A real staging
+deployment exists (Render, with Aiven MySQL and Cloudflare R2) and a real
+Facebook Page publish has been live-verified against it, but the latest
+`main` — including the platform-admin and localization fixes from external
+report #3 — is **not yet deployed there**; see
+[`docs/audit/KNOWN_ISSUES.md`](docs/audit/KNOWN_ISSUES.md) for what is and
+isn't live. This repository is still not evidence that Meta App Review, a
+signed distribution artifact, or a real-device native-login test exist. The
+concrete gates are in
 [`docs/operations/closed_beta_release_checklist.md`](docs/operations/closed_beta_release_checklist.md).
 
 The supported release artifact is an **Android closed-beta AAB** only. Web and
@@ -106,7 +112,10 @@ flutter test test/integration/laravel_backend_smoke_integration_test.dart \
 
 - [.github/workflows/ci.yml](.github/workflows/ci.yml) is a hard frontend
   gate: secret scan, release-source hardening, formatting, `flutter analyze`,
-  and tests.
+  tests, and an enforced line-coverage floor over `coverage/lcov.info` (see
+  the workflow file's own comments for the current number and ratchet
+  plan). Its presence in source is not proof of a passing run on the latest
+  commit — check the Actions tab.
 - [.github/workflows/release.yml](.github/workflows/release.yml) produces an
   Android **closed-beta** AAB only. It fails closed when signing, HTTPS
   endpoint, or Firebase App Distribution configuration is missing; it does

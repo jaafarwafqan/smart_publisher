@@ -1,23 +1,43 @@
 # Test Status
 
-**Last verified:** 2026-07-30. These are executed results, not inferred
-counts.
+**This is the single, current-as-of-today source of truth for test counts
+and CI status.** If any other doc (KNOWN_ISSUES.md, either README) states a
+different number, this file is correct and the other is stale — file an
+issue or fix it on sight rather than trusting the other file's number.
+
+**Last verified:** 2026-08-15, re-run locally in this session (not inferred
+from commit messages). Counts before this date (e.g. 210 Flutter / 245
+backend) are historical and superseded.
 
 ## Release-hardening results
 
 | Check | Result |
-||
+| --- | --- |
 | Flutter `flutter analyze` | Passed - 0 issues |
-| Flutter `flutter test` | Passed - 210 tests |
+| Flutter `flutter test` | Passed - 319 tests |
 | Flutter `dart format --set-exit-if-changed lib test scripts/ci` | Passed - 0 files changed |
 | Flutter release-source check | Passed |
+| Flutter line coverage | 56.62% (7,739/13,669 lines) — CI floor is 50%, see `.github/workflows/ci.yml` |
 | Android release manifest processing | Passed |
 | Laravel `composer validate` | Passed |
-| Laravel `php artisan test` | Passed - 245 passed, 2 MySQL-only skips, 855 assertions |
+| Laravel `php artisan test` | Passed - 459 tests, 457 passed, 2 MySQL-only skips, 1454 assertions |
 | Laravel PHPStan/Larastan | Passed - 0 errors |
 | Laravel Pint | Passed |
+| Laravel coverage gate | CI floor is 50% (`--min=50`), see `.github/workflows/ci.yml` in the backend repo — not independently measured in this session (no Xdebug/PCOV available locally) |
 | SQLite clean migration | Passed - all migrations applied to an in-memory database |
-| Docker source hardening test | Passed - 8 tests, 68 assertions |
+| Database-backed service topology | Passed - migrated `jobs`, `job_batches`, `failed_jobs`, `cache`, `cache_locks`, and `sessions`; the real database driver persisted all application queues (`publishing`, `default`) |
+| Database queue + publishing reliability slice | Passed - 49 tests, 233 assertions with database cache, session, and queue environment overrides |
+| Docker source hardening test | Passed - 10 tests; validates database worker limits and an independent minutely Scheduler |
+
+## GitHub Actions status
+
+**Not independently confirmed in this session.** The counts above are from
+local re-runs (`flutter test`, `php artisan test`), not a GitHub Actions
+Combined Status or Workflow Run. Per external report #3 (2026-08-15), do not
+treat "N/N tests passing" as CI-verified until an actual Actions run against
+the latest commit on both repos is checked, branch protection requiring
+those checks is enabled on `main`, and coverage artifacts are confirmed
+uploaded.
 
 ## What is covered by the launch-hardening work
 
