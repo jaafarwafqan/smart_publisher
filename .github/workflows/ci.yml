@@ -65,5 +65,23 @@ jobs:
           name: coverage-lcov
           path: coverage/lcov.info
 
+      - name: Enforce coverage floor
+        # External report #3 (2026-08-15) flagged that lcov.info was
+        # uploaded with no enforced minimum. Measured overall line coverage
+        # at the time this gate was added was 56.65% (13,664 lines,
+        # coverage/lcov.info); 50% is that measurement minus a safety
+        # margin, not the target. Ratchet plan: raise this toward the 80%
+        # overall target once CI has run it a few times, and add a second,
+        # stricter pass (--min-pct 80) scoped to lib/src/**/domain/repositories,
+        # lib/src/backend_contracts, lib/src/core/router (route guards), and
+        # lib/src/features/composer specifically once per-path filtering is
+        # worth the added script complexity.
+        run: >-
+          awk -F: '/^DA:/{split($2,a,","); total++; if(a[2]+0>0) hit++}
+          END{pct=(total>0)?(hit/total)*100:0;
+          printf "Flutter line coverage: %d/%d = %.2f%% (floor: 50%%)\n", hit, total, pct;
+          if (pct < 50) { print "::error::Coverage " pct "% is below the 50% floor"; exit 1 }}'
+          coverage/lcov.info
+
       - name: Unit and integration tests (sanity rerun)
         run: flutter test
