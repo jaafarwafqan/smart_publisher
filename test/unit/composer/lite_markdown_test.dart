@@ -14,27 +14,21 @@ void main() {
       expect(LiteMarkdown.toPlainText('Just plain text.'), 'Just plain text.');
     });
 
-    test(
-      'never treats underscores inside hashtags as italic markers — Arabic '
-      'hashtags routinely use them as a word separator since spaces are not '
-      'allowed (reported live: four hashtags collapsed into two mangled, '
-      'merged runs)',
-      () {
-        const caption =
-            '#رسول_الله\n#وفاء_للحسين\n#شهر_صفر\n#العتبة_الحسينية_المقدسة';
-        expect(LiteMarkdown.toPlainText(caption), caption);
-      },
-    );
+    test('never treats underscores inside hashtags as italic markers — Arabic '
+        'hashtags routinely use them as a word separator since spaces are not '
+        'allowed (reported live: four hashtags collapsed into two mangled, '
+        'merged runs)', () {
+      const caption =
+          '#رسول_الله\n#وفاء_للحسين\n#شهر_صفر\n#العتبة_الحسينية_المقدسة';
+      expect(LiteMarkdown.toPlainText(caption), caption);
+    });
 
-    test(
-      'still treats underscores at real word boundaries as italic',
-      () {
-        expect(
-          LiteMarkdown.toPlainText('a snake_case_name and _real italic_ text'),
-          'a snake_case_name and real italic text',
-        );
-      },
-    );
+    test('still treats underscores at real word boundaries as italic', () {
+      expect(
+        LiteMarkdown.toPlainText('a snake_case_name and _real italic_ text'),
+        'a snake_case_name and real italic text',
+      );
+    });
   });
 
   group('LiteMarkdown.toRuns', () {

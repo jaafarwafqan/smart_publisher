@@ -436,7 +436,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
     context.go(RouteNames.dashboardPath);
   }
 

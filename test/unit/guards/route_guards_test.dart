@@ -131,69 +131,60 @@ void main() {
       },
     );
 
-    test(
-      'platform administration is reachable by super_admin but no longer '
-      'forces them into it',
-      () async {
-        final noOrganization = OrganizationAccessState.noActiveOrganization(
-          memberships: const <OrganizationEntity>[],
-        );
-        final superAdmin = _containerFor(noOrganization, platformAdmin: true);
-        final superAdminWithOrg = _containerFor(
-          _accessFor('owner'),
-          platformAdmin: true,
-        );
-        final regularUser = _containerFor(
-          _accessFor('owner'),
-          platformAdmin: false,
-        );
-        addTearDown(superAdmin.dispose);
-        addTearDown(superAdminWithOrg.dispose);
-        addTearDown(regularUser.dispose);
+    test('platform administration is reachable by super_admin but no longer '
+        'forces them into it', () async {
+      final noOrganization = OrganizationAccessState.noActiveOrganization(
+        memberships: const <OrganizationEntity>[],
+      );
+      final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+      final superAdminWithOrg = _containerFor(
+        _accessFor('owner'),
+        platformAdmin: true,
+      );
+      final regularUser = _containerFor(
+        _accessFor('owner'),
+        platformAdmin: false,
+      );
+      addTearDown(superAdmin.dispose);
+      addTearDown(superAdminWithOrg.dispose);
+      addTearDown(regularUser.dispose);
 
-        expect(
-          await _redirect(superAdmin, RouteNames.platformAdministrationPath),
-          isNull,
-        );
-        expect(
-          await _redirect(superAdmin, RouteNames.platformUsersPath),
-          isNull,
-        );
-        expect(
-          await _redirect(regularUser, RouteNames.platformUsersPath),
-          RouteNames.dashboardPath,
-        );
+      expect(
+        await _redirect(superAdmin, RouteNames.platformAdministrationPath),
+        isNull,
+      );
+      expect(await _redirect(superAdmin, RouteNames.platformUsersPath), isNull);
+      expect(
+        await _redirect(regularUser, RouteNames.platformUsersPath),
+        RouteNames.dashboardPath,
+      );
 
-        // 2026-08-11 decision: a super_admin's default landing is the
-        // regular dashboard, same as any other user — no longer forced into
-        // a separate platform-only workspace. One with an active
-        // organization reaches /dashboard exactly like a regular member.
-        expect(
-          await _redirect(superAdminWithOrg, RouteNames.dashboardPath),
-          isNull,
-        );
+      // 2026-08-11 decision: a super_admin's default landing is the
+      // regular dashboard, same as any other user — no longer forced into
+      // a separate platform-only workspace. One with an active
+      // organization reaches /dashboard exactly like a regular member.
+      expect(
+        await _redirect(superAdminWithOrg, RouteNames.dashboardPath),
+        isNull,
+      );
 
-        // A super_admin with zero organization memberships still falls
-        // through to the same "no active organization" branch a regular
-        // zero-membership user hits — the organization switcher already
-        // renders a distinct state for this, so it's not a dead end.
-        for (final path in <String>[
-          RouteNames.settingsPath,
-          RouteNames.postsListPath,
-          RouteNames.calendarPath,
-        ]) {
-          expect(
-            await _redirect(superAdmin, path),
-            RouteNames.organizationsPath,
-            reason: path,
-          );
-        }
+      // A super_admin with zero organization memberships still falls
+      // through to the same "no active organization" branch a regular
+      // zero-membership user hits — the organization switcher already
+      // renders a distinct state for this, so it's not a dead end.
+      for (final path in <String>[
+        RouteNames.settingsPath,
+        RouteNames.postsListPath,
+        RouteNames.calendarPath,
+      ]) {
         expect(
-          await _redirect(superAdmin, RouteNames.organizationsPath),
-          isNull,
+          await _redirect(superAdmin, path),
+          RouteNames.organizationsPath,
+          reason: path,
         );
-      },
-    );
+      }
+      expect(await _redirect(superAdmin, RouteNames.organizationsPath), isNull);
+    });
 
     test(
       'a super_admin session lands on the platform overview on its first '
@@ -531,31 +522,22 @@ void main() {
       },
     );
 
-    test(
-      'a platform admin session can also reach the help center, same as any '
-      'authenticated account',
-      () async {
-        // 2026-08-11 decision: super_admin is no longer forced through a
-        // platform-only workspace, so it falls through to this
-        // not-gated-on-organization check exactly like everyone else — see
-        // the reachable-by-super_admin test above for what's still
-        // super_admin-exclusive (/platform/*, oauthProviderSettingsPath).
-        final noOrganization = OrganizationAccessState.noActiveOrganization(
-          memberships: const <OrganizationEntity>[],
-        );
-        final superAdmin = _containerFor(noOrganization, platformAdmin: true);
-        addTearDown(superAdmin.dispose);
+    test('a platform admin session can also reach the help center, same as any '
+        'authenticated account', () async {
+      // 2026-08-11 decision: super_admin is no longer forced through a
+      // platform-only workspace, so it falls through to this
+      // not-gated-on-organization check exactly like everyone else — see
+      // the reachable-by-super_admin test above for what's still
+      // super_admin-exclusive (/platform/*, oauthProviderSettingsPath).
+      final noOrganization = OrganizationAccessState.noActiveOrganization(
+        memberships: const <OrganizationEntity>[],
+      );
+      final superAdmin = _containerFor(noOrganization, platformAdmin: true);
+      addTearDown(superAdmin.dispose);
 
-        expect(
-          await _redirect(superAdmin, RouteNames.helpCenterPath),
-          isNull,
-        );
-        expect(
-          await _redirect(superAdmin, RouteNames.userGuidePath),
-          isNull,
-        );
-      },
-    );
+      expect(await _redirect(superAdmin, RouteNames.helpCenterPath), isNull);
+      expect(await _redirect(superAdmin, RouteNames.userGuidePath), isNull);
+    });
 
     test(
       'an unauthenticated visitor is sent to login for /help but not /about',

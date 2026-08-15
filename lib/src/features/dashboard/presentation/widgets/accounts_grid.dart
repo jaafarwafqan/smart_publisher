@@ -73,8 +73,7 @@ class AccountsGrid extends StatelessWidget {
                 onTestConnection: () => onTestConnection(account),
                 onSyncPages: () => onSyncPages(account),
                 onAddChannel: () => onAddChannel(account),
-                onSaveSelection: (pageIds) =>
-                    onSaveSelection(account, pageIds),
+                onSaveSelection: (pageIds) => onSaveSelection(account, pageIds),
                 onDeletePage: (pageId) => onDeletePage(account, pageId),
                 operationAccess: operationAccess,
               ),

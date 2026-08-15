@@ -636,7 +636,10 @@ class _PlatformOrganizationDetailScreenState
     } on PlatformAdminException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(backgroundColor: AppColors.error, content: Text(error.message)),
+        SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text(error.message),
+        ),
       );
     }
   }
@@ -910,9 +913,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                               items: <DropdownMenuItem<int>>[
                                 DropdownMenuItem(
                                   value: -1,
-                                  child: Text(
-                                    l10n.platformAdminAllOrgsOption,
-                                  ),
+                                  child: Text(l10n.platformAdminAllOrgsOption),
                                 ),
                                 ...snapshot.data!.items.map(
                                   (organization) => DropdownMenuItem(
@@ -932,9 +933,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                               items: <DropdownMenuItem<String>>[
                                 DropdownMenuItem(
                                   value: 'all',
-                                  child: Text(
-                                    l10n.platformAdminAllRolesOption,
-                                  ),
+                                  child: Text(l10n.platformAdminAllRolesOption),
                                 ),
                                 ..._membershipRoles.map(
                                   (role) => DropdownMenuItem(
@@ -1914,180 +1913,182 @@ class _CreateOrganizationDialogState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-    title: Text(l10n.platformAdminCreateOrgButton),
-    content: SizedBox(
-      width: 480,
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextFormField(
-                controller: _name,
-                decoration: InputDecoration(
-                  labelText: l10n.platformAdminOrgNameLabel,
-                ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? l10n.platformAdminOrgNameRequiredError
-                    : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SegmentedButton<bool>(
-                segments: <ButtonSegment<bool>>[
-                  ButtonSegment(
-                    value: false,
-                    label: Text(l10n.platformAdminNewOwnerSegment),
-                  ),
-                  ButtonSegment(
-                    value: true,
-                    label: Text(l10n.platformAdminExistingOwnerSegment),
-                  ),
-                ],
-                selected: <bool>{_useExistingOwner},
-                onSelectionChanged: (value) =>
-                    setState(() => _useExistingOwner = value.first),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              if (_useExistingOwner)
-                FutureBuilder<PlatformPage<PlatformUser>>(
-                  future: _availableUsers,
-                  builder: (context, snapshot) {
-                    // A failed fetch (network error, backend error) must not
-                    // spin forever — only snapshot.hasData was checked
-                    // before, so an error here left this picker showing an
-                    // infinite loading spinner with no way to notice
-                    // anything had actually gone wrong or retry. The raw
-                    // error is logged (never shown raw to the user — same
-                    // reasoning as the _submit() catch-alls above) and the
-                    // message/button are localized rather than hardcoded
-                    // Arabic, which would render even under an English
-                    // locale.
-                    if (snapshot.hasError) {
-                      AppLogger.e(
-                        'Failed to load platform admin owner picker users',
-                        snapshot.error,
-                        snapshot.stackTrace,
-                      );
-                      return Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              l10n.platformAdminOwnerListLoadError,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            OutlinedButton(
-                              onPressed: () => setState(() {
-                                _availableUsers = ref
-                                    .read(platformAdminRepositoryProvider)
-                                    .getUsers();
-                              }),
-                              child: Text(l10n.commonRetry),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    if (!snapshot.hasData) {
-                      return const Padding(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                    final users = snapshot.data!.items
-                        .where((user) => user.isActive)
-                        .toList(growable: false);
-                    return DropdownButtonFormField<PlatformUser>(
-                      initialValue: _selectedOwner,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: l10n.platformAdminOwnerFieldLabel,
-                      ),
-                      items: users
-                          .map(
-                            (user) => DropdownMenuItem(
-                              value: user,
-                              child: Text(
-                                '${user.name} — ${user.email}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) =>
-                          setState(() => _selectedOwner = value),
-                      validator: (value) => value == null
-                          ? l10n.platformAdminSelectActiveOwnerError
-                          : null,
-                    );
-                  },
-                )
-              else ...<Widget>[
+      title: Text(l10n.platformAdminCreateOrgButton),
+      content: SizedBox(
+        width: 480,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
                 TextFormField(
-                  controller: _ownerName,
+                  controller: _name,
                   decoration: InputDecoration(
-                    labelText: l10n.platformAdminNewOwnerNameLabel,
+                    labelText: l10n.platformAdminOrgNameLabel,
                   ),
                   validator: (value) => value == null || value.trim().isEmpty
-                      ? l10n.platformAdminNewOwnerNameRequiredError
+                      ? l10n.platformAdminOrgNameRequiredError
                       : null,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _ownerEmail,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: l10n.platformAdminNewOwnerEmailLabel,
-                  ),
-                  validator: (value) => value == null || !value.contains('@')
-                      ? l10n.platformAdminValidEmailRequiredError
-                      : null,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _ownerPassword,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.platformAdminNewOwnerPasswordLabel,
-                  ),
-                  validator: (value) => value == null || value.length < 12
-                      ? l10n.platformAdminPasswordMinLengthError
-                      : null,
-                ),
-              ],
-              if (_error != null) ...<Widget>[
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                SegmentedButton<bool>(
+                  segments: <ButtonSegment<bool>>[
+                    ButtonSegment(
+                      value: false,
+                      label: Text(l10n.platformAdminNewOwnerSegment),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      label: Text(l10n.platformAdminExistingOwnerSegment),
+                    ),
+                  ],
+                  selected: <bool>{_useExistingOwner},
+                  onSelectionChanged: (value) =>
+                      setState(() => _useExistingOwner = value.first),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                if (_useExistingOwner)
+                  FutureBuilder<PlatformPage<PlatformUser>>(
+                    future: _availableUsers,
+                    builder: (context, snapshot) {
+                      // A failed fetch (network error, backend error) must not
+                      // spin forever — only snapshot.hasData was checked
+                      // before, so an error here left this picker showing an
+                      // infinite loading spinner with no way to notice
+                      // anything had actually gone wrong or retry. The raw
+                      // error is logged (never shown raw to the user — same
+                      // reasoning as the _submit() catch-alls above) and the
+                      // message/button are localized rather than hardcoded
+                      // Arabic, which would render even under an English
+                      // locale.
+                      if (snapshot.hasError) {
+                        AppLogger.e(
+                          'Failed to load platform admin owner picker users',
+                          snapshot.error,
+                          snapshot.stackTrace,
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                l10n.platformAdminOwnerListLoadError,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              OutlinedButton(
+                                onPressed: () => setState(() {
+                                  _availableUsers = ref
+                                      .read(platformAdminRepositoryProvider)
+                                      .getUsers();
+                                }),
+                                child: Text(l10n.commonRetry),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const Padding(
+                          padding: EdgeInsets.all(AppSpacing.md),
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                      final users = snapshot.data!.items
+                          .where((user) => user.isActive)
+                          .toList(growable: false);
+                      return DropdownButtonFormField<PlatformUser>(
+                        initialValue: _selectedOwner,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.platformAdminOwnerFieldLabel,
+                        ),
+                        items: users
+                            .map(
+                              (user) => DropdownMenuItem(
+                                value: user,
+                                child: Text(
+                                  '${user.name} — ${user.email}',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) =>
+                            setState(() => _selectedOwner = value),
+                        validator: (value) => value == null
+                            ? l10n.platformAdminSelectActiveOwnerError
+                            : null,
+                      );
+                    },
+                  )
+                else ...<Widget>[
+                  TextFormField(
+                    controller: _ownerName,
+                    decoration: InputDecoration(
+                      labelText: l10n.platformAdminNewOwnerNameLabel,
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? l10n.platformAdminNewOwnerNameRequiredError
+                        : null,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  TextFormField(
+                    controller: _ownerEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: l10n.platformAdminNewOwnerEmailLabel,
+                    ),
+                    validator: (value) => value == null || !value.contains('@')
+                        ? l10n.platformAdminValidEmailRequiredError
+                        : null,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  TextFormField(
+                    controller: _ownerPassword,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.platformAdminNewOwnerPasswordLabel,
+                    ),
+                    validator: (value) => value == null || value.length < 12
+                        ? l10n.platformAdminPasswordMinLengthError
+                        : null,
+                  ),
+                ],
+                if (_error != null) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
-    ),
-    actions: <Widget>[
-      TextButton(
-        onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: Text(l10n.commonCancel),
-      ),
-      FilledButton(
-        onPressed: _submitting ? null : _submit,
-        child: _submitting
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(l10n.platformAdminCreateOrgSubmitButton),
-      ),
-    ],
-  );
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.platformAdminCreateOrgSubmitButton),
+        ),
+      ],
+    );
   }
 }
 
@@ -2118,8 +2119,9 @@ class _EditOrganizationDialogState
   Future<void> _submit() async {
     if (_name.text.trim().isEmpty) {
       setState(
-        () => _error =
-            AppLocalizations.of(context)!.platformAdminOrgNameRequiredError,
+        () => _error = AppLocalizations.of(
+          context,
+        )!.platformAdminOrgNameRequiredError,
       );
       return;
     }
@@ -2163,41 +2165,41 @@ class _EditOrganizationDialogState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-    title: Text(l10n.platformAdminEditOrgNameMenuItem),
-    content: SizedBox(
-      width: 440,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          TextField(
-            controller: _name,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: l10n.platformAdminOrgNameLabel,
-            ),
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
-              child: Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+      title: Text(l10n.platformAdminEditOrgNameMenuItem),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
+              controller: _name,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminOrgNameLabel,
               ),
             ),
-        ],
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
       ),
-    ),
-    actions: <Widget>[
-      TextButton(
-        onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: Text(l10n.commonCancel),
-      ),
-      FilledButton(
-        onPressed: _submitting ? null : _submit,
-        child: Text(l10n.commonSave),
-      ),
-    ],
-  );
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    );
   }
 }
 
@@ -2265,126 +2267,130 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-    title: Text(l10n.platformAdminAddUserButton),
-    content: SizedBox(
-      width: 440,
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextFormField(
-              controller: _name,
-              decoration: InputDecoration(labelText: l10n.platformAdminNameLabel),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? l10n.platformAdminNameRequiredError
-                  : null,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextFormField(
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: l10n.platformAdminEmailLabel,
+      title: Text(l10n.platformAdminAddUserButton),
+      content: SizedBox(
+        width: 440,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextFormField(
+                controller: _name,
+                decoration: InputDecoration(
+                  labelText: l10n.platformAdminNameLabel,
+                ),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? l10n.platformAdminNameRequiredError
+                    : null,
               ),
-              validator: (value) => value == null || !value.contains('@')
-                  ? l10n.platformAdminValidEmailShortError
-                  : null,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextFormField(
-              controller: _password,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: l10n.platformAdminPasswordLabel,
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: l10n.platformAdminEmailLabel,
+                ),
+                validator: (value) => value == null || !value.contains('@')
+                    ? l10n.platformAdminValidEmailShortError
+                    : null,
               ),
-              validator: (value) => value == null || value.length < 12
-                  ? l10n.platformAdminPasswordMinLengthError
-                  : null,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            FutureBuilder<PlatformPage<PlatformOrganization>>(
-              future: _organizations,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SizedBox.shrink();
-                }
-                return Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    DropdownButton<int>(
-                      value: _organizationId,
-                      items: <DropdownMenuItem<int>>[
-                        DropdownMenuItem(
-                          value: -1,
-                          child: Text(l10n.platformAdminNoOrgOption),
-                        ),
-                        ...snapshot.data!.items.map(
-                          (organization) => DropdownMenuItem(
-                            value: organization.id,
-                            child: Text(organization.name),
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _password,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: l10n.platformAdminPasswordLabel,
+                ),
+                validator: (value) => value == null || value.length < 12
+                    ? l10n.platformAdminPasswordMinLengthError
+                    : null,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              FutureBuilder<PlatformPage<PlatformOrganization>>(
+                future: _organizations,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SizedBox.shrink();
+                  }
+                  return Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      DropdownButton<int>(
+                        value: _organizationId,
+                        items: <DropdownMenuItem<int>>[
+                          DropdownMenuItem(
+                            value: -1,
+                            child: Text(l10n.platformAdminNoOrgOption),
                           ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) {
-                          return;
-                        }
-                        setState(() => _organizationId = value);
-                      },
-                    ),
-                    if (_organizationId != -1)
-                      DropdownButton<String>(
-                        value: _membershipRole,
-                        items: _membershipRoles
-                            .map(
-                              (role) => DropdownMenuItem(
-                                value: role,
-                                child: Text(_roleLabel(role, l10n)),
-                              ),
-                            )
-                            .toList(growable: false),
+                          ...snapshot.data!.items.map(
+                            (organization) => DropdownMenuItem(
+                              value: organization.id,
+                              child: Text(organization.name),
+                            ),
+                          ),
+                        ],
                         onChanged: (value) {
                           if (value == null) {
                             return;
                           }
-                          setState(() => _membershipRole = value);
+                          setState(() => _organizationId = value);
                         },
                       ),
-                  ],
-                );
-              },
-            ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.md),
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                      if (_organizationId != -1)
+                        DropdownButton<String>(
+                          value: _membershipRole,
+                          items: _membershipRoles
+                              .map(
+                                (role) => DropdownMenuItem(
+                                  value: role,
+                                  child: Text(_roleLabel(role, l10n)),
+                                ),
+                              )
+                              .toList(growable: false),
+                          onChanged: (value) {
+                            if (value == null) {
+                              return;
+                            }
+                            setState(() => _membershipRole = value);
+                          },
+                        ),
+                    ],
+                  );
+                },
               ),
-          ],
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
-    ),
-    actions: <Widget>[
-      TextButton(
-        onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: Text(l10n.commonCancel),
-      ),
-      FilledButton(
-        onPressed: _submitting ? null : _submit,
-        child: _submitting
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(l10n.platformAdminAddButtonShort),
-      ),
-    ],
-  );
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.platformAdminAddButtonShort),
+        ),
+      ],
+    );
   }
 }
 
@@ -2439,46 +2445,48 @@ class _EditUserDialogState extends ConsumerState<_EditUserDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-    title: Text(l10n.platformAdminEditUserDialogTitle),
-    content: SizedBox(
-      width: 440,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          TextField(
-            controller: _name,
-            decoration: InputDecoration(labelText: l10n.platformAdminNameLabel),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: l10n.platformAdminEmailLabel,
-            ),
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
-              child: Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+      title: Text(l10n.platformAdminEditUserDialogTitle),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
+              controller: _name,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminNameLabel,
               ),
             ),
-        ],
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminEmailLabel,
+              ),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
       ),
-    ),
-    actions: <Widget>[
-      TextButton(
-        onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: Text(l10n.commonCancel),
-      ),
-      FilledButton(
-        onPressed: _submitting ? null : _submit,
-        child: Text(l10n.commonSave),
-      ),
-    ],
-  );
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    );
   }
 }
 
@@ -2530,163 +2538,164 @@ class _MembershipEditorDialogState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-    title: Text(l10n.platformAdminMembershipsDialogTitle(widget.user.name)),
-    content: SizedBox(
-      width: 600,
-      child: FutureBuilder<PlatformPage<PlatformOrganization>>(
-        future: _organizations,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const SizedBox(
-              height: 120,
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final organizations = snapshot.data!.items;
-          return SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(l10n.platformAdminMembershipsHint),
-                const SizedBox(height: AppSpacing.md),
-                ..._memberships.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final membership = entry.value;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(child: Text(membership.organizationName)),
-                          DropdownButton<String>(
-                            value: membership.role,
-                            items: _membershipRoles
-                                .map(
-                                  (role) => DropdownMenuItem(
-                                    value: role,
-                                    child: Text(_roleLabel(role, l10n)),
-                                  ),
-                                )
-                                .toList(growable: false),
-                            onChanged: (role) => role == null
-                                ? null
-                                : setState(
-                                    () => _memberships[index] =
-                                        PlatformMembership(
-                                          organizationId:
-                                              membership.organizationId,
-                                          organizationName:
-                                              membership.organizationName,
-                                          organizationStatus:
-                                              membership.organizationStatus,
-                                          role: role,
-                                          status: membership.status,
-                                        ),
-                                  ),
-                          ),
-                          IconButton(
-                            tooltip: l10n.platformAdminRemoveMembershipTooltip,
-                            onPressed: () =>
-                                setState(() => _memberships.removeAt(index)),
-                            icon: const Icon(
-                              Icons.remove_circle_outline,
-                              color: AppColors.error,
+      title: Text(l10n.platformAdminMembershipsDialogTitle(widget.user.name)),
+      content: SizedBox(
+        width: 600,
+        child: FutureBuilder<PlatformPage<PlatformOrganization>>(
+          future: _organizations,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const SizedBox(
+                height: 120,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final organizations = snapshot.data!.items;
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(l10n.platformAdminMembershipsHint),
+                  const SizedBox(height: AppSpacing.md),
+                  ..._memberships.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final membership = entry.value;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(child: Text(membership.organizationName)),
+                            DropdownButton<String>(
+                              value: membership.role,
+                              items: _membershipRoles
+                                  .map(
+                                    (role) => DropdownMenuItem(
+                                      value: role,
+                                      child: Text(_roleLabel(role, l10n)),
+                                    ),
+                                  )
+                                  .toList(growable: false),
+                              onChanged: (role) => role == null
+                                  ? null
+                                  : setState(
+                                      () => _memberships[index] =
+                                          PlatformMembership(
+                                            organizationId:
+                                                membership.organizationId,
+                                            organizationName:
+                                                membership.organizationName,
+                                            organizationStatus:
+                                                membership.organizationStatus,
+                                            role: role,
+                                            status: membership.status,
+                                          ),
+                                    ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-                DropdownButtonFormField<PlatformOrganization>(
-                  // Bug reported 2026-08-11: DropdownButtonFormField keeps
-                  // its selected value in its own internal FormFieldState,
-                  // separate from this widget's `items:` list. Picking an
-                  // organization here calls setState() to add it to
-                  // _memberships, which immediately filters that same
-                  // organization OUT of `items` below (already-added
-                  // orgs are excluded) — but without a key forcing a fresh
-                  // State, the field's retained value is now an object
-                  // matching zero entries in the rebuilt items list,
-                  // tripping Flutter's "exactly one item must match value"
-                  // assertion on every subsequent add/remove. Keying on the
-                  // current membership set forces Flutter to discard the
-                  // old State (and its stale value) and mount a fresh one
-                  // that starts unselected — which is also the correct UX,
-                  // since the just-added organization can no longer be
-                  // picked again anyway.
-                  key: ValueKey<String>(
-                    _memberships.map((m) => m.organizationId).join(','),
-                  ),
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.platformAdminAddToOrgLabel,
-                  ),
-                  items: organizations
-                      .where(
-                        (organization) => !_memberships.any(
-                          (membership) =>
-                              membership.organizationId == organization.id,
-                        ),
-                      )
-                      .map(
-                        (organization) => DropdownMenuItem(
-                          value: organization,
-                          child: Text(
-                            organization.name,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: (organization) {
-                    if (organization == null) return;
-                    setState(
-                      () => _memberships.add(
-                        PlatformMembership(
-                          organizationId: organization.id,
-                          organizationName: organization.name,
-                          organizationStatus: organization.status,
-                          role: 'viewer',
-                          status: 'active',
+                            IconButton(
+                              tooltip:
+                                  l10n.platformAdminRemoveMembershipTooltip,
+                              onPressed: () =>
+                                  setState(() => _memberships.removeAt(index)),
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
-                  },
-                ),
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                    child: Text(
-                      _error!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                  }),
+                  DropdownButtonFormField<PlatformOrganization>(
+                    // Bug reported 2026-08-11: DropdownButtonFormField keeps
+                    // its selected value in its own internal FormFieldState,
+                    // separate from this widget's `items:` list. Picking an
+                    // organization here calls setState() to add it to
+                    // _memberships, which immediately filters that same
+                    // organization OUT of `items` below (already-added
+                    // orgs are excluded) — but without a key forcing a fresh
+                    // State, the field's retained value is now an object
+                    // matching zero entries in the rebuilt items list,
+                    // tripping Flutter's "exactly one item must match value"
+                    // assertion on every subsequent add/remove. Keying on the
+                    // current membership set forces Flutter to discard the
+                    // old State (and its stale value) and mount a fresh one
+                    // that starts unselected — which is also the correct UX,
+                    // since the just-added organization can no longer be
+                    // picked again anyway.
+                    key: ValueKey<String>(
+                      _memberships.map((m) => m.organizationId).join(','),
+                    ),
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.platformAdminAddToOrgLabel,
+                    ),
+                    items: organizations
+                        .where(
+                          (organization) => !_memberships.any(
+                            (membership) =>
+                                membership.organizationId == organization.id,
+                          ),
+                        )
+                        .map(
+                          (organization) => DropdownMenuItem(
+                            value: organization,
+                            child: Text(
+                              organization.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (organization) {
+                      if (organization == null) return;
+                      setState(
+                        () => _memberships.add(
+                          PlatformMembership(
+                            organizationId: organization.id,
+                            organizationName: organization.name,
+                            organizationStatus: organization.status,
+                            role: 'viewer',
+                            status: 'active',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.md),
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
-    ),
-    actions: <Widget>[
-      TextButton(
-        onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-        child: Text(l10n.commonCancel),
-      ),
-      FilledButton(
-        onPressed: _submitting ? null : _submit,
-        child: _submitting
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(l10n.platformAdminSaveMembershipsButton),
-      ),
-    ],
-  );
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l10n.platformAdminSaveMembershipsButton),
+        ),
+      ],
+    );
   }
 }
 

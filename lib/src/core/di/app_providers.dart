@@ -286,10 +286,11 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
   return AccountRepositoryImpl(networkClient: ref.read(networkClientProvider));
 });
 
-final facebookNativeLoginServiceProvider =
-    Provider<FacebookNativeLoginService>((ref) {
-      return const FacebookNativeLoginService();
-    });
+final facebookNativeLoginServiceProvider = Provider<FacebookNativeLoginService>(
+  (ref) {
+    return const FacebookNativeLoginService();
+  },
+);
 
 final systemSettingsRepositoryProvider = Provider<SystemSettingsRepository>((
   ref,

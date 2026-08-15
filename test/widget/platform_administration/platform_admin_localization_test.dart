@@ -58,7 +58,9 @@ void main() {
       expect(find.text('Organizations'), findsOneWidget);
       expect(find.text('No matching organizations'), findsOneWidget);
       expect(
-        find.text('Try adjusting your search terms or create a new organization.'),
+        find.text(
+          'Try adjusting your search terms or create a new organization.',
+        ),
         findsOneWidget,
       );
       // The pre-migration Arabic text must not leak through regardless of
