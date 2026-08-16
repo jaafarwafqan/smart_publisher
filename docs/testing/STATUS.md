@@ -54,15 +54,19 @@ artifact. First real measured backend coverage: **80.9% statements**
 (4639/5734) — the CI floor was raised 50% → 75% accordingly (`a05c442`,
 deliberately below the measured number, not at it).
 
-**Branch-protection enforcement of these checks on `main` — checked, not
-yet enabled.** Confirmed via the real API that neither repo currently has
-any branch protection (`404 Branch not protected`). Setting it requires a
-GitHub Settings write this sandbox's own tooling policy blocks agent-side
-(same class of restriction that blocked a direct Render env-var change
-earlier this session) — needs a human to do it in the GitHub UI. Required
-status check contexts already identified: Flutter repo needs `quality-gate`;
-backend repo needs both `quality-gate` and
-`MySQL 8.4 publishing reliability`.
+**Branch-protection enforcement of these checks on `main` — done and
+verified.** A GitHub Ruleset named "main" is `active` on both repos
+(created by the user in the GitHub UI — this sandbox's own tooling policy
+blocks agent-side GitHub Settings writes, same class of restriction that
+blocked a direct Render env-var change earlier this session). Verified via
+the real API (`gh api repos/.../rulesets/{id}`, not just the list endpoint)
+after catching and having the user fix one real mistake — the first
+attempt had non-existent status-check context names (`"Flutter repo"`,
+`"MySQL"`) that would never have been satisfied by anything. Final state:
+Flutter repo requires `quality-gate`; backend repo requires `quality-gate`
+and `MySQL 8.4 publishing reliability`; both also block force pushes and
+branch deletion; both bypass the repository-admin role so the existing
+direct-push-to-`main` workflow is unaffected.
 
 ## 2026-08-16 incident: real staging outage found, fixed, and verified live
 
