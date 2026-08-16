@@ -16,6 +16,14 @@
 # header. This is the durable fix for that gap; mirrors the header set
 # smart_publisher_backend's SecurityHeadersMiddleware already sends on every
 # API response, so the two surfaces are consistent.
+#
+# 2026-08-16 incident: this file's CSP had drifted from web/index.html's —
+# whoever pasted this header set into the dashboard did so before the
+# gstatic.com allow-list fix landed in the <meta> tag, so the live HTTP
+# header stayed stricter and kept blocking CanvasKit/Roboto even after the
+# <meta> tag was fixed (browsers enforce the intersection of every CSP
+# source present). Keep both in sync by hand until this is actually linked
+# as a Blueprint — a config file alone does not update the dashboard value.
 services:
   - type: web
     runtime: static
@@ -44,7 +52,8 @@ services:
         value: >-
           default-src 'self'; base-uri 'self'; form-action 'self';
           object-src 'none'; frame-ancestors 'none';
-          script-src 'self' 'wasm-unsafe-eval' blob:;
-          style-src 'self' 'unsafe-inline'; font-src 'self' data:;
+          script-src 'self' 'wasm-unsafe-eval' blob: https://www.gstatic.com;
+          style-src 'self' 'unsafe-inline';
+          font-src 'self' data: https://fonts.gstatic.com;
           img-src 'self' data: blob: https:;
-          connect-src 'self' https://smart-publisher-api-staging.onrender.com
+          connect-src 'self' https://www.gstatic.com https://fonts.gstatic.com https://smart-publisher-api-staging.onrender.com
