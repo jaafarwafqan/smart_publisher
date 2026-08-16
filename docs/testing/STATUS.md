@@ -36,12 +36,33 @@ superseded.
 **Independently confirmed** via `gh run list`/`gh api` against the real
 Actions API for both repos across multiple pushes this session (not
 inferred from source or commit messages) — every push landing on `main`
-during this session's work (backend `91ca0da`, `ffc2625`; frontend
-`9404265`, `a1c76f1`, `8324f5f`) produced a `completed`/`success` CI run.
-This closes the previous open caveat that "N/N tests passing" wasn't
-CI-verified. Still not independently confirmed: branch-protection
-enforcement of these checks on `main`, and coverage-artifact upload
-correctness beyond the gate passing.
+during this session's work produced a `completed`/`success` CI run,
+through backend `a05c442` and frontend `41c0ec0`. This closes the previous
+open caveat that "N/N tests passing" wasn't CI-verified.
+
+**Coverage-artifact upload correctness — checked and a real bug fixed**:
+the backend's "Upload coverage artifact" step had silently uploaded
+nothing on every run (neither `phpunit.xml` nor the test command ever told
+PHPUnit where to write a report; `continue-on-error: true` masked the
+resulting failure) — confirmed via the real Actions API artifact list, not
+assumed. Fixed backend `0945548` (CI-only `--coverage-html`/
+`--coverage-clover` flags; deliberately not added to `phpunit.xml` — that
+approach was tried first and reproducibly crashed every plain local
+`php artisan test` run with zero output on a machine without Xdebug/PCOV,
+reverted). Verified: the next run produced a real 2.69MB HTML+Clover
+artifact. First real measured backend coverage: **80.9% statements**
+(4639/5734) — the CI floor was raised 50% → 75% accordingly (`a05c442`,
+deliberately below the measured number, not at it).
+
+**Branch-protection enforcement of these checks on `main` — checked, not
+yet enabled.** Confirmed via the real API that neither repo currently has
+any branch protection (`404 Branch not protected`). Setting it requires a
+GitHub Settings write this sandbox's own tooling policy blocks agent-side
+(same class of restriction that blocked a direct Render env-var change
+earlier this session) — needs a human to do it in the GitHub UI. Required
+status check contexts already identified: Flutter repo needs `quality-gate`;
+backend repo needs both `quality-gate` and
+`MySQL 8.4 publishing reliability`.
 
 ## 2026-08-16 incident: real staging outage found, fixed, and verified live
 
@@ -117,9 +138,20 @@ session:
 - A signed AAB was not produced: `verifyReleaseSigning` correctly fails
   without `ANDROID_RELEASE_STORE_FILE`, `ANDROID_RELEASE_STORE_PASSWORD`,
   `ANDROID_RELEASE_KEY_ALIAS`, and `ANDROID_RELEASE_KEY_PASSWORD`.
-- Docker build/compose and local gitleaks were not run because their CLIs are
-  absent in this environment. Both are required CI gates; Docker source
-  hardening is covered by the passing Laravel test above.
+- Docker build/compose was not run — the `docker` CLI is absent in this
+  environment (checked again 2026-08-16, including the Laragon install this
+  machine has for MySQL/Redis binaries; no Docker there either). It remains
+  a required CI gate; Docker source hardening is covered by the passing
+  Laravel test above, but an actual `docker build`/`compose up` has never
+  been exercised on this machine.
+- **Local gitleaks actually run 2026-08-16** (binary downloaded directly
+  from GitHub releases, since the CLI isn't preinstalled): backend repo,
+  full history, 39 commits — **zero leaks**. Flutter repo, full history, 43
+  commits — one finding, but it's the same already-investigated 2026-08-04
+  false positive documented in `docs/audit/REMEDIATION_TRACKER.md` (a
+  Chromium-internal public telemetry key written into that doc's own prose
+  as an example, from the pre-redaction commit; current `main` already has
+  it redacted). No new or unaddressed leak.
 - This refers to the local `flutter test`/`php artisan test` runner
   environment specifically, not staging — real Facebook (2026-08-12) and
   real Telegram (2026-08-16, see the incident section above) publishes
