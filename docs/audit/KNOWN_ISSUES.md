@@ -51,11 +51,25 @@ Supersedes the 2026-08-15 override below where they disagree:
 - **Two secrets were pasted directly into a chat session this day**: a
   scoped Render API key and a Telegram bot token. Neither was echoed back
   or persisted beyond a scratchpad file deleted the same session, but both
-  should be treated as exposed — rotate/revoke when convenient. Not yet
-  done as of this entry; the API key has not been confirmed revoked, and
-  the several long-standing Aiven/AWS/mail/Facebook secrets pasted earlier
-  the same session (see the 2026-08-15 entry's own caveats) also remain
-  un-rotated.
+  should be treated as exposed — rotate/revoke when convenient.
+  **Explicitly deferred by the operator (2026-08-16)** — a deliberate
+  decision to postpone, not a forgotten item; the API key has not been
+  revoked, and the several long-standing Aiven/AWS/mail/Facebook secrets
+  pasted earlier the same session (see the 2026-08-15 entry's own caveats)
+  also remain un-rotated.
+- **Render Auto-Deploy is a confirmed, deliberate decision (2026-08-16),
+  not an oversight**: all three backend services and the frontend static
+  site auto-deploy on every push to `main`. The operator explicitly chose
+  to keep this on rather than switch to controlled manual deploys.
+- **A real Facebook publish was end-to-end live-verified on staging the
+  same day as Telegram's (2026-08-16)**: real draft, real R2 media upload,
+  targeted at the pre-existing "قلوب تنتظر النور" Page, `publish-now`
+  reached `published` within 3 seconds, zero new `dead_letter_jobs`
+  entries. Closes the "Facebook-equivalent smoke test" gap. One caveat:
+  unlike Telegram, there is no API path to delete a Facebook Page post
+  server-side (the Page access token is deliberately never exposed) — the
+  test post, and an earlier undeleted one from 2026-08-12 on the same
+  Page, both need manual deletion by the Page's own operator.
 
 ## Prior launch-hardening override (2026-08-15)
 
