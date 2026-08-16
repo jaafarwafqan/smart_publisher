@@ -134,6 +134,106 @@ void main() {
     expect(find.byTooltip('Edit draft'), findsNothing);
   });
 
+  testWidgets('an owner with delete permissions sees the delete action', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    expect(find.byTooltip('Delete post'), findsNWidgets(2));
+  });
+
+  testWidgets('a viewer without delete permissions sees no delete action', (
+    tester,
+  ) async {
+    await _pump(tester, organizationAccess: _viewerAccess);
+
+    expect(find.byTooltip('Delete post'), findsNothing);
+  });
+
+  testWidgets(
+    'deleting a post asks for confirmation, then calls the delete endpoint and removes it from the list',
+    (tester) async {
+      String? deletedPath;
+      final postRepository = PostRepositoryImpl(
+        networkClient: FakeNetworkClient(
+          getHandler: (path) async {
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'success': true,
+                'data': <dynamic>[
+                  <String, dynamic>{
+                    'id': '1',
+                    'title': 'Failed campaign post',
+                    'content': 'Body',
+                    'status': 'failed',
+                  },
+                  <String, dynamic>{
+                    'id': '2',
+                    'title': 'Mid-flight post',
+                    'content': 'Body',
+                    'status': 'publishing',
+                  },
+                ],
+              },
+            );
+          },
+          deleteHandler: (path, data) async {
+            deletedPath = path;
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'success': true,
+                'message': 'Post deleted successfully.',
+              },
+            );
+          },
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: <Override>[
+            postRepositoryProvider.overrideWithValue(postRepository),
+            currentOrganizationAccessProvider.overrideWith(
+              (_) async => _ownerAccess,
+            ),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: testLocalizationsDelegates,
+            supportedLocales: testSupportedLocales,
+            home: PostsListScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Delete post').first);
+      await tester.pumpAndSettle();
+
+      // Cancel first: nothing is deleted, both posts remain.
+      expect(find.text('Delete this post?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(deletedPath, isNull);
+      expect(find.text('Failed campaign post'), findsOneWidget);
+
+      // Now confirm for real.
+      await tester.tap(find.byTooltip('Delete post').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(deletedPath, contains('/posts/1'));
+      expect(find.text('Failed campaign post'), findsNothing);
+      expect(find.text('Post deleted.'), findsOneWidget);
+      // The other post is untouched.
+      expect(find.text('Mid-flight post'), findsOneWidget);
+    },
+  );
+
   testWidgets(
     'a second backend page of posts is reachable via Load more, not silently capped',
     (tester) async {

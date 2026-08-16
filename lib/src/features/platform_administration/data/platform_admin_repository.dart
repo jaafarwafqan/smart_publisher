@@ -366,6 +366,19 @@ class PlatformAdminRepository {
     );
   }
 
+  /// A real soft delete on the backend — the organization row is excluded
+  /// from every normal query afterward, but its posts/media/social
+  /// accounts/memberships are not destroyed. The backend independently
+  /// rejects this (422, surfaced via [PlatformAdminException]) unless the
+  /// organization is already `inactive` — this method doesn't pre-check
+  /// that itself, matching every other write here trusting the server as
+  /// the real authorization/invariant boundary.
+  Future<void> deleteOrganization(int id) async {
+    await _delete(
+      LaravelEndpoints.platformAdminOrganizationById(id.toString()),
+    );
+  }
+
   Future<PlatformPage<PlatformUser>> getUsers({
     String? search,
     bool? isActive,
@@ -431,6 +444,16 @@ class PlatformAdminRepository {
       LaravelEndpoints.platformAdminUserById(id.toString()),
       data: <String, dynamic>{'name': name, 'email': email},
     );
+  }
+
+  /// A real hard delete on the backend. The backend independently rejects
+  /// this (422, surfaced via [PlatformAdminException]) for a self-deletion,
+  /// the platform's last active super admin, or an organization's sole
+  /// active owner — this method doesn't pre-check any of that itself,
+  /// matching every other write here trusting the server as the real
+  /// authorization/invariant boundary.
+  Future<void> deleteUser(int id) async {
+    await _delete(LaravelEndpoints.platformAdminUserById(id.toString()));
   }
 
   Future<void> updateUserStatus(int id, bool isActive) async {
@@ -535,6 +558,14 @@ class PlatformAdminRepository {
   Future<Response<dynamic>> _put(String path, {dynamic data}) async {
     try {
       return await networkClient.put(path, data: data);
+    } on DioException catch (error) {
+      throw _exception(error);
+    }
+  }
+
+  Future<Response<dynamic>> _delete(String path) async {
+    try {
+      return await networkClient.delete(path);
     } on DioException catch (error) {
       throw _exception(error);
     }

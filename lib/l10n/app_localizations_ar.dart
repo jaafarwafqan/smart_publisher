@@ -1942,6 +1942,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get postsListEditTooltip => 'تعديل المسودة';
 
   @override
+  String get postsListDeleteTooltip => 'حذف المنشور';
+
+  @override
+  String get postsListDeleteDialogTitle => 'حذف هذا المنشور؟';
+
+  @override
+  String get postsListDeleteDialogBody =>
+      'سيؤدي هذا إلى حذف المنشور وسجل نشره نهائيًا. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get postsListDeleteSuccess => 'تم حذف المنشور.';
+
+  @override
+  String get postsListDeleteFailed => 'فشل حذف المنشور.';
+
+  @override
   String get postsListNewPostButton => 'منشور جديد';
 
   @override
@@ -2379,6 +2395,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get platformAdminOrgEnabledMessage => 'تم تفعيل المؤسسة.';
 
   @override
+  String get platformAdminDeleteOrgTitle => 'حذف المؤسسة';
+
+  @override
+  String platformAdminDeleteOrgMessage(String name) {
+    return 'سيتم حذف \"$name\" نهائيًا من قائمة المؤسسات. لن تُحذف منشوراتها ووسائطها وحساباتها الاجتماعية، ويمكن استرجاعها عند الحاجة.';
+  }
+
+  @override
+  String get platformAdminOrgDeletedMessage => 'تم حذف المؤسسة.';
+
+  @override
   String get platformAdminNoEligibleOwnerMessage =>
       'لا يوجد عضو مؤهل لتولي الملكية — عيّن دور المالك لأحد الأعضاء أولاً.';
 
@@ -2462,6 +2489,17 @@ class AppLocalizationsAr extends AppLocalizations {
       'تم سحب صلاحية مسؤول المنصة.';
 
   @override
+  String get platformAdminDeleteUserTitle => 'حذف المستخدم';
+
+  @override
+  String platformAdminDeleteUserMessage(String email) {
+    return 'سيتم حذف حساب $email نهائيًا. لا يمكن التراجع عن هذا الإجراء.';
+  }
+
+  @override
+  String get platformAdminUserDeletedMessage => 'تم حذف المستخدم.';
+
+  @override
   String get platformAdminUsersAppBarTitle => 'مستخدمو النظام';
 
   @override
@@ -2517,6 +2555,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformAdminEditOrgNameMenuItem => 'تعديل اسم المؤسسة';
+
+  @override
+  String get platformAdminDeleteOrgMenuItem => 'حذف المؤسسة';
+
+  @override
+  String get platformAdminDeleteUserMenuItem => 'حذف المستخدم';
 
   @override
   String get platformAdminReactivateMenuItem => 'إعادة التفعيل';

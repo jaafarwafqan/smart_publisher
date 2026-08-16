@@ -429,6 +429,28 @@ class _PlatformOrganizationsScreenState
     }
   }
 
+  Future<void> _deleteOrganization(PlatformOrganization organization) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await _confirm(
+      context,
+      title: l10n.platformAdminDeleteOrgTitle,
+      message: l10n.platformAdminDeleteOrgMessage(organization.name),
+      destructive: true,
+    );
+    if (confirmed != true) return;
+    try {
+      await ref
+          .read(platformAdminRepositoryProvider)
+          .deleteOrganization(organization.id);
+      if (mounted) {
+        _message(l10n.platformAdminOrgDeletedMessage);
+        _reload(page: _page);
+      }
+    } on PlatformAdminException catch (error) {
+      if (mounted) _message(error.message, danger: true);
+    }
+  }
+
   Future<void> _fixPrimaryOwner(PlatformOrganization organization) async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -568,6 +590,7 @@ class _PlatformOrganizationsScreenState
                               page: snapshot.data!,
                               onStatus: _setStatus,
                               onEdit: _editOrganization,
+                              onDelete: _deleteOrganization,
                               onFixPrimaryOwner: _fixPrimaryOwner,
                               onPage: (page) => _reload(page: page),
                             )
@@ -765,6 +788,21 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
       next
           ? l10n.platformAdminAccountActivatedMessage
           : l10n.platformAdminAccountDeactivatedMessage,
+    );
+  }
+
+  Future<void> _deleteUser(PlatformUser user) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await _confirm(
+      context,
+      title: l10n.platformAdminDeleteUserTitle,
+      message: l10n.platformAdminDeleteUserMessage(user.email),
+      destructive: true,
+    );
+    if (confirmed != true) return;
+    await _runUserAction(
+      () => ref.read(platformAdminRepositoryProvider).deleteUser(user.id),
+      l10n.platformAdminUserDeletedMessage,
     );
   }
 
@@ -987,6 +1025,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
                               onPlatformRole: _changePlatformRole,
                               onEdit: _editUser,
                               onMemberships: _editMemberships,
+                              onDelete: _deleteUser,
                               onPage: (page) => _reload(page: page),
                             )
                           : const SizedBox.shrink(),
@@ -1264,12 +1303,14 @@ class _OrganizationList extends StatelessWidget {
     required this.page,
     required this.onStatus,
     required this.onEdit,
+    required this.onDelete,
     required this.onFixPrimaryOwner,
     required this.onPage,
   });
   final PlatformPage<PlatformOrganization> page;
   final ValueChanged<PlatformOrganization> onStatus;
   final ValueChanged<PlatformOrganization> onEdit;
+  final ValueChanged<PlatformOrganization> onDelete;
   final ValueChanged<PlatformOrganization> onFixPrimaryOwner;
   final ValueChanged<int> onPage;
 
@@ -1301,10 +1342,15 @@ class _OrganizationList extends StatelessWidget {
             onFixPrimaryOwner: () => onFixPrimaryOwner(organization),
             actions: PopupMenuButton<String>(
               onSelected: (action) {
-                if (action == 'edit') {
-                  onEdit(organization);
-                } else {
-                  onStatus(organization);
+                switch (action) {
+                  case 'edit':
+                    onEdit(organization);
+                    break;
+                  case 'delete':
+                    onDelete(organization);
+                    break;
+                  default:
+                    onStatus(organization);
                 }
               },
               itemBuilder: (_) => <PopupMenuEntry<String>>[
@@ -1320,6 +1366,15 @@ class _OrganizationList extends StatelessWidget {
                         : l10n.platformAdminReactivateMenuItem,
                   ),
                 ),
+                // Deletion is only offered once the organization is already
+                // deactivated — mirrors the backend's own real precondition
+                // (AdminOrganizationController::destroy()) instead of
+                // showing an action that would just 422.
+                if (!organization.isActive)
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.platformAdminDeleteOrgMenuItem),
+                  ),
               ],
             ),
           ),
@@ -1622,6 +1677,7 @@ class _UserList extends StatelessWidget {
     required this.onPlatformRole,
     required this.onEdit,
     required this.onMemberships,
+    required this.onDelete,
     required this.onPage,
   });
   final PlatformPage<PlatformUser> page;
@@ -1629,6 +1685,7 @@ class _UserList extends StatelessWidget {
   final ValueChanged<PlatformUser> onPlatformRole;
   final ValueChanged<PlatformUser> onEdit;
   final ValueChanged<PlatformUser> onMemberships;
+  final ValueChanged<PlatformUser> onDelete;
   final ValueChanged<int> onPage;
 
   @override
@@ -1665,6 +1722,9 @@ class _UserList extends StatelessWidget {
                   case 'role':
                     onPlatformRole(user);
                     break;
+                  case 'delete':
+                    onDelete(user);
+                    break;
                 }
               },
               itemBuilder: (_) => <PopupMenuEntry<String>>[
@@ -1691,6 +1751,10 @@ class _UserList extends StatelessWidget {
                         ? l10n.platformAdminDeactivateAccountTitle
                         : l10n.platformAdminActivateAccountTitle,
                   ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(l10n.platformAdminDeleteUserMenuItem),
                 ),
               ],
             ),

@@ -125,6 +125,72 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         false;
   }
 
+  // Same shape as _canEditPosts: shown whenever the account holds either
+  // the "own" or "all" grant, with the backend's PostPolicy::delete() doing
+  // the real per-post ownership check (an "own"-only holder attempting a
+  // colleague's post gets a 403 from the server) — the client button is a
+  // usability convenience, not the trust boundary, matching every other
+  // permission gate on this screen.
+  bool get _canDeletePosts {
+    final access = ref.watch(currentOrganizationAccessProvider).valueOrNull;
+    return access?.hasAnyPermission(<String>[
+          OrganizationPermissions.postsDeleteOwn,
+          OrganizationPermissions.postsDeleteAll,
+        ]) ??
+        false;
+  }
+
+  final Set<String> _deletingIds = <String>{};
+
+  Future<void> _deletePostWithConfirmation(PostEntity post) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.postsListDeleteDialogTitle),
+        content: Text(l10n.postsListDeleteDialogBody),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() => _deletingIds.add(post.id));
+
+    final result = await ref.read(postRepositoryProvider).deletePost(post.id);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _deletingIds.remove(post.id);
+      if (result.isSuccess) {
+        _posts = _posts.where((item) => item.id != post.id).toList();
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isSuccess
+              ? l10n.postsListDeleteSuccess
+              : result.message ?? l10n.postsListDeleteFailed,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final posts = _filteredPosts;
@@ -312,16 +378,38 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
                     ),
                   ],
                 ),
-                trailing: _canEditPosts
-                    ? IconButton(
-                        tooltip: l10n.postsListEditTooltip,
-                        onPressed: () => context.push(
-                          RouteNames.postsCreatePath,
-                          extra: post,
-                        ),
-                        icon: const Icon(Icons.edit_outlined),
-                      )
-                    : null,
+                trailing: !_canEditPosts && !_canDeletePosts
+                    ? null
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          if (_canEditPosts)
+                            IconButton(
+                              tooltip: l10n.postsListEditTooltip,
+                              onPressed: () => context.push(
+                                RouteNames.postsCreatePath,
+                                extra: post,
+                              ),
+                              icon: const Icon(Icons.edit_outlined),
+                            ),
+                          if (_canDeletePosts)
+                            IconButton(
+                              tooltip: l10n.postsListDeleteTooltip,
+                              onPressed: _deletingIds.contains(post.id)
+                                  ? null
+                                  : () => _deletePostWithConfirmation(post),
+                              icon: _deletingIds.contains(post.id)
+                                  ? const SizedBox(
+                                      width: AppSizes.iconSm,
+                                      height: AppSizes.iconSm,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.delete_outline),
+                            ),
+                        ],
+                      ),
               ),
             ),
           )

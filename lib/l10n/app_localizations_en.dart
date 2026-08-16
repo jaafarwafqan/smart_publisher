@@ -1959,6 +1959,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postsListEditTooltip => 'Edit draft';
 
   @override
+  String get postsListDeleteTooltip => 'Delete post';
+
+  @override
+  String get postsListDeleteDialogTitle => 'Delete this post?';
+
+  @override
+  String get postsListDeleteDialogBody =>
+      'This permanently deletes the post and its publication history. This cannot be undone.';
+
+  @override
+  String get postsListDeleteSuccess => 'Post deleted.';
+
+  @override
+  String get postsListDeleteFailed => 'Failed to delete post.';
+
+  @override
   String get postsListNewPostButton => 'New Post';
 
   @override
@@ -2398,6 +2414,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get platformAdminOrgEnabledMessage => 'Organization enabled.';
 
   @override
+  String get platformAdminDeleteOrgTitle => 'Delete organization';
+
+  @override
+  String platformAdminDeleteOrgMessage(String name) {
+    return '\"$name\" will be permanently removed from the organizations list. Its posts, media, and social accounts are not deleted and can be recovered if needed.';
+  }
+
+  @override
+  String get platformAdminOrgDeletedMessage => 'Organization deleted.';
+
+  @override
   String get platformAdminNoEligibleOwnerMessage =>
       'No eligible member to take ownership — assign the owner role to a member first.';
 
@@ -2483,6 +2510,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Platform administrator access revoked.';
 
   @override
+  String get platformAdminDeleteUserTitle => 'Delete user';
+
+  @override
+  String platformAdminDeleteUserMessage(String email) {
+    return '$email\'s account will be permanently deleted. This cannot be undone.';
+  }
+
+  @override
+  String get platformAdminUserDeletedMessage => 'User deleted.';
+
+  @override
   String get platformAdminUsersAppBarTitle => 'System users';
 
   @override
@@ -2538,6 +2576,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platformAdminEditOrgNameMenuItem => 'Edit organization name';
+
+  @override
+  String get platformAdminDeleteOrgMenuItem => 'Delete organization';
+
+  @override
+  String get platformAdminDeleteUserMenuItem => 'Delete user';
 
   @override
   String get platformAdminReactivateMenuItem => 'Re-activate';

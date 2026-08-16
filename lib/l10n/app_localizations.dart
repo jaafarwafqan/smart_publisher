@@ -3542,6 +3542,36 @@ abstract class AppLocalizations {
   /// **'تعديل المسودة'**
   String get postsListEditTooltip;
 
+  /// No description provided for @postsListDeleteTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المنشور'**
+  String get postsListDeleteTooltip;
+
+  /// No description provided for @postsListDeleteDialogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف هذا المنشور؟'**
+  String get postsListDeleteDialogTitle;
+
+  /// No description provided for @postsListDeleteDialogBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيؤدي هذا إلى حذف المنشور وسجل نشره نهائيًا. لا يمكن التراجع عن هذا الإجراء.'**
+  String get postsListDeleteDialogBody;
+
+  /// No description provided for @postsListDeleteSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف المنشور.'**
+  String get postsListDeleteSuccess;
+
+  /// No description provided for @postsListDeleteFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل حذف المنشور.'**
+  String get postsListDeleteFailed;
+
   /// No description provided for @postsListNewPostButton.
   ///
   /// In ar, this message translates to:
@@ -4316,6 +4346,24 @@ abstract class AppLocalizations {
   /// **'تم تفعيل المؤسسة.'**
   String get platformAdminOrgEnabledMessage;
 
+  /// No description provided for @platformAdminDeleteOrgTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المؤسسة'**
+  String get platformAdminDeleteOrgTitle;
+
+  /// No description provided for @platformAdminDeleteOrgMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم حذف \"{name}\" نهائيًا من قائمة المؤسسات. لن تُحذف منشوراتها ووسائطها وحساباتها الاجتماعية، ويمكن استرجاعها عند الحاجة.'**
+  String platformAdminDeleteOrgMessage(String name);
+
+  /// No description provided for @platformAdminOrgDeletedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف المؤسسة.'**
+  String get platformAdminOrgDeletedMessage;
+
   /// No description provided for @platformAdminNoEligibleOwnerMessage.
   ///
   /// In ar, this message translates to:
@@ -4454,6 +4502,24 @@ abstract class AppLocalizations {
   /// **'تم سحب صلاحية مسؤول المنصة.'**
   String get platformAdminSuperAdminRevokedMessage;
 
+  /// No description provided for @platformAdminDeleteUserTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المستخدم'**
+  String get platformAdminDeleteUserTitle;
+
+  /// No description provided for @platformAdminDeleteUserMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم حذف حساب {email} نهائيًا. لا يمكن التراجع عن هذا الإجراء.'**
+  String platformAdminDeleteUserMessage(String email);
+
+  /// No description provided for @platformAdminUserDeletedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف المستخدم.'**
+  String get platformAdminUserDeletedMessage;
+
   /// No description provided for @platformAdminUsersAppBarTitle.
   ///
   /// In ar, this message translates to:
@@ -4555,6 +4621,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعديل اسم المؤسسة'**
   String get platformAdminEditOrgNameMenuItem;
+
+  /// No description provided for @platformAdminDeleteOrgMenuItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المؤسسة'**
+  String get platformAdminDeleteOrgMenuItem;
+
+  /// No description provided for @platformAdminDeleteUserMenuItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف المستخدم'**
+  String get platformAdminDeleteUserMenuItem;
 
   /// No description provided for @platformAdminReactivateMenuItem.
   ///
