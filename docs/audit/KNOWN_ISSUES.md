@@ -11,6 +11,34 @@ Severity key: 🔴 P0 (blocks production/trust) · 🟠 P1 (real gap, should fix
 
 ---
 
+## 🖊️ Operator sign-off (2026-08-16)
+
+The project owner reviewed the 2026-08-16 engineering report and issued an
+explicit verdict, item by item. This is the authoritative line between
+"certified" and "not yet" as of this date — later entries in this document
+must not claim an item is done unless it graduates out of the "not yet
+certified" list below through the same kind of explicit review, not through
+a code change alone passing tests.
+
+**Certified (اعتُمد):**
+code quality (PHPStan/Larastan 0 errors, Pint/analyze clean) · tenant
+isolation in the automated test suite · CI green on both repos · Backend
+coverage at a strong real percentage (80.9%) · MySQL 8.4 reliability
+testing · the new Docker build/boot CI job, contingent on it proving stable
+over continued runs · Cloudflare R2 · real Telegram publish · real Facebook
+publish · the public legal pages · the platform-admin panel · basic Web
+staging.
+
+**Not yet certified (لم يُعتمد بعد):**
+a live multi-target publish to Telegram *and* Facebook together · a real
+retry against a genuinely retryable external failure · a live permanent
+failure and DLQ entry · live scheduled publishing · live approval/reject ·
+manual tenant-isolation verification with an ordinary (non-super-admin)
+account · real native Facebook Login on a physical Android device · a
+signed AAB distributed through Firebase App Distribution · Meta App Review
+· a real backup/restore drill · a real Render rollback · load/chaos/restart
+testing · push notifications · SaaS billing.
+
 ## Current launch-hardening override (2026-08-16)
 
 Supersedes the 2026-08-15 override below where they disagree:
