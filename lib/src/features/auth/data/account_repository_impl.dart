@@ -259,10 +259,19 @@ class AccountRepositoryImpl extends AccountRepository {
     );
   }
 
+  // instagram_basic/instagram_content_publish added 2026-08 after a live
+  // Instagram publish attempt failed with a real Meta "(#10) Application
+  // does not have permission for this action" — pages_show_list is enough
+  // to discover a linked Instagram Business Account but not to publish to
+  // it. Kept identical to FacebookNativeLoginService.permissions (the
+  // native SDK path) and the backend's config/social.php facebook
+  // default_scopes.
   static const List<String> _facebookOAuthScopes = <String>[
     'pages_show_list',
     'pages_read_engagement',
     'pages_manage_posts',
+    'instagram_basic',
+    'instagram_content_publish',
   ];
 
   @override

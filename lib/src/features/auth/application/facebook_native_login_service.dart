@@ -39,11 +39,15 @@ class FacebookNativeLoginService {
 
   /// Kept identical to _facebookOAuthScopes in account_repository_impl.dart
   /// (the web/desktop browser flow) — both paths must request exactly the
-  /// permissions actually used, nothing broader.
+  /// permissions actually used, nothing broader. instagram_basic/
+  /// instagram_content_publish added 2026-08 — see that constant's own
+  /// docblock for why (a live Instagram publish failed without them).
   static const List<String> permissions = <String>[
     'pages_show_list',
     'pages_read_engagement',
     'pages_manage_posts',
+    'instagram_basic',
+    'instagram_content_publish',
   ];
 
   /// True only on a real Android/iOS build. Flutter Web reports a
