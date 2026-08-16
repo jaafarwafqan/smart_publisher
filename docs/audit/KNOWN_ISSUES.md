@@ -276,8 +276,17 @@ These were real, confirmed bugs at some point in this project's history. They ar
 5. **Publication-attempt retention needs a product decision.** Deleting a
    post can remove related attempt history; choose a retention model before
    any broader rollout.
-6. **Production observability is an external deployment requirement.** Source
-   configuration is not evidence of an active monitoring/alerting service.
+6. **Production observability is mostly still an external deployment
+   requirement, with one real exception.** Sentry/Bugsnag/OpenTelemetry
+   config scaffolding remains source-only, not evidence of an active
+   service — that's still true. What changed 2026-08-16: `app:ops-snapshot`
+   (already real — 4 genuine signals from `PostPublicationAttempt`/
+   `DeadLetterJob` data, not a facade) now also delivers a real Telegram
+   message on a threshold breach, opt-in via `OPS_ALERT_TELEGRAM_BOT_TOKEN`/
+   `OPS_ALERT_TELEGRAM_CHAT_ID` (unset today — the operator has not yet
+   configured these on Render), and `GET /admin/ops` gives a super_admin an
+   on-demand read of the same metrics. No Flutter UI for that endpoint yet
+   — see `docs/architecture/decisions/0010-observability-alert-delivery.md`.
 7. **Closed-beta evidence is incomplete until an operator records it.** As of
    the 2026-08-15 override above: a real staging deployment exists, a real
    Facebook Page publish has been live-verified, and public legal/support

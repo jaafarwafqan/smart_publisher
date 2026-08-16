@@ -13,3 +13,4 @@ Short records of decisions that would otherwise only live in commit messages, ch
 | [0007](0007-persistent-local-caches-for-drafts-and-analytics.md) | Drafts and last-viewed analytics are real, persistent local caches — not in-memory-only stand-ins | Accepted |
 | [0008](0008-spacing-token-enforcement.md) | Enforce the existing spacing token scale with a CI script, not a new lint package | Accepted |
 | [0009](0009-openapi-doc-drift.md) | `docs/api/openapi_v1.yaml` drift — fixed the known items, flagged a structural cause | Accepted |
+| [0010](0010-observability-alert-delivery.md) | Real dead-letter alerting and admin ops read, delivery stays opt-in | Accepted |

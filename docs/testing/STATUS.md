@@ -6,11 +6,12 @@ different number, this file is correct and the other is stale — file an
 issue or fix it on sight rather than trusting the other file's number.
 
 **Last verified:** 2026-08-16 (continued session — Phase 3 webhook receiver,
-a Phase 1 Flutter/backend gap audit, then a Phase 5 UI/UX token-discipline
-audit), re-run locally in this session (not inferred from commit messages).
-The GitHub Actions confirmation below is from earlier the same day and has
-not been re-checked against this session's new commits yet — see the
-Instagram/X, webhook-receiver, Phase-1-audit, and Phase-5-audit entries
+a Phase 1 Flutter/backend gap audit, a Phase 5 UI/UX token-discipline audit,
+then Phase 2 doc-consistency and Phase 4 observability), re-run locally in
+this session (not inferred from commit messages). The GitHub Actions
+confirmation below is from earlier the same day and has not been re-checked
+against this session's new commits yet — see the Instagram/X,
+webhook-receiver, Phase-1-audit, Phase-5-audit, and Phase-2/4 entries
 further down. Counts before 2026-08-15 (e.g. 210 Flutter / 245 backend) are
 historical and superseded.
 
@@ -25,7 +26,7 @@ historical and superseded.
 | Flutter line coverage | Not re-measured this session; last measured 56.62% (7,739/13,669 lines) — CI floor is 50%, see `.github/workflows/ci.yml` |
 | Android release manifest processing | Passed |
 | Laravel `composer validate` | Passed |
-| Laravel `php artisan test` | Passed - 510 tests, 507 passed, 3 skipped (2 MySQL-only + 1 opt-in Instagram sandbox), 1611 assertions |
+| Laravel `php artisan test` | Passed - 524 tests, 521 passed, 3 skipped (2 MySQL-only + 1 opt-in Instagram sandbox), 1655 assertions |
 | Laravel PHPStan/Larastan | Passed - 0 errors |
 | Laravel Pint | Passed |
 | Laravel coverage gate | CI floor is 50% (`--min=50`), see `.github/workflows/ci.yml` in the backend repo — not independently measured locally in this session (no Xdebug/PCOV available locally; CI itself does measure and enforce it) |
@@ -238,6 +239,39 @@ for the full design:
   "without a storage backend, this does NOT survive recreation" case
   documenting the exact gap closed. Flutter 359 tests, `flutter analyze` 0
   issues, `dart format` clean.
+
+## 2026-08-16 (continued): Phase 2 doc-consistency + Phase 4 observability
+
+**Phase 2**: fixed real drift found in `docs/api/openapi_v1.yaml` (documented
+deleted `/accounts/*` routes; missing ~20 real routes — Organizations,
+Admin, approval workflow, `native-connect`, the new Webhooks receiver,
+`publishing/dead-letters/{deadLetterJob}/retry`). While fixing it, found
+that the backend's actually-served spec
+(`smart_publisher_backend/resources/openapi/openapi.json`, `GET
+/openapi.json`) already had all of this correct — the two are independently
+hand-maintained and had drifted apart. Not resolved in this pass: an actual
+mechanism to keep them in sync going forward, or a decision to stop
+maintaining two copies — recorded as an open item, see
+`docs/architecture/decisions/0009-openapi-doc-drift.md` and
+`docs/audit/KNOWN_ISSUES.md`.
+
+**Phase 4**: `app:ops-snapshot` already computed 3 real signals (queue
+length, publish failure rate, retry-storm count) and logged a structured
+alert on breach — real, not a facade, confirmed by audit. Added a fourth:
+open (un-retried) `dead_letter_jobs` count. Added real Telegram delivery
+(`OpsAlertNotifier`) alongside the existing log-based alert, deliberately
+fail-safe/opt-in (silent no-op unless both `OPS_ALERT_TELEGRAM_BOT_TOKEN`
+and `OPS_ALERT_TELEGRAM_CHAT_ID` are set — the operator supplies these
+later). Added `GET /admin/ops` (`super_admin`-gated) for an on-demand read
+of the same metrics. See
+`docs/architecture/decisions/0010-observability-alert-delivery.md`.
+**Not done**: a Flutter admin UI for `/admin/ops` — the natural file for it
+(`platform_admin_screens.dart`) was under active concurrent modification by
+a separate session during this work; deferred rather than risking a
+conflicting edit.
+
+Backend 524 tests (521 passed, 3 skipped — up from 510), Pint clean,
+PHPStan 0 errors.
 
 ## 2026-08-16 (continued): Phase 5 UI/UX audit — token discipline
 
