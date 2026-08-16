@@ -142,8 +142,17 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   bool _isLaunchTarget(AccountEntity account, SocialPageEntity page) {
-    return isBetaLaunchPublishingTarget(
-      platform: account.platform,
+    // Discovery-mode-aware, not account.platform-keyed: an
+    // instagram_business page's parent AccountEntity still has
+    // platform: 'facebook' (Instagram has no OAuth of its own — it's
+    // discovered in the same sync call as the Facebook Page, see
+    // FacebookOAuthProvider::listPages() on the backend), so checking
+    // account.platform directly would never recognize it as eligible.
+    // Mirrors AccountPagesPanel's own eligibility check exactly, so the
+    // dashboard and composer never disagree about which embedded pages are
+    // real publishing targets.
+    return isBetaLaunchPublishingTargetForDiscoveryMode(
+      discoveryMode: account.discoveryMode,
       pageKind: page.kind,
     );
   }

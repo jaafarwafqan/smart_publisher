@@ -309,4 +309,99 @@ void main() {
       },
     );
   });
+
+  // XOAuthProvider is real (see the backend), but 'x'/'twitter' stays
+  // outside isBetaLaunchPlatform until a live publish is verified — these
+  // repository methods are unreachable from the Connect UI today, same as
+  // beginWhatsAppOAuth/completeWhatsAppOAuth were before WhatsApp's OAuth
+  // was built. The PKCE code_verifier/code_challenge pair itself is
+  // generated and cached server-side (see SocialAccountController on the
+  // backend), so nothing PKCE-specific appears in this request/response
+  // shape — it's a plain mirror of the Facebook/WhatsApp pairs above.
+  group('Integration - X OAuth (AccountRepositoryImpl)', () {
+    test('beginXOAuth posts provider=x and x-specific scopes', () async {
+      String? sentPath;
+      Map<String, dynamic>? sentPayload;
+
+      final repository = AccountRepositoryImpl(
+        networkClient: FakeNetworkClient(
+          postHandler: (path, data) async {
+            sentPath = path;
+            sentPayload = data as Map<String, dynamic>;
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'success': true,
+                'data': <String, dynamic>{
+                  'message': 'OAuth authorization URL generated.',
+                  'provider': 'x',
+                  'state': 'x-state-1',
+                  'authorize_url':
+                      'https://twitter.com/i/oauth2/authorize?client_id=1&state=x-state-1&code_challenge=abc',
+                },
+              },
+            );
+          },
+        ),
+      );
+
+      final result = await repository.beginXOAuth(
+        userId: _userId,
+        redirectUri: 'http://localhost:5055/',
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(sentPath, contains('/social-accounts/authorize'));
+      expect(sentPayload!['provider'], 'x');
+      expect(sentPayload!['scopes'], <String>[
+        'tweet.read',
+        'tweet.write',
+        'users.read',
+        'offline.access',
+      ]);
+      expect(result.data, contains('twitter.com'));
+    });
+
+    test(
+      'completeXOAuth posts provider=x and maps the connected account to the local "twitter" platform id',
+      () async {
+        final repository = AccountRepositoryImpl(
+          networkClient: FakeNetworkClient(
+            postHandler: (path, data) async {
+              return Response<dynamic>(
+                requestOptions: RequestOptions(path: path),
+                statusCode: 200,
+                data: <String, dynamic>{
+                  'success': true,
+                  'data': <String, dynamic>{
+                    'id': '99',
+                    'provider': 'x',
+                    'provider_account_id': 'x-user-1',
+                    'account_name': 'X Test Account',
+                    'account_username': '@x_test_account',
+                    'status': 'connected',
+                    'discovery_mode': 'auto',
+                    'metadata': <String, dynamic>{},
+                  },
+                },
+              );
+            },
+          ),
+        );
+
+        final result = await repository.completeXOAuth(
+          userId: _userId,
+          code: 'x-auth-code',
+          state: 'x-state-1',
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(result.data!.remoteId, '99');
+        // _platformFromBackendProvider maps the backend's 'x' to this
+        // app's locally-seeded 'twitter' placeholder id.
+        expect(result.data!.platform, 'twitter');
+      },
+    );
+  });
 }

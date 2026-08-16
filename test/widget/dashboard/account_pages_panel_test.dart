@@ -119,7 +119,7 @@ void main() {
   );
 
   testWidgets(
-    'embedded non-beta page kinds are visibly disabled and excluded on save',
+    'an embedded Instagram Business page is selectable; WhatsApp stays visibly disabled and excluded on save',
     (tester) async {
       const facebookPage = SocialPageEntity(
         id: 'facebook-page',
@@ -129,6 +129,9 @@ void main() {
         name: 'Launch Page',
         status: SocialPageStatus.valid,
       );
+      // 2026-08: instagram_business graduated into the closed beta (see
+      // platform_label.dart's isBetaLaunchPublishingTargetForDiscoveryMode)
+      // — no longer an "embedded non-beta" kind like whatsapp_number below.
       const instagramPage = SocialPageEntity(
         id: '10',
         socialAccountId: '42',
@@ -160,10 +163,7 @@ void main() {
         onSaveSelection: (ids) async => saved = ids,
       );
 
-      expect(
-        find.text('my_business — Instagram — Coming soon'),
-        findsOneWidget,
-      );
+      expect(find.text('my_business — Instagram — Coming soon'), findsNothing);
       expect(
         find.text('Support Line — WhatsApp — Coming soon'),
         findsOneWidget,
@@ -172,9 +172,13 @@ void main() {
       final tiles = tester.widgetList<CheckboxListTile>(
         find.byType(CheckboxListTile),
       );
+      // facebookPage: eligible, not pre-selected.
+      expect(tiles.elementAt(0).value, isFalse);
       expect(tiles.elementAt(0).onChanged, isNotNull);
-      expect(tiles.elementAt(1).value, isFalse);
-      expect(tiles.elementAt(1).onChanged, isNull);
+      // instagramPage: eligible now, and pre-selected (isSelected: true).
+      expect(tiles.elementAt(1).value, isTrue);
+      expect(tiles.elementAt(1).onChanged, isNotNull);
+      // whatsappPage: still not an eligible beta target.
       expect(tiles.elementAt(2).value, isFalse);
       expect(tiles.elementAt(2).onChanged, isNull);
 
@@ -183,7 +187,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Save Selection'));
       await tester.pumpAndSettle();
 
-      expect(saved, <String>['facebook-page']);
+      expect(saved, <String>['facebook-page', '10']);
     },
   );
 

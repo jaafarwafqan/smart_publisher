@@ -5,24 +5,25 @@ and CI status.** If any other doc (KNOWN_ISSUES.md, either README) states a
 different number, this file is correct and the other is stale — file an
 issue or fix it on sight rather than trusting the other file's number.
 
-**Last verified:** 2026-08-16, re-run locally in this session (not inferred
-from commit messages), plus independently confirmed via real GitHub Actions
-runs (see below — this was previously an open caveat, now closed). Counts
-before 2026-08-15 (e.g. 210 Flutter / 245 backend) are historical and
-superseded.
+**Last verified:** 2026-08-16 (continued session — Instagram/X platform
+work), re-run locally in this session (not inferred from commit messages).
+The GitHub Actions confirmation below is from earlier the same day and has
+not been re-checked against this session's new commits yet — see the
+Instagram/X entry further down. Counts before 2026-08-15 (e.g. 210 Flutter /
+245 backend) are historical and superseded.
 
 ## Release-hardening results
 
 | Check | Result |
 | --- | --- |
 | Flutter `flutter analyze` | Passed - 0 issues |
-| Flutter `flutter test` | Passed - 319 tests |
+| Flutter `flutter test` | Passed - 340 tests |
 | Flutter `dart format --set-exit-if-changed lib test scripts/ci` | Passed - 0 files changed |
 | Flutter release-source check | Passed |
-| Flutter line coverage | 56.62% (7,739/13,669 lines) — CI floor is 50%, see `.github/workflows/ci.yml` |
+| Flutter line coverage | Not re-measured this session; last measured 56.62% (7,739/13,669 lines) — CI floor is 50%, see `.github/workflows/ci.yml` |
 | Android release manifest processing | Passed |
 | Laravel `composer validate` | Passed |
-| Laravel `php artisan test` | Passed - 469 tests, 467 passed, 2 MySQL-only skips, 1498 assertions |
+| Laravel `php artisan test` | Passed - 495 tests, 492 passed, 3 skipped (2 MySQL-only + 1 opt-in Instagram sandbox), 1578 assertions |
 | Laravel PHPStan/Larastan | Passed - 0 errors |
 | Laravel Pint | Passed |
 | Laravel coverage gate | CI floor is 50% (`--min=50`), see `.github/workflows/ci.yml` in the backend repo — not independently measured locally in this session (no Xdebug/PCOV available locally; CI itself does measure and enforce it) |
@@ -114,6 +115,48 @@ session:
   `@UOK_Faculty_Nursing` channel — reached `published` on the first attempt,
   no new `dead_letter_jobs` entry, cleaned up (post deleted, channel message
   deleted by the user) after the user visually confirmed it appeared.
+
+## 2026-08-16 (continued): Instagram Business + X (Twitter) platform work
+
+Real code, not a facade — see `docs/api/integrations.md` for the full
+provider table. Summary:
+
+- **Instagram Business**: `InstagramProvider` makes real Content Publishing
+  API calls (container create → poll → publish; single image/video/carousel;
+  honest rejection of a text-only post, matching Instagram's real
+  constraint). `FacebookOAuthProvider::listPages()`'s linked
+  `instagram_business_account` entry now carries the parent Page's real
+  access token (was `null`) since that's the token Instagram publishing
+  actually authenticates with. `PublishEngineService`,
+  `ClosedBetaPublishingGate`, and `PostMetricsSyncService` all dispatch by
+  `SocialPage.kind`, not just the parent `SocialAccount.provider`, since an
+  `instagram_business` page's account is still `provider: 'facebook'`.
+  `'instagram'` joined `SocialOAuthManager::CLOSED_BETA_PROVIDERS`.
+- **X (Twitter)**: `XOAuthProvider` — real OAuth 2.0 + PKCE (the
+  `code_verifier`/`code_challenge` pair is generated and cached entirely
+  server-side), Tweet v2 publish (text-only this release), refresh,
+  app-credential test, health check, metrics. Deliberately **not** added to
+  `CLOSED_BETA_PROVIDERS` — write access needs a paid X API tier that has
+  not been live-verified against a real account.
+- **WhatsApp**: explicitly deferred by the user this session — the Cloud
+  API sends to one fixed recipient number, not a broadcast surface, and
+  doesn't fit this app's publish model without a template/recipient-list
+  feature that doesn't exist yet. No change from its existing "real
+  OAuth/discovery, `publishPost()` unimplemented" state.
+- **Automated coverage**: backend 495 tests (492 passed, 3 skipped — 2
+  MySQL-only + 1 new opt-in `InstagramSandboxE2ETest`), Pint clean, PHPStan
+  0 errors. Flutter 340 tests, `flutter analyze` 0 issues, `dart format`
+  clean.
+- **Live verification: [PENDING — update this line once the staging test
+  below actually runs]**. Plan: deploy to Render staging (existing
+  Auto-Deploy), confirm the already-connected Facebook Page has a linked
+  Instagram professional account, re-sync pages, create a draft with one
+  real image targeting the discovered `instagram_business` page,
+  `publish-now`, confirm `published` with no new `dead_letter_jobs` row,
+  visually confirm the post on Instagram, then clean up via the real Graph
+  API `DELETE /{media-id}` (Instagram, unlike Facebook, supports this).
+  X has no live test this session — its automated PKCE round-trip test
+  (`SocialAccountOAuthTest`) is the extent of its verification for now.
 
 ## What is covered by the launch-hardening work
 

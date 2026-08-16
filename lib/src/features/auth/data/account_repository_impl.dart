@@ -499,6 +499,92 @@ class AccountRepositoryImpl extends AccountRepository {
     );
   }
 
+  // X's OAuth 2.0 flow requires PKCE — the code_verifier/code_challenge
+  // pair is generated and cached entirely server-side (see
+  // SocialAccountController::beginOAuthAuthorization()/callback() on the
+  // backend), so beginXOAuth/completeXOAuth below carry no PKCE parameters
+  // of their own; they're a plain mirror of beginFacebookOAuth/
+  // completeFacebookOAuth with provider: 'x'.
+  static const List<String> _xOAuthScopes = <String>[
+    'tweet.read',
+    'tweet.write',
+    'users.read',
+    'offline.access',
+  ];
+
+  @override
+  Future<AppResult<String>> beginXOAuth({
+    required String userId,
+    required String redirectUri,
+  }) async {
+    if (networkClient == null) {
+      return Failure<String>('Connecting X requires a connection.');
+    }
+
+    return execute(
+      () async {
+        final response = await networkClient!.post(
+          LaravelEndpoints.socialAccountsAuthorize(userId),
+          data: BeginOAuthAuthorizationRequestDtoV1(
+            provider: 'x',
+            redirectUri: redirectUri,
+            scopes: _xOAuthScopes,
+          ).toJson(),
+        );
+        final payload = _unwrapPayload(response.data);
+        if (payload is! Map<String, dynamic>) {
+          throw StateError('Invalid OAuth authorize response.');
+        }
+        final dto = BeginOAuthAuthorizationResponseDtoV1.fromJson(payload);
+        if (dto.authorizeUrl.isEmpty) {
+          throw StateError('X did not return an authorize URL.');
+        }
+        return dto.authorizeUrl;
+      },
+      operation: 'accounts.x.oauth.begin',
+      fallbackMessage: 'Failed to start X connection',
+    );
+  }
+
+  @override
+  Future<AppResult<AccountEntity>> completeXOAuth({
+    required String userId,
+    required String code,
+    required String state,
+  }) async {
+    if (networkClient == null) {
+      return Failure<AccountEntity>('Connecting X requires a connection.');
+    }
+
+    return execute(
+      () async {
+        final response = await networkClient!.post(
+          LaravelEndpoints.socialAccountsCallback(userId),
+          data: OAuthCallbackRequestDtoV1(
+            provider: 'x',
+            code: code,
+            state: state,
+            scopes: _xOAuthScopes,
+          ).toJson(),
+        );
+        final payload = _unwrapPayload(response.data);
+        if (payload is! Map<String, dynamic>) {
+          throw StateError('Invalid X OAuth callback response.');
+        }
+        final linked = _toEntity(SocialAccountResponseDtoV1.fromJson(payload));
+        final existing = _localAccounts.values
+            .where((a) => a.platform == linked.platform)
+            .firstOrNull;
+        final accountId = existing?.id ?? linked.id;
+        final updated = linked.copyWith(id: accountId);
+        _localAccounts[accountId] = updated;
+        return updated;
+      },
+      operation: 'accounts.x.oauth.complete',
+      fallbackMessage: 'Failed to complete X connection',
+    );
+  }
+
   @override
   Future<AppResult<List<SocialPageEntity>>> getPages(
     AccountEntity account, {

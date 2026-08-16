@@ -98,6 +98,19 @@ Supersedes the 2026-08-15 override below where they disagree:
   server-side (the Page access token is deliberately never exposed) — the
   test post, and an earlier undeleted one from 2026-08-12 on the same
   Page, both need manual deletion by the Page's own operator.
+- **Instagram Business and X (Twitter) platform work, same day (continued
+  session)**: `InstagramProvider` is a real Content Publishing API
+  implementation (image/video/carousel, no text-only post) and graduated
+  into `SocialOAuthManager::CLOSED_BETA_PROVIDERS` after live verification
+  [PENDING — see `docs/testing/STATUS.md`'s Instagram/X entry for current
+  status]. `XOAuthProvider` is real OAuth 2.0 + PKCE and Tweet v2 publish
+  code with full automated coverage, deliberately **not** production-enabled
+  yet — write access needs a paid X API tier not yet live-verified. WhatsApp
+  was explicitly deferred by the operator this session (Cloud API's
+  one-fixed-recipient model doesn't fit this app's publish-to-my-audience
+  model without a template/recipient-list feature that doesn't exist).
+  Backend 495 tests / Flutter 340 tests, both green. Full detail:
+  `docs/api/integrations.md`.
 
 ## Prior launch-hardening override (2026-08-15)
 
@@ -260,8 +273,12 @@ topology.
 
 - Organisation membership and the editor's own-post rule are authorization
   requirements, not optional global-permission behavior.
-- Instagram, WhatsApp, X, LinkedIn, and every other provider are intentionally
-  `Coming soon`; a non-production generic OAuth mock is not an integration.
+- WhatsApp, X, LinkedIn, and every other still-`Coming soon` provider are
+  intentionally so; a non-production generic OAuth mock is not an
+  integration. (Instagram graduated out of this list in 2026-08 — see the
+  launch-hardening override above and `docs/api/integrations.md` — it is a
+  real, non-mock implementation now, discovered as a child of a connected
+  Facebook Page rather than through its own separate OAuth.)
 - Canary controls, web/backend deployment controls, and automated rollback
   are intentionally unavailable.  Closed-beta tester groups and an operator's
   tested hosting procedure are the only valid release/rollback boundary.

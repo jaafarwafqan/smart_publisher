@@ -1,20 +1,25 @@
 # OAuth & Platform Integrations — Closed Beta
 
 **Release scope:** closed beta only.  Production is intentionally limited to
-Telegram and Facebook **Pages**.  This is a server-enforced allow-list, not a
-client-side visibility convention.
+Telegram, Facebook **Pages**, and (since 2026-08, after a live-verified real
+publish) linked Instagram **Business Accounts**.  This is a server-enforced
+allow-list (`SocialOAuthManager::CLOSED_BETA_PROVIDERS`), not a client-side
+visibility convention.
 
 The word `Available` below means that a guarded implementation path exists.  It does
 **not** mean the provider is approved, configured, or ready for external
 testers.  Until the Meta gate and the staging evidence below are complete,
-Facebook access is limited to the release owner's permitted app-role testing
-and is not a launch claim.
+Facebook/Instagram access is limited to the release owner's permitted
+app-role testing and is not a launch claim.
 
 | Provider | Closed-beta production behaviour | Delivery implementation |
 |---|---|---|
 | Telegram | Implemented closed-beta path after a bot is connected and made an administrator of the target channel; real staging evidence is still required. | Telegram Bot API (`getMe`, `getChat`, `sendMessage`) |
 | Facebook Page | Implemented Page-only OAuth and publishing path, pending Meta approval and real Page staging evidence before external beta use. | Facebook Graph API |
-| Instagram, WhatsApp, X, LinkedIn and every other provider | `Coming soon`; connection and publishing are rejected in production. | No production delivery path |
+| Instagram Business Account | Discovered as a child of a connected Facebook Page (no separate OAuth) — see Connection flows below. Real Content Publishing API implementation (image/video/carousel; no text-only post), live-verified 2026-08. Subject to the same Meta App Review gate as Facebook Page publishing. | Facebook Graph API (Content Publishing) |
+| X (Twitter) | Real OAuth 2.0 + PKCE and Tweet v2 publish implementation (`XOAuthProvider`) exists and is fully covered by automated tests, but is **deliberately not** in the production allow-list yet — write access needs a paid X API tier that hasn't been live-verified against a real account. `Coming soon` in the client until that verification happens. | X API v2 (not yet production-enabled) |
+| WhatsApp | Real OAuth/Page-discovery implementation exists, but `publishPost()` is deliberately unimplemented — the WhatsApp Business Cloud API sends to one fixed recipient number, which doesn't fit this app's "publish to my own audience" model without a template/recipient-list feature that doesn't exist yet. `Coming soon` in the client. | Not implemented (product-scope decision, not a missing credential) |
+| LinkedIn and every other provider | `Coming soon`; connection and publishing are rejected in production. | No production delivery path (`GenericOAuthProvider` mock) |
 
 `GenericOAuthProvider` can still be used in non-production automated tests.
 It must never be treated as proof of a live integration, and production rejects
@@ -26,10 +31,21 @@ it rather than fabricating a successful publish.
   bot token, verifies it with Telegram, then the user adds a channel.  The bot
   must already have permission to post in that channel.
 - **Facebook Pages:** `POST /users/{user}/social-accounts/authorize`, followed
-  by `/callback`, completes the OAuth flow.  Only discovered targets whose
-  `kind` is `page` are eligible for closed-beta publishing; discovering an
-  Instagram business account through Facebook does not enable Instagram
-  publishing.
+  by `/callback`, completes the OAuth flow.  Discovered targets whose `kind`
+  is `page` publish through the Facebook Graph API.
+- **Instagram Business Accounts:** discovered automatically in the same
+  Facebook sync call — no separate OAuth handshake. A target whose `kind` is
+  `instagram_business` publishes through Instagram's own Content Publishing
+  API (`InstagramProvider`, authenticated with the linked Page's own access
+  token), not Facebook's Page-feed endpoints. Every Instagram post requires
+  at least one image or video (up to 10, as a carousel) — there is no
+  text-only Instagram post.
+- **X (Twitter):** `POST /users/{user}/social-accounts/authorize` with
+  `provider: "x"`, followed by `/callback`, completes an OAuth 2.0 + PKCE
+  flow — the `code_verifier`/`code_challenge` pair is generated and cached
+  entirely server-side, so the client-facing request/response shape is
+  identical to Facebook's. Not reachable from the production allow-list yet
+  (see the table above).
 - **Mobile callback:** Android declares
   `smartpublisher://oauth/callback`.  Register the exact redirect URI used by
   the deployed client in each provider console; do not use a localhost or

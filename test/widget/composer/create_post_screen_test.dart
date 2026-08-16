@@ -171,6 +171,19 @@ class _FakeAccountRepository extends AccountRepository {
     required String socialAccountId,
     required String businessId,
   }) => throw UnimplementedError();
+
+  @override
+  Future<AppResult<String>> beginXOAuth({
+    required String userId,
+    required String redirectUri,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<AppResult<AccountEntity>> completeXOAuth({
+    required String userId,
+    required String code,
+    required String state,
+  }) => throw UnimplementedError();
 }
 
 class _FailingAccountRepository extends _FakeAccountRepository {
@@ -479,7 +492,7 @@ void main() {
   );
 
   testWidgets(
-    'only Facebook Pages and Telegram Channels are selectable beta targets',
+    'Facebook Pages, Telegram Channels, and Instagram Business accounts are selectable beta targets — WhatsApp is not',
     (tester) async {
       await _pump(
         tester,
@@ -500,11 +513,14 @@ void main() {
       );
 
       expect(tester.widget<FilterChip>(facebookTarget).onSelected, isNotNull);
-      expect(tester.widget<FilterChip>(instagramTarget).onSelected, isNull);
+      // 2026-08: Instagram graduated into the closed beta —
+      // InstagramProvider makes real Content Publishing API calls now
+      // (see platform_label.dart's isBetaLaunchPublishingTarget).
+      expect(tester.widget<FilterChip>(instagramTarget).onSelected, isNotNull);
       expect(tester.widget<FilterChip>(whatsAppTarget).onSelected, isNull);
       expect(
         find.text('Instagram Business — Instagram — Coming soon'),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.text('WhatsApp Number — WhatsApp — Coming soon'),
@@ -512,28 +528,28 @@ void main() {
       );
 
       await tester.tap(facebookTarget);
+      await tester.tap(instagramTarget);
       await tester.pumpAndSettle();
       expect(tester.widget<FilterChip>(facebookTarget).selected, isTrue);
+      expect(tester.widget<FilterChip>(instagramTarget).selected, isTrue);
 
-      await tester.tap(instagramTarget);
       await tester.tap(whatsAppTarget);
       await tester.pumpAndSettle();
-      expect(tester.widget<FilterChip>(instagramTarget).selected, isFalse);
       expect(tester.widget<FilterChip>(whatsAppTarget).selected, isFalse);
     },
   );
 
-  testWidgets('a stale Instagram draft target fails closed before publish', (
+  testWidgets('a stale WhatsApp draft target fails closed before publish', (
     tester,
   ) async {
     const staleDraft = PostEntity(
-      id: 'draft-with-stale-instagram-target',
+      id: 'draft-with-stale-whatsapp-target',
       title: 'Safe beta draft',
-      body: 'This must not target Instagram.',
-      targetPageIds: <String>['page-instagram-1'],
-      platforms: <String>['instagram'],
+      body: 'This must not target WhatsApp.',
+      targetPageIds: <String>['page-whatsapp-1'],
+      platforms: <String>['whatsapp'],
       platformContent: <String, String>{
-        'instagram': 'Do not send this caption.',
+        'whatsapp': 'Do not send this caption.',
       },
     );
 
@@ -550,14 +566,14 @@ void main() {
       tester
           .widget<FilterChip>(
             find.byKey(
-              const ValueKey<String>('publish-target-page-instagram-1'),
+              const ValueKey<String>('publish-target-page-whatsapp-1'),
             ),
           )
           .selected,
       isFalse,
     );
     expect(
-      find.byKey(const ValueKey<String>('platform-preview-text-instagram')),
+      find.byKey(const ValueKey<String>('platform-preview-text-whatsapp')),
       findsNothing,
     );
 

@@ -40,6 +40,27 @@ Future<void> _pump(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Scopes a finder to a single platform's status Card — several platforms
+/// legitimately share the exact same readiness label/capability text (e.g.
+/// WhatsApp and X both render "Partially available"), so an unscoped
+/// `find.text(...)` can't tell them apart once more than one platform is in
+/// the same state.
+Finder _withinPlatformCard(
+  WidgetTester tester,
+  String platformLabel,
+  Finder matching,
+) {
+  // .first: find.ancestor returns every matching ancestor up the tree, not
+  // just the nearest one — the platform Card is itself nested inside the
+  // section's own outer Card, so an unrestricted ancestor search matches
+  // both and the descendant search below would then span every platform's
+  // card, not just this one.
+  final card = find
+      .ancestor(of: find.text(platformLabel), matching: find.byType(Card))
+      .first;
+  return find.descendant(of: card, matching: matching);
+}
+
 void main() {
   testWidgets('renders without an authenticated session', (tester) async {
     // No auth/network provider is overridden at all — proves the screen
@@ -64,12 +85,47 @@ void main() {
   );
 
   testWidgets(
-    'a mock-backed platform (Instagram) is labeled Coming soon, not Available',
+    'a still fully mock-backed platform (LinkedIn) is labeled Coming soon, not Available',
+    (tester) async {
+      await _pump(tester);
+
+      expect(find.text('LinkedIn'), findsOneWidget);
+      expect(
+        _withinPlatformCard(tester, 'LinkedIn', find.text('Coming soon')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'Instagram (2026-08 graduation) is labeled Available (Beta), can publish, but cannot Connect directly',
     (tester) async {
       await _pump(tester);
 
       expect(find.text('Instagram'), findsOneWidget);
-      expect(find.text('Coming soon'), findsWidgets);
+      expect(
+        _withinPlatformCard(tester, 'Instagram', find.text('Available (Beta)')),
+        findsOneWidget,
+      );
+      expect(
+        _withinPlatformCard(
+          tester,
+          'Instagram',
+          find.textContaining('Publish: Yes'),
+        ),
+        findsOneWidget,
+      );
+      // No OAuth of its own — discovered as a child of a connected
+      // Facebook Page, see FacebookOAuthProvider::listPages() on the
+      // backend and platformHelpStatuses()'s dedicated instagram branch.
+      expect(
+        _withinPlatformCard(
+          tester,
+          'Instagram',
+          find.textContaining('Connect: No'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 
@@ -79,15 +135,42 @@ void main() {
     await _pump(tester);
 
     expect(find.text('WhatsApp'), findsOneWidget);
-    expect(find.text('Partially available'), findsOneWidget);
+    expect(
+      _withinPlatformCard(tester, 'WhatsApp', find.text('Partially available')),
+      findsOneWidget,
+    );
     // "Publish: No" must be present for WhatsApp's card — publishPost()
     // throws "not implemented" on the real backend (verified 2026-08-10).
-    expect(find.textContaining('Publish: No'), findsWidgets);
+    expect(
+      _withinPlatformCard(
+        tester,
+        'WhatsApp',
+        find.textContaining('Publish: No'),
+      ),
+      findsOneWidget,
+    );
     expect(
       find.textContaining('Publish: Yes'),
       findsWidgets,
-    ); // Facebook/Telegram do allow it.
+    ); // Facebook/Telegram/Instagram do allow it.
   });
+
+  testWidgets(
+    'X (Twitter) is Partially available — real code, not yet production-approved',
+    (tester) async {
+      await _pump(tester);
+
+      expect(find.text('X'), findsOneWidget);
+      expect(
+        _withinPlatformCard(tester, 'X', find.text('Partially available')),
+        findsOneWidget,
+      );
+      expect(
+        _withinPlatformCard(tester, 'X', find.textContaining('Publish: No')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('never renders a token, secret, or API key value', (
     tester,

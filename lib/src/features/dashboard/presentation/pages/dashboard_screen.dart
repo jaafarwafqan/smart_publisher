@@ -202,6 +202,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       _showInstagramManagedViaFacebookDialog();
       return;
     }
+    // Unreachable today: isBetaLaunchPlatform('twitter') is still false
+    // (XOAuthProvider is real but not yet production-approved — see
+    // platform_label.dart), so the top-of-method guard above returns
+    // before this. Wired up now so flipping that gate later needs no
+    // further dashboard changes — the same "real but still gated" shape
+    // 'whatsapp' has had since its OAuth flow was built.
+    if (account.platform == 'twitter') {
+      await _connectViaOAuth(account, 'x');
+      return;
+    }
 
     final userId = await _currentUserId();
     if (userId == null) {
@@ -246,8 +256,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  String _platformLabel(String provider) =>
-      provider == 'whatsapp' ? 'WhatsApp' : 'Facebook';
+  String _platformLabel(String provider) {
+    switch (provider) {
+      case 'whatsapp':
+        return 'WhatsApp';
+      case 'x':
+        return 'X';
+      default:
+        return 'Facebook';
+    }
+  }
 
   /// Android/iOS only: tries the native flutter_facebook_auth SDK flow
   /// first (a real Facebook Login, potentially skipping straight to a
@@ -324,15 +342,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
     final repository = ref.read(accountRepositoryProvider);
-    final result = provider == 'whatsapp'
-        ? await repository.beginWhatsAppOAuth(
-            userId: userId,
-            redirectUri: _oauthRedirectUri,
-          )
-        : await repository.beginFacebookOAuth(
-            userId: userId,
-            redirectUri: _oauthRedirectUri,
-          );
+    final result = switch (provider) {
+      'whatsapp' => await repository.beginWhatsAppOAuth(
+        userId: userId,
+        redirectUri: _oauthRedirectUri,
+      ),
+      'x' => await repository.beginXOAuth(
+        userId: userId,
+        redirectUri: _oauthRedirectUri,
+      ),
+      _ => await repository.beginFacebookOAuth(
+        userId: userId,
+        redirectUri: _oauthRedirectUri,
+      ),
+    };
     if (!mounted) {
       return;
     }
@@ -390,17 +413,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
     final repository = ref.read(accountRepositoryProvider);
-    final result = provider == 'whatsapp'
-        ? await repository.completeWhatsAppOAuth(
-            userId: userId,
-            code: callback.code!,
-            state: callback.state!,
-          )
-        : await repository.completeFacebookOAuth(
-            userId: userId,
-            code: callback.code!,
-            state: callback.state!,
-          );
+    final result = switch (provider) {
+      'whatsapp' => await repository.completeWhatsAppOAuth(
+        userId: userId,
+        code: callback.code!,
+        state: callback.state!,
+      ),
+      'x' => await repository.completeXOAuth(
+        userId: userId,
+        code: callback.code!,
+        state: callback.state!,
+      ),
+      _ => await repository.completeFacebookOAuth(
+        userId: userId,
+        code: callback.code!,
+        state: callback.state!,
+      ),
+    };
     if (!mounted) {
       return;
     }

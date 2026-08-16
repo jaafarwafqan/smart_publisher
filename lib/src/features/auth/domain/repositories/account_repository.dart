@@ -119,4 +119,28 @@ abstract class AccountRepository extends BaseRepository<AccountEntity> {
     required String socialAccountId,
     required String businessId,
   });
+
+  /// Starts the real X (Twitter) OAuth 2.0 + PKCE redirect flow — the
+  /// code_verifier/code_challenge pair is generated and cached server-side
+  /// (see SocialAccountController::beginOAuthAuthorization() on the
+  /// backend), so this call and [completeXOAuth] carry no PKCE-specific
+  /// parameters of their own, same shape as [beginFacebookOAuth].
+  ///
+  /// Not yet reachable from the Connect UI — [isBetaLaunchPlatform] keeps
+  /// 'x'/'twitter' gated until a live publish is verified against a real
+  /// paid-tier X API account. Wired up now so flipping that gate later is a
+  /// one-line change, not a coding project — the same state
+  /// [beginWhatsAppOAuth] has been in since WhatsApp's OAuth was built.
+  Future<AppResult<String>> beginXOAuth({
+    required String userId,
+    required String redirectUri,
+  });
+
+  /// Completes the X OAuth flow after the browser redirects back with
+  /// `code`/`state` query parameters.
+  Future<AppResult<AccountEntity>> completeXOAuth({
+    required String userId,
+    required String code,
+    required String state,
+  });
 }

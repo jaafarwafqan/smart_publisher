@@ -144,7 +144,7 @@ void main() {
       expect(whatsapp.canConnect, isFalse);
     });
 
-    test('only Facebook and Telegram are available-beta', () {
+    test('Facebook, Telegram, and Instagram are available-beta', () {
       final availableBeta = platformHelpStatuses()
           .where(
             (status) => status.readiness == PlatformReadiness.availableBeta,
@@ -152,7 +152,28 @@ void main() {
           .map((status) => status.platformId)
           .toSet();
 
-      expect(availableBeta, <String>{'facebook', 'telegram'});
+      expect(availableBeta, <String>{'facebook', 'telegram', 'instagram'});
+    });
+
+    test('Instagram is available-beta but has no OAuth of its own', () {
+      final instagram = platformHelpStatuses().firstWhere(
+        (status) => status.platformId == 'instagram',
+      );
+
+      expect(instagram.readiness, PlatformReadiness.availableBeta);
+      expect(instagram.canPublish, isTrue);
+      expect(instagram.canDiscoverPages, isTrue);
+      expect(instagram.canConnect, isFalse);
+      expect(instagram.canTestConnection, isFalse);
+    });
+
+    test('X (twitter) is partial, real but not yet production-approved', () {
+      final statuses = platformHelpStatuses();
+      final x = statuses.firstWhere((status) => status.platformId == 'twitter');
+
+      expect(x.readiness, PlatformReadiness.partial);
+      expect(x.canPublish, isFalse);
+      expect(x.canConnect, isFalse);
     });
 
     test('mock-backed platforms never claim to support publishing', () {

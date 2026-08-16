@@ -48,9 +48,12 @@ Run this with two organisation memberships and record the request IDs:
    verify a real Facebook **Page** staging publish, view the Page post, and
    perform the documented cleanup.  Never use a personal profile as a Page
    substitute.
-7. Confirm Instagram, WhatsApp, X, LinkedIn, and all other unsupported
-   providers show `Coming soon` in the client and receive a production
-   rejection from the API.
+7. Confirm WhatsApp, X, LinkedIn, and all other unsupported providers show
+   `Coming soon` in the client and receive a production rejection from the
+   API. (Instagram graduated into the closed beta in 2026-08 — see
+   `docs/api/integrations.md` — and is covered by item 6's Meta gate
+   instead, since a linked Instagram Business Account shares the same
+   Facebook Page connection and App Review requirements.)
 
 ## 3. Meta release evidence
 
