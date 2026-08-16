@@ -120,6 +120,10 @@ session:
 - Docker build/compose and local gitleaks were not run because their CLIs are
   absent in this environment. Both are required CI gates; Docker source
   hardening is covered by the passing Laravel test above.
-- No real Facebook Page publish, Meta review, Firebase distribution, or
-  production TLS/domain smoke test was possible without external accounts and
-  secrets. See `docs/operations/closed_beta_release_checklist.md`.
+- This refers to the local `flutter test`/`php artisan test` runner
+  environment specifically, not staging — real Facebook (2026-08-12) and
+  real Telegram (2026-08-16, see the incident section above) publishes
+  *have* both been live-verified against the real staging environment.
+  Meta review, Firebase distribution, and a production TLS/domain smoke
+  test remain genuinely not done — see
+  `docs/operations/closed_beta_release_checklist.md`.
