@@ -7,6 +7,7 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../backend_contracts/v1/account_contract_v1.dart';
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/application/auth_session_controller.dart';
 
 /// Sprint 4 (Commercial SaaS): "download my data" —
@@ -97,12 +98,12 @@ class _AccountDataExportScreenState
     if (_error != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(_error!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: _load,
                 child: Text(l10n.dataExportRetryButton),
@@ -116,13 +117,13 @@ class _AccountDataExportScreenState
     final export = _export!;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: <Widget>[
         Text(l10n.dataExportIntro),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -130,14 +131,14 @@ class _AccountDataExportScreenState
                   l10n.dataExportUserSectionTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(export.userName),
                 Text(export.userEmail),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Card(
           child: Column(
             children: <Widget>[
@@ -164,13 +165,13 @@ class _AccountDataExportScreenState
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         ListTile(
           leading: const Icon(Icons.schedule_outlined),
           title: Text(l10n.dataExportExportedAtLabel),
           subtitle: Text(export.exportedAt),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         FilledButton.icon(
           onPressed: _copyJson,
           icon: const Icon(Icons.copy_outlined),

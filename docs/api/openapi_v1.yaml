@@ -4,15 +4,39 @@ info:
   version: "1.0.0"
   description: >
     Laravel 13 backend for Smart Publisher (social-media publishing platform).
-    Updated 2026-07-30 to reflect the real, current route table
-    (`routes/api.php`) and real controller/validation/Resource behavior — the
-    previous version of this file covered roughly 10% of the real surface.
-    Every response is wrapped by `ApiEnvelopeMiddleware` in the shape
-    `{success, message, data, meta, errors}` with **no exceptions** for any
-    `/api/*` route, including error responses. The production public contract
-    is a closed beta: only Telegram and Facebook Pages are accepted as social
-    providers. Other identifiers may exist in non-production test fixtures,
-    but are not production integrations and are rejected there.
+    Updated 2026-08-16 (Phase 2 doc-consistency pass) to drop the `/accounts/*`
+    route group entirely — those routes are not merely broken, they were
+    deliberately REMOVED from `routes/api.php` (Sprint 2, API Hardening, per
+    that route file's own comment) — this repo's own hard constraint is:
+    never resurrect `AccountController`, use `SocialAccountController` at
+    `/users/{user}/social-accounts/*` instead — and to add the real routes
+    that existed in code but not here yet: Organizations, platform Admin, and
+    the new inbound Webhooks receiver. This same pass also found that the
+    backend's own separately-maintained served spec
+    (`smart_publisher_backend/resources/openapi/openapi.json`, returned by
+    `GET /openapi.json`) already had all of this correct — the drift was
+    specific to this file, a second, independently-hand-maintained copy that
+    fell behind. That same check surfaced a larger, NOT-yet-closed gap this
+    pass did not attempt to fully replicate here: the served spec also
+    documents an entire Auth/Sprint-4 surface this file still omits —
+    self-registration, password reset, email verification, 2FA, the bare
+    `/login`/`/refresh` aliases, and `/account/data-export`. Treat the
+    backend's served `/openapi.json` as the more current source for those
+    specific routes until this file catches up; see
+    `docs/audit/KNOWN_ISSUES.md` for the open item recommending this file
+    either stop being independently hand-maintained or gain a CI check that
+    fails on drift between the two, so this exact gap can't quietly reopen.
+    Originally updated 2026-07-30 to reflect the real, current
+    route table and real controller/validation/Resource behavior. Every
+    response is wrapped by `ApiEnvelopeMiddleware` in the
+    shape `{success, message, data, meta, errors}` with **no exceptions** for
+    any `/api/*` route, including error responses (the Webhooks routes are
+    the one deliberate exception — they're provider callbacks, not part of
+    this envelope contract). The production public contract is a closed
+    beta: only Telegram and Facebook Pages (and, since 2026-08, a linked
+    Instagram Business Account discovered through Facebook) are accepted as
+    social providers. Other identifiers may exist in non-production test
+    fixtures, but are not production integrations and are rejected there.
 servers:
   - url: http://127.0.0.1:8000/api/v1
     description: Local development (php artisan serve)
@@ -21,7 +45,6 @@ security:
 tags:
   - name: Auth
   - name: Privacy
-  - name: Accounts (legacy/broken)
   - name: Branches
   - name: Users
   - name: SocialAccounts
@@ -33,6 +56,9 @@ tags:
   - name: Settings
   - name: SystemSettings
   - name: Publishing
+  - name: Organizations
+  - name: Admin
+  - name: Webhooks
 
 components:
   securitySchemes:
@@ -211,27 +237,6 @@ paths:
         '202': { description: "{ id, status: pending, requested_at }" }
         '422': { description: "confirm was omitted or not accepted" }
 
-  /accounts:
-    get:
-      tags: [Accounts (legacy/broken)]
-      summary: "List the current user's social accounts (legacy path — only this one method works)"
-      description: >
-        WARNING: `AccountController` only implements `index()`. The routes
-        `POST /accounts/connect`, `GET /accounts/{account}`,
-        `PUT /accounts/{account}`, `DELETE /accounts/{account}` are registered
-        but the controller has no matching methods — calling them throws a
-        fatal error (surfaces as a 500). The Flutter app was migrated off this
-        controller entirely onto `/users/{user}/social-accounts/*` below; this
-        route group is dead/broken and kept only for backward compatibility.
-        Do not build new clients against anything but `index()` here.
-      responses: { '200': { description: OK } }
-  /accounts/connect:
-    post: { tags: [Accounts (legacy/broken)], summary: "BROKEN — no controller method exists, always errors", responses: { '500': { description: "Fatal error, not implemented" } } }
-  /accounts/{account}:
-    get: { tags: [Accounts (legacy/broken)], summary: "BROKEN — no controller method exists", parameters: [{name: account, in: path, required: true, schema: {type: integer}}], responses: { '500': { description: "Fatal error, not implemented" } } }
-    put: { tags: [Accounts (legacy/broken)], summary: "BROKEN — no controller method exists", parameters: [{name: account, in: path, required: true, schema: {type: integer}}], responses: { '500': { description: "Fatal error, not implemented" } } }
-    delete: { tags: [Accounts (legacy/broken)], summary: "BROKEN — no controller method exists", parameters: [{name: account, in: path, required: true, schema: {type: integer}}], responses: { '500': { description: "Fatal error, not implemented" } } }
-
   /branches:
     get:
       tags: [Branches]
@@ -356,33 +361,32 @@ paths:
           content:
             application/json:
               schema: { type: array, items: { $ref: '#/components/schemas/SocialAccount' } }
+      description: >
+        No POST here (Sprint C, role/permission remediation): a generic
+        manual-link endpoint that accepted an arbitrary access_token for any
+        provider with no verification was removed. Every real connection now
+        goes through authorize()/callback() (web/desktop OAuth),
+        native-connect (Android/iOS), or telegram/connect (bot token) below —
+        all three actually verify the account with the provider before
+        saving.
+  /users/{user}/social-accounts/native-connect:
     post:
       tags: [SocialAccounts]
-      summary: "Directly link a social account (bypasses OAuth — used for manual/test linking)"
+      summary: "Android/iOS only: verify a client-asserted Facebook access token (from flutter_facebook_auth) and link it"
+      description: >
+        Unlike authorize()/callback(), the client hands back a real access
+        token directly instead of a ?code= to exchange — this endpoint
+        independently re-verifies it server-side via Meta's /debug_token
+        (confirms it's currently valid AND was minted for this exact app)
+        before trusting it. Only `provider: facebook` is accepted today.
       x-permission: social-accounts.create
       parameters: [{name: user, in: path, required: true, schema: {type: integer}}]
       requestBody:
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [provider, provider_account_id]
-              properties:
-                provider: { type: string, enum: [facebook, telegram], description: "Production closed-beta provider only" }
-                provider_account_id: { type: string }
-                account_name: { type: string, nullable: true }
-                account_username: { type: string, nullable: true }
-                access_token: { type: string, nullable: true }
-                refresh_token: { type: string, nullable: true }
-                token_expires_at: { type: string, format: date-time, nullable: true }
-                scopes: { type: array, items: { type: string } }
-                metadata: { type: object }
-                status: { type: string, enum: [connected, expired, revoked, failed, pending] }
-                is_active: { type: boolean }
+        content: { application/json: { schema: { type: object, required: [provider, access_token], properties: { provider: { type: string, enum: [facebook] }, access_token: { type: string } } } } }
       responses:
-        '201': { description: "Created/relinked", content: { application/json: { schema: { $ref: '#/components/schemas/SocialAccount' } } } }
-        '422': { description: "Provider account already linked to a different user" }
+        '200': { description: "Linked/relinked", content: { application/json: { schema: { $ref: '#/components/schemas/SocialAccount' } } } }
+        '422': { description: "Token invalid, expired, or issued for a different app; code: native_token_invalid" }
   /users/{user}/social-accounts/authorize:
     post:
       tags: [SocialAccounts]
@@ -561,6 +565,29 @@ paths:
       responses: { '200': { description: "Jobs dispatched, { jobs_count }" }, '422': { description: "No usable pages selected" } }
   /posts/{post}/draft:
     post: { tags: [Posts], summary: "Revert a post to draft — clears scheduled_at/published_at/failed_at/last_error/publish_batch_key", parameters: [{name: post, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /posts/{post}/cancel:
+    post: { tags: [Posts], summary: "Cancel a scheduled post before it publishes", parameters: [{name: post, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /posts/{post}/approve:
+    post:
+      tags: [Posts]
+      summary: "Approve a post pending approval (Sprint F, role/permission remediation) — requires posts.approve"
+      description: >
+        Dispatches the post's own already-selected targets for publishing.
+        The approver, not the original author, is who PublishPostJob
+        re-verifies still holds a valid publishing capability at execution
+        time — see PublishPostJob's own docblock.
+      x-permission: posts.approve
+      parameters: [{name: post, in: path, required: true, schema: {type: integer}}]
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Post' } } } }, '422': { description: "Post is not pending approval" } }
+  /posts/{post}/reject:
+    post:
+      tags: [Posts]
+      summary: "Reject a post pending approval, with an optional note"
+      x-permission: posts.approve
+      parameters: [{name: post, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { note: { type: string, maxLength: 1000 } } } } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Post' } } } } }
 
   /media:
     get:
@@ -693,6 +720,8 @@ paths:
     post: { tags: [Publishing], summary: "Manually dispatch ProcessScheduledPostsJob (normally runs every minute via the scheduler)", x-permission: publishing.manage, responses: { '200': {description: OK} } }
   /publishing/dead-letters:
     get: { tags: [Publishing], summary: "Paginated dead-letter job records (terminal failures across any job type)", x-permission: publishing.monitor, responses: { '200': {description: OK} } }
+  /publishing/dead-letters/{deadLetterJob}/retry:
+    post: { tags: [Publishing], summary: "Requeue a dead-lettered job for another attempt", x-permission: publishing.manage, parameters: [{name: deadLetterJob, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK}, '404': {description: "Not found"} } }
   /publishing/circuit-breaker/clear:
     post:
       tags: [Publishing]
@@ -702,3 +731,87 @@ paths:
         required: true
         content: { application/json: { schema: { type: object, required: [provider], properties: { provider: { type: string, maxLength: 50 } } } } }
       responses: { '200': { description: OK } }
+
+  /organizations:
+    get: { tags: [Organizations], summary: "List every organization the authenticated user holds a membership in", responses: { '200': {description: OK} } }
+  /organizations/{organization}/switch:
+    post: { tags: [Organizations], summary: "Switch the caller's active organization (must hold a membership in it)", parameters: [{name: organization, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: "New current_organization_id"}, '403': {description: "Not a member of this organization"} } }
+  /organizations/{organization}/audit-logs:
+    get: { tags: [Organizations], summary: "Organization-scoped audit trail — explicit {organization} binding, not ambient tenant context", x-organization-permission: audit_logs.view, parameters: [{name: organization, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /organizations/current:
+    get: { tags: [Organizations], summary: "The caller's currently active organization", responses: { '200': {description: OK} } }
+    put:
+      tags: [Organizations]
+      summary: "Update the current organization's own settings"
+      x-organization-permission: settings.manage
+      requestBody: { content: { application/json: { schema: { type: object, properties: { name: { type: string }, timezone: { type: string } } } } } }
+      responses: { '200': { description: OK } }
+  /organization/members:
+    get: { tags: [Organizations], summary: "List the current organization's members", x-organization-permission: members.view, responses: { '200': {description: OK} } }
+    post:
+      tags: [Organizations]
+      summary: "Add a member to the current organization"
+      x-organization-permission: members.manage
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [user_id, role], properties: { user_id: { type: integer }, role: { type: string } } } } } }
+      responses: { '201': { description: Created } }
+  /organization/members/{user}:
+    put: { tags: [Organizations], summary: "Change a member's role", x-organization-permission: members.manage, parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+    delete: { tags: [Organizations], summary: "Remove a member from the current organization", x-organization-permission: members.manage, parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+
+  /admin/dashboard:
+    get: { tags: [Admin], summary: "Platform-wide operational summary", security: [{ bearerAuth: [] }], x-super-admin: true, responses: { '200': {description: OK} } }
+  /admin/organizations:
+    get: { tags: [Admin], summary: "List every organization on the platform (cross-tenant)", x-super-admin: true, responses: { '200': {description: OK} } }
+    post: { tags: [Admin], summary: "Create an organization", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", responses: { '201': {description: Created} } }
+  /admin/organizations/{organization}:
+    get: { tags: [Admin], summary: "Get one organization (cross-tenant)", x-super-admin: true, parameters: [{name: organization, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+    put: { tags: [Admin], summary: "Update an organization", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: organization, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/organizations/{organization}/status:
+    post: { tags: [Admin], summary: "Activate/suspend an organization", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: organization, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/organizations/{organization}/reconcile-primary-owner:
+    post: { tags: [Admin], summary: "Repair a missing/ambiguous primary_owner_id invariant on an organization", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: organization, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/users:
+    get: { tags: [Admin], summary: "List every user on the platform (cross-tenant)", x-super-admin: true, responses: { '200': {description: OK} } }
+    post: { tags: [Admin], summary: "Create a platform user", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", responses: { '201': {description: Created} } }
+  /admin/users/{user}:
+    get: { tags: [Admin], summary: "Get one user (cross-tenant)", x-super-admin: true, parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+    put: { tags: [Admin], summary: "Update a user", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/users/{user}/memberships:
+    put: { tags: [Admin], summary: "Replace a user's organization memberships wholesale", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/users/{user}/platform-role:
+    post: { tags: [Admin], summary: "Grant/revoke platform super_admin", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/users/{user}/status:
+    post: { tags: [Admin], summary: "Suspend/reactivate a user's platform access", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: user, in: path, required: true, schema: {type: integer}}], responses: { '200': {description: OK} } }
+  /admin/oauth-providers:
+    get: { tags: [Admin], summary: "Platform-wide shared OAuth App ID/Secret per provider (super_admin only — see Sprint D, role/permission remediation, for why this moved off the tenant-scoped SystemSettings permission)", x-super-admin: true, responses: { '200': {description: OK} } }
+  /admin/oauth-providers/{provider}:
+    put: { tags: [Admin], summary: "Update a provider's shared app credentials", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: provider, in: path, required: true, schema: {type: string}}], responses: { '200': {description: OK} } }
+  /admin/oauth-providers/{provider}/test:
+    post: { tags: [Admin], summary: "Live-test a provider's shared app credentials", x-super-admin: true, x-rate-limit: "throttle:platform-admin-write", parameters: [{name: provider, in: path, required: true, schema: {type: string}}], responses: { '200': {description: OK} } }
+  /admin/oauth-providers/{provider}/audit-log:
+    get: { tags: [Admin], summary: "Audit trail for a provider's shared credential changes", x-super-admin: true, parameters: [{name: provider, in: path, required: true, schema: {type: string}}], responses: { '200': {description: OK} } }
+  /admin/audit-logs:
+    get: { tags: [Admin], summary: "Platform-wide audit trail across every organization (see /organizations/{organization}/audit-logs for the org-scoped equivalent, gated by audit_logs.view instead of super_admin)", x-super-admin: true, responses: { '200': {description: OK} } }
+
+  /webhooks/facebook:
+    get:
+      tags: [Webhooks]
+      summary: "Meta's one-time Page-webhook subscription handshake"
+      description: "Not part of the ApiEnvelope contract — a bare text/plain echo of ?hub.challenge= when ?hub.verify_token= matches FACEBOOK_WEBHOOK_VERIFY_TOKEN, else 403. See docs/api/webhooks.md."
+      security: []
+      parameters: [{name: "hub.mode", in: query, required: true, schema: {type: string, enum: [subscribe]}}, {name: "hub.verify_token", in: query, required: true, schema: {type: string}}, {name: "hub.challenge", in: query, required: true, schema: {type: string}}]
+      responses: { '200': { description: "text/plain hub.challenge echo" }, '403': { description: "Verify token mismatch or not configured" } }
+    post:
+      tags: [Webhooks]
+      summary: "Facebook Page webhook event delivery (feed changes — reactions/comments/shares)"
+      description: "Requires a valid X-Hub-Signature-256 (HMAC-SHA256 of the raw body, keyed by the existing OAuth App Secret) or 401. Idempotent — a redelivered event is a no-op. Not part of the ApiEnvelope contract."
+      security: []
+      responses: { '200': { description: "{ ok: true }" }, '401': { description: "Missing/invalid signature" } }
+  /webhooks/telegram/{socialAccountId}:
+    post:
+      tags: [Webhooks]
+      summary: "Per-bot Telegram update delivery (channel posts, bot membership changes)"
+      description: "Requires a valid X-Telegram-Bot-Api-Secret-Token matching this specific bot's own secret (registered automatically via setWebhook at connect time) or 401; unknown account is 404. Idempotent. Not part of the ApiEnvelope contract."
+      security: []
+      parameters: [{name: socialAccountId, in: path, required: true, schema: {type: integer}}]
+      responses: { '200': { description: "{ ok: true }" }, '401': { description: "Missing/invalid secret token" }, '404': { description: "Unknown webhook endpoint" } }

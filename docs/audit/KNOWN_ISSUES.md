@@ -226,18 +226,49 @@ These were real, confirmed bugs at some point in this project's history. They ar
 | **Staging 500'd on login/legal pages/openapi.json (2026-08-16)** | Auto-Deploy shipped the Redis-removal refactor while a conflicting service-level `CACHE_STORE=redis`/`SESSION_DRIVER=redis`/`QUEUE_CONNECTION=redis` still overrode the correct linked-group `database` values on the Web service — `Class "Redis" not found` on every cache/session-touching request | Fixed — removed the conflicting service-level vars |
 | **Staging web build was a blank white page (2026-08-16)** | CSP (`<meta>` tag and the separately-configured HTTP header) never allow-listed `www.gstatic.com`/`fonts.gstatic.com`, blocking Flutter Web's own CanvasKit renderer and Roboto font outright | Fixed in both CSP sources; confirmed via a clean Incognito console |
 | **Telegram connect 500'd for a bot already linked elsewhere (2026-08-16)** | `(provider, provider_account_id)` uniqueness is platform-wide, but the "already linked?" lookup was implicitly scoped to the caller's own organization — the INSERT collided with the real DB constraint | Fixed (`ffc2625`) — clear 422 instead, same SQLSTATE-23000 guard pattern as `PostController`/`MediaLibraryController` |
+| **No inbound webhook receiver existed (Phase 3, 2026-08-16)** | `docs/api/webhooks.md` described an endpoint that was never actually built — no route, no signature verification | Fixed — real signature/secret-verified receiver, idempotent event storage, database-queued processing; not yet live-verified (external Meta Dashboard subscription still pending) — see `docs/api/webhooks.md` |
+| **A post drafted/edited offline vanished from every read path on app restart (Phase 1 audit, 2026-08-16)** | `DraftStorage` was wired into `PostRepositoryImpl` but was in-memory-only and its own read methods were never called — reads went through a second, separate, equally non-persistent field instead; the already-durable `OutboxStore` mutation queue was unaffected, but the user couldn't see/keep editing the draft locally in the meantime | Fixed — `DraftStorage` now persists via `StorageService` (same pattern as `OutboxStore`); the redundant in-memory field was removed — see `docs/architecture/decisions/0007-persistent-local-caches-for-drafts-and-analytics.md` |
+| **"Last-viewed analytics" reset on every app restart (Phase 1 audit, 2026-08-16)** | `AnalyticsRepositoryImpl`'s cache was in-memory-only | Fixed — persisted via `StorageService`, same pattern |
+| **Spacing tokens existed but drifted (Phase 5 audit, 2026-08-16)** | `AppSpacing` existed and was already imported in most files touching `EdgeInsets`, but 22 raw literals exactly matching the token scale remained beside already-tokenized calls in the same files, with no enforcement | Fixed — 22 occurrences replaced; new CI gate `scripts/ci/check_spacing_tokens.dart` (no new lint package) — see `docs/architecture/decisions/0008-spacing-token-enforcement.md` |
 
 ---
 
 ## 🟠 Open — real gaps and external gates
 
+0. **Two independently hand-maintained OpenAPI documents exist for the same
+   API** (Phase 2, 2026-08-16). `docs/api/openapi_v1.yaml` (this repo) and
+   `smart_publisher_backend/resources/openapi/openapi.json` (the one
+   actually served by `GET /api/v1/openapi.json`) both document the route
+   table by hand, independently. A 2026-08-16 pass fixed real drift in this
+   file (documented deleted `/accounts/*` routes; was missing ~20 real
+   routes the served spec already had correct — Organizations, Admin,
+   approval workflow, `native-connect`, Webhooks) — but that same pass found
+   the served spec also documents an entire Auth/Sprint-4 surface
+   (registration, password reset, email verification, 2FA,
+   `/account/data-export`) this file still doesn't, predating this session.
+   Not fixed here: an actual mechanism to stop the two from drifting apart
+   again. See `docs/architecture/decisions/0009-openapi-doc-drift.md` for
+   the two candidate fixes (make this file a pointer to the served spec, or
+   add a CI check asserting they don't diverge) — an open decision, not yet
+   made.
+
 1. **Push notifications do not exist.** In-app notifications are persistent,
    recipient-scoped, and tested, but there is no FCM/APNs delivery path. This
    is not a reason to describe the in-app notification API as a facade.
-2. **No general provider-webhook receiver is implemented.** Do not rely on
-   `docs/api/webhooks.md` as a deployed callback endpoint. The supported
-   Telegram/Facebook connection and publish flows are documented in
-   `docs/api/integrations.md`.
+2. **~~No general provider-webhook receiver is implemented.~~ Fixed
+   2026-08-16, code-complete and tested — not yet live-verified.** A real
+   receiver now exists: signature-verified Facebook Page webhooks
+   (`X-Hub-Signature-256`), secret-token-verified Telegram bot webhooks
+   (`X-Telegram-Bot-Api-Secret-Token`, registered automatically at bot
+   connect time), idempotent/replay-safe event storage, and processing
+   queued on the existing `default` database queue (no new infrastructure).
+   See `docs/api/webhooks.md` and `docs/architecture/decisions/0006-inbound-webhook-receiver.md`
+   for the full design. **What remains open**: no live delivery from
+   Facebook or Telegram's real infrastructure has been observed yet — that
+   needs external configuration (subscribing the app to Page webhooks in
+   the Meta App Dashboard with a matching verify token) that has not been
+   done. Backend 510 tests (507 passed, 3 skipped), Pint clean, PHPStan 0
+   errors — see `docs/testing/STATUS.md`.
 3. **No plans, subscriptions, or billing system exists.** It is outside the
    closed-beta publishing scope, rather than an available SaaS capability.
 4. **OAuth state cleanup needs an explicit retention job.** Historical state

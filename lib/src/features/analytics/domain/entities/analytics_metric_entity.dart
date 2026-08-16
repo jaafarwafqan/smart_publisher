@@ -49,4 +49,22 @@ class AnalyticsMetricEntity {
       'available': available,
     };
   }
+
+  /// The inverse of [toJson] — deliberately ignores the redundant
+  /// `engagement_rate` key (a derived getter here, not stored state) rather
+  /// than trying to round-trip it.
+  factory AnalyticsMetricEntity.fromJson(Map<String, dynamic> json) {
+    return AnalyticsMetricEntity(
+      postId: json['post_id'] as String,
+      impressions: (json['impressions'] as num?)?.toInt() ?? 0,
+      clicks: (json['clicks'] as num?)?.toInt() ?? 0,
+      shares: (json['shares'] as num?)?.toInt() ?? 0,
+      reactions: (json['reactions'] as num?)?.toInt() ?? 0,
+      comments: (json['comments'] as num?)?.toInt() ?? 0,
+      reach: (json['reach'] as num?)?.toInt() ?? 0,
+      engagement: (json['engagement'] as num?)?.toInt() ?? 0,
+      status: json['status'] as String? ?? 'draft',
+      available: json['available'] as bool? ?? false,
+    );
+  }
 }

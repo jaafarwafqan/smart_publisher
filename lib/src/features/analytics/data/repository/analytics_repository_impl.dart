@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import '../../../../backend_contracts/v1/analytics_contract_v1.dart';
 import '../../../../backend_contracts/v1/api_envelope_v1.dart';
 import '../../../../core/network/laravel_api.dart';
 import '../../../../core/network/network_client.dart';
 import '../../../../core/result/app_result.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../domain/entities/analytics_dashboard_entity.dart';
 import '../../domain/entities/analytics_insight_entity.dart';
 import '../../domain/entities/analytics_metric_entity.dart';
@@ -10,12 +13,65 @@ import '../../domain/entities/analytics_report_entity.dart';
 import '../../domain/entities/analytics_summary_entity.dart';
 import '../../domain/repositories/analytics_repository.dart';
 
+/// Phase 1 (2026-08-16): [_cache] is the "last-viewed analytics" local data
+/// source the original integration plan called for — every real fetch
+/// (getPostMetrics/getPostsMetrics/getDashboard) writes through it, and it's
+/// what backs every read in local/offline mode. It's now persisted via
+/// [StorageService] (same hydrate-once/persist-on-write pattern as
+/// DraftStorage/OutboxStore) so the last real numbers a user saw for a post
+/// are still there after an app restart, instead of resetting to "no data
+/// yet" the moment the process restarts while offline.
 class AnalyticsRepositoryImpl extends AnalyticsRepository {
-  AnalyticsRepositoryImpl({this.networkClient});
+  AnalyticsRepositoryImpl({this.networkClient, this._storage});
+
+  static const _storageKey = 'analytics_last_viewed_v1';
 
   final NetworkClient? networkClient;
+  final StorageService? _storage;
   final Map<String, AnalyticsMetricEntity> _cache =
       <String, AnalyticsMetricEntity>{};
+  Future<void>? _hydration;
+
+  Future<void> _ensureHydrated() {
+    return _hydration ??= _hydrate();
+  }
+
+  Future<void> _hydrate() async {
+    final storage = _storage;
+    if (storage == null) {
+      return;
+    }
+
+    final raw = await storage.readString(_storageKey);
+    if (raw == null || raw.isEmpty) {
+      return;
+    }
+
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      for (final entry in decoded.entries) {
+        _cache[entry.key] = AnalyticsMetricEntity.fromJson(
+          Map<String, dynamic>.from(entry.value as Map),
+        );
+      }
+    } catch (_) {
+      // Persisted analytics cache is corrupted/unreadable — start clean
+      // rather than crash app startup over a cache that's a convenience, not
+      // a source of truth (the backend remains authoritative either way).
+    }
+  }
+
+  Future<void> _persistCache() async {
+    final storage = _storage;
+    if (storage == null) {
+      return;
+    }
+
+    final serialized = _cache.map(
+      (postId, metric) => MapEntry(postId, metric.toJson()),
+    );
+    await storage.writeString(_storageKey, jsonEncode(serialized));
+  }
 
   int _asInt(Object? value, {int fallback = 0}) {
     if (value is int) {
@@ -54,7 +110,9 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
           final payload = _unwrapPayload(response.data) as Map<String, dynamic>;
           final dto = PostAnalyticsResponseDtoV1.fromJson(payload);
           final metric = _toMetric(dto);
+          await _ensureHydrated();
           _cache[metric.postId] = metric;
+          await _persistCache();
           return metric;
         },
         operation: 'analytics.metrics.remote',
@@ -64,6 +122,7 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
 
     return execute(
       () async {
+        await _ensureHydrated();
         final cached = _cache[postId];
         if (cached != null) {
           return cached;
@@ -82,6 +141,7 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
           available: false,
         );
         _cache[postId] = generated;
+        await _persistCache();
         return generated;
       },
       operation: 'analytics.metrics.local',
@@ -108,9 +168,11 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
               .map(_toMetric)
               .toList(growable: false);
 
+          await _ensureHydrated();
           for (final metric in metrics) {
             _cache[metric.postId] = metric;
           }
+          await _persistCache();
 
           return metrics;
         },
@@ -120,9 +182,12 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
     }
 
     return executeList(
-      () async => postIds
-          .map((id) => _cache[id] ?? _localMetric(id))
-          .toList(growable: false),
+      () async {
+        await _ensureHydrated();
+        return postIds
+            .map((id) => _cache[id] ?? _localMetric(id))
+            .toList(growable: false);
+      },
       operation: 'analytics.metrics.bulk.local',
       fallbackMessage: 'Failed to build local analytics metrics',
     );
@@ -165,9 +230,11 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
               .map(_toMetric)
               .toList(growable: false);
 
+          await _ensureHydrated();
           for (final metric in topPosts) {
             _cache[metric.postId] = metric;
           }
+          await _persistCache();
 
           final totalReach = _asInt(payload['total_reach']);
           final totalEngagement = _asInt(payload['total_engagement']);
@@ -196,6 +263,7 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
 
     return execute(
       () async {
+        await _ensureHydrated();
         final entries = _cache.values.toList(growable: false);
         final totalReach = entries.fold<int>(
           0,
@@ -346,6 +414,7 @@ class AnalyticsRepositoryImpl extends AnalyticsRepository {
   }) {
     return execute(
       () async {
+        await _ensureHydrated();
         final reportItems = <AnalyticsMetricEntity>[];
         final ids = postIds.isEmpty
             ? _cache.keys.toList(growable: false)

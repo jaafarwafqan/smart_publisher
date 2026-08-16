@@ -317,7 +317,7 @@ final platformAdminRepositoryProvider = Provider<PlatformAdminRepository>((
 
 @Riverpod(keepAlive: true)
 DraftStorage draftStorage(DraftStorageRef ref) {
-  return DraftStorage();
+  return DraftStorage(storage: ref.read(storageServiceProvider));
 }
 
 @Riverpod(keepAlive: true)
@@ -403,6 +403,7 @@ MediaRepository mediaRepository(MediaRepositoryRef ref) {
 final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
   return AnalyticsRepositoryImpl(
     networkClient: ref.read(networkClientProvider),
+    storage: ref.read(storageServiceProvider),
   );
 });
 

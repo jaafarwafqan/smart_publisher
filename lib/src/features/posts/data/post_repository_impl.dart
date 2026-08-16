@@ -38,8 +38,6 @@ class PostRepositoryImpl extends PostRepository {
   // null (replay is never blocked, matching pre-fix behavior for that case).
   final ActiveOrganizationStore? activeOrganizationStore;
 
-  final Map<String, PostEntity> _inMemoryStore = <String, PostEntity>{};
-
   @override
   Future<AppResult<PostEntity>> createPost(PostEntity post) async {
     if (networkClient != null) {
@@ -48,7 +46,6 @@ class PostRepositoryImpl extends PostRepository {
 
     return executeTransaction(
       () async {
-        _inMemoryStore[post.id] = post;
         await draftStorage.saveDraft(post);
         await _enqueuePostOperation(OutboxOperation.createPost, post);
         await eventDispatcher?.dispatch(PostCreatedEvent(postId: post.id));
@@ -67,7 +64,6 @@ class PostRepositoryImpl extends PostRepository {
 
     return executeTransaction(
       () async {
-        _inMemoryStore[post.id] = post;
         await draftStorage.saveDraft(post);
         await _enqueuePostOperation(OutboxOperation.updatePost, post);
         if (post.status == 'scheduled') {
@@ -96,7 +92,7 @@ class PostRepositoryImpl extends PostRepository {
 
     return execute(
       () async {
-        final post = _inMemoryStore[id];
+        final post = await draftStorage.getDraft(id);
         if (post == null) {
           throw StateError('Post not found');
         }
@@ -115,7 +111,7 @@ class PostRepositoryImpl extends PostRepository {
     }
 
     return executeList(
-      () async => _inMemoryStore.values.toList(),
+      () => draftStorage.listDrafts(),
       operation: 'posts.list.local',
       fallbackMessage: 'Failed to list posts locally',
     );
@@ -126,7 +122,7 @@ class PostRepositoryImpl extends PostRepository {
     int page = 1,
   }) async {
     if (networkClient == null) {
-      final all = _inMemoryStore.values.toList();
+      final all = await draftStorage.listDrafts();
       return Success<PaginatedResult<PostEntity>>(
         PaginatedResult<PostEntity>(
           items: all,
@@ -313,7 +309,6 @@ class PostRepositoryImpl extends PostRepository {
 
     return executeTransaction<void>(
       () async {
-        _inMemoryStore.remove(id);
         await draftStorage.deleteDraft(id);
         await _enqueueDeleteOperation(id);
         await eventDispatcher?.dispatch(PostDeletedEvent(postId: id));
@@ -347,7 +342,6 @@ class PostRepositoryImpl extends PostRepository {
         fallbackMessage: 'Failed to create post',
       );
       if (failure is NetworkFailure) {
-        _inMemoryStore[post.id] = post;
         await draftStorage.saveDraft(post);
         await _enqueuePostOperation(OutboxOperation.createPost, post);
         return Success<PostEntity>(post, message: 'Post queued for sync');
@@ -380,7 +374,6 @@ class PostRepositoryImpl extends PostRepository {
         fallbackMessage: 'Failed to update post',
       );
       if (failure is NetworkFailure) {
-        _inMemoryStore[post.id] = post;
         await draftStorage.saveDraft(post);
         await _enqueuePostOperation(OutboxOperation.updatePost, post);
         return Success<PostEntity>(

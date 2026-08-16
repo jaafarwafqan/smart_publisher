@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/application/auth_session_controller.dart';
 
 /// Sprint 4 (Commercial SaaS): self-service account deletion request —
@@ -80,7 +81,7 @@ class _AccountDataDeletionScreenState
       appBar: AppBar(title: Text(l10n.dataDeletionAppBarTitle)),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: _successStatus != null
@@ -97,13 +98,13 @@ class _AccountDataDeletionScreenState
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Icon(Icons.check_circle_outline, size: 48, color: colorScheme.primary),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Text(
           l10n.dataDeletionSuccessTitle,
           style: Theme.of(context).textTheme.titleLarge,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Text(
           l10n.dataDeletionSuccessMessage(_successStatus!),
           textAlign: TextAlign.center,
@@ -122,7 +123,7 @@ class _AccountDataDeletionScreenState
           Card(
             color: colorScheme.errorContainer,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -132,7 +133,7 @@ class _AccountDataDeletionScreenState
                         Icons.warning_amber_outlined,
                         color: colorScheme.onErrorContainer,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           l10n.dataDeletionWarningTitle,
@@ -144,7 +145,7 @@ class _AccountDataDeletionScreenState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     l10n.dataDeletionWarningMessage,
                     style: TextStyle(color: colorScheme.onErrorContainer),
@@ -153,7 +154,7 @@ class _AccountDataDeletionScreenState
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           TextFormField(
             controller: _reasonController,
             maxLines: 3,
@@ -162,7 +163,7 @@ class _AccountDataDeletionScreenState
               alignLabelWithHint: true,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           CheckboxListTile(
             value: _confirmed,
             onChanged: (value) => setState(() => _confirmed = value ?? false),
@@ -171,10 +172,10 @@ class _AccountDataDeletionScreenState
           ),
           if (_error != null)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Text(_error!, style: TextStyle(color: colorScheme.error)),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
             onPressed: _submitting ? null : _submit,

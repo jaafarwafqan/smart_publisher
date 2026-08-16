@@ -139,7 +139,9 @@ flutter test test/integration/laravel_backend_smoke_integration_test.dart \
   the deployment owner before inviting external users.
 - **Other providers** remain intentionally unavailable in production until a
   real integration, provider approval, and production evidence are added.
-- **No webhook receiver** exists; see [the integration scope](docs/api/integrations.md).
+- **Webhook receiver**: a real, signature/secret-verified receiver exists for Facebook Page and Telegram bot webhooks (code-complete, tested, database-queued — no new infrastructure). It has **not** been live-verified against real provider traffic yet — that needs external Meta App Dashboard configuration not yet done. See [docs/api/webhooks.md](docs/api/webhooks.md).
+- **Offline drafts and analytics**: `DraftStorage` and the analytics "last-viewed" cache are real, persistent local data sources now (`StorageService`-backed, same pattern as the offline outbox) — a post edited offline or the last numbers a user viewed both survive an app restart. See [ADR-0007](docs/architecture/decisions/0007-persistent-local-caches-for-drafts-and-analytics.md).
+- **UI/UX**: motion, component consolidation, and adaptive layout already have real shared primitives (`app_async_switcher.dart`, `status_pill.dart`, `adaptive_card_grid.dart`) used across a dozen-plus screens; typography has a deliberate identity (Google Fonts Tajawal). Spacing token discipline had real drift (raw values beside already-tokenized ones) — fixed, with a new CI gate (`scripts/ci/check_spacing_tokens.dart`) so it can't silently reappear. See [ADR-0008](docs/architecture/decisions/0008-spacing-token-enforcement.md). Empty-state illustrations remain generic Material icons — a known, not-yet-actioned gap.
 - **A tested hosting-specific rollback procedure** is still an external
   requirement; the local rollback script intentionally fails rather than
   pretending to roll anything back.

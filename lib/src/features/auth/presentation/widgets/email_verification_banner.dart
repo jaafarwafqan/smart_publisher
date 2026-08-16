@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../application/auth_session_controller.dart';
 
 /// Sprint 4 (Commercial SaaS): a persistent nudge shown while the
@@ -86,9 +87,9 @@ class _EmailVerificationBannerState
 
     return Card(
       color: colorScheme.tertiaryContainer,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -96,7 +97,7 @@ class _EmailVerificationBannerState
               Icons.mark_email_unread_outlined,
               color: colorScheme.onTertiaryContainer,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 _resendSucceeded

@@ -34,6 +34,9 @@ jobs:
       - name: Release source hardening
         run: dart scripts/ci/check_release_hardening.dart
 
+      - name: Spacing token discipline
+        run: dart scripts/ci/check_spacing_tokens.dart
+
       - name: Cache Pub dependencies
         uses: actions/cache@v4
         with:

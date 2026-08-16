@@ -5,25 +5,27 @@ and CI status.** If any other doc (KNOWN_ISSUES.md, either README) states a
 different number, this file is correct and the other is stale — file an
 issue or fix it on sight rather than trusting the other file's number.
 
-**Last verified:** 2026-08-16 (continued session — Instagram/X platform
-work), re-run locally in this session (not inferred from commit messages).
+**Last verified:** 2026-08-16 (continued session — Phase 3 webhook receiver,
+a Phase 1 Flutter/backend gap audit, then a Phase 5 UI/UX token-discipline
+audit), re-run locally in this session (not inferred from commit messages).
 The GitHub Actions confirmation below is from earlier the same day and has
 not been re-checked against this session's new commits yet — see the
-Instagram/X entry further down. Counts before 2026-08-15 (e.g. 210 Flutter /
-245 backend) are historical and superseded.
+Instagram/X, webhook-receiver, Phase-1-audit, and Phase-5-audit entries
+further down. Counts before 2026-08-15 (e.g. 210 Flutter / 245 backend) are
+historical and superseded.
 
 ## Release-hardening results
 
 | Check | Result |
 | --- | --- |
 | Flutter `flutter analyze` | Passed - 0 issues |
-| Flutter `flutter test` | Passed - 340 tests |
+| Flutter `flutter test` | Passed - 363 tests |
 | Flutter `dart format --set-exit-if-changed lib test scripts/ci` | Passed - 0 files changed |
 | Flutter release-source check | Passed |
 | Flutter line coverage | Not re-measured this session; last measured 56.62% (7,739/13,669 lines) — CI floor is 50%, see `.github/workflows/ci.yml` |
 | Android release manifest processing | Passed |
 | Laravel `composer validate` | Passed |
-| Laravel `php artisan test` | Passed - 495 tests, 492 passed, 3 skipped (2 MySQL-only + 1 opt-in Instagram sandbox), 1578 assertions |
+| Laravel `php artisan test` | Passed - 510 tests, 507 passed, 3 skipped (2 MySQL-only + 1 opt-in Instagram sandbox), 1611 assertions |
 | Laravel PHPStan/Larastan | Passed - 0 errors |
 | Laravel Pint | Passed |
 | Laravel coverage gate | CI floor is 50% (`--min=50`), see `.github/workflows/ci.yml` in the backend repo — not independently measured locally in this session (no Xdebug/PCOV available locally; CI itself does measure and enforce it) |
@@ -197,6 +199,124 @@ provider table. Summary:
   - X still has no live test this session — its automated PKCE round-trip
     test (`SocialAccountOAuthTest`) is the extent of its verification for
     now.
+
+## 2026-08-16 (continued): Phase 1 audit — Flutter/backend gap
+
+Per the original production-readiness plan's Phase 1 ("Implement every
+Repository Interface... against the real Laravel API"): audited the current
+frontend against `docs/api/openapi_v1.yaml` and the live-verified evidence
+already in this document. **Most of Phase 1 was already real and done**,
+contrary to the plan's premise that the frontend was "stuck at early
+architectural scaffolding" — that premise predates the 2026-08-09/2026-08-16
+work documented above and in `README.md`. Confirmed already real: every
+feature's Repository implementation calling the actual Laravel API (not a
+`SocialPlatform` abstraction — that was deliberately deleted, see
+`docs/architecture/decisions/0001-repository-riverpod-not-cqrs.md`), DTOs/
+mappers in `lib/src/backend_contracts/v1/`, the `X-Organization-Id` header
+attached automatically (`network_interceptor.dart`), an organization
+switcher (`organization_switcher_screen.dart`), Sanctum bearer + refresh
+rotation, and Facebook/Telegram publish/approve/reject all wired and
+live-verified per the entries above.
+
+**Two real, concrete gaps were found and fixed** — see
+`docs/architecture/decisions/0007-persistent-local-caches-for-drafts-and-analytics.md`
+for the full design:
+
+- `DraftStorage` was wired into `PostRepositoryImpl` but was in-memory-only
+  and its own read methods were never called by anything — reads went
+  through a second, separate, equally non-persistent field instead. A post
+  created/edited while offline was gone from every read path the moment the
+  app process restarted. Fixed: `DraftStorage` now persists via
+  `StorageService` (same pattern as `OutboxStore`), and
+  `PostRepositoryImpl`'s redundant in-memory field was removed entirely —
+  every read and write goes through the one real local data source now.
+- `AnalyticsRepositoryImpl`'s "last-viewed analytics" cache was also
+  in-memory-only — the last real numbers a user viewed reset on every app
+  restart. Fixed: persisted via the same `StorageService` pattern.
+- 11 new tests (`draft_storage_persistence_test.dart`,
+  `analytics_cache_persistence_test.dart`), each including an explicit
+  "without a storage backend, this does NOT survive recreation" case
+  documenting the exact gap closed. Flutter 359 tests, `flutter analyze` 0
+  issues, `dart format` clean.
+
+## 2026-08-16 (continued): Phase 5 UI/UX audit — token discipline
+
+Per the original UI/UX plan's 5 sub-items (Motion, Component consolidation,
+Token discipline, Adaptive layout, Visual identity): audited each against
+the current code before writing anything, per this session's own working
+rule of showing a before/after and getting direction approved first. Found
+**4 of 5 already substantially real**, contrary to the plan's premise of an
+unstarted UI/UX pass:
+
+- Motion: `app_async_switcher.dart`/`animated_count_text.dart` shared
+  widgets, used across 12 files.
+- Component consolidation: `status_pill.dart` shared widget, used across 11
+  files.
+- Adaptive layout: `adaptive_card_grid.dart`/`adaptive_content_width.dart`
+  shared widgets, used across 7 files.
+- Visual identity: already has a deliberate typographic choice (Google
+  Fonts Tajawal, not default Roboto) and a real, non-Material-purple brand
+  palette (`app_colors.dart`). One real remaining gap found and **not yet
+  actioned**: `AppEmptyState` renders a generic Material icon
+  (`Icons.inbox_outlined`) rather than a custom illustration — deferred,
+  not selected as this session's priority.
+
+**Token discipline had one real, concrete gap, found and fixed**: the token
+system itself (`app_spacing.dart` et al.) already existed and colors were
+already 100% token-based (zero raw `Color(0x...)` literals under
+`lib/src/features`), but spacing specifically had real drift — 22 raw
+`EdgeInsets`/`SizedBox` literals exactly matching the `AppSpacing` scale,
+scattered across 3 files that already imported the token in other spots (a
+first grep-based estimate of "163 across 40 files" was a measurement
+artifact of an overly broad pattern and is corrected here — see
+`docs/architecture/decisions/0008-spacing-token-enforcement.md` for the
+real count and the fix). Fixed the 22 occurrences, and added a real CI
+enforcement gate (`scripts/ci/check_spacing_tokens.dart`, pure Dart SDK, no
+new lint package) so a new one can't reappear silently.
+
+`flutter analyze` 0 issues, `dart format` clean, full test suite green
+after the fix.
+
+## 2026-08-16 (continued): Phase 3 inbound webhook receiver
+
+Real code, not a facade — see `docs/api/webhooks.md` and
+`docs/architecture/decisions/0006-inbound-webhook-receiver.md` for the full
+design. Summary:
+
+- A real receiver now exists for Facebook Page webhooks
+  (`X-Hub-Signature-256` HMAC verification against the existing OAuth App
+  Secret) and Telegram bot webhooks (a per-bot secret token, registered
+  automatically with Telegram's `setWebhook` at connect time, verified via
+  `X-Telegram-Bot-Api-Secret-Token`). Both routes are deliberately
+  unauthenticated (the caller is the provider, not a logged-in user) and
+  rate-limited via a new dedicated `webhook` throttle.
+- Idempotent, replay-safe event storage in a new `platform_webhook_events`
+  table (same shape as the existing `billing_webhook_events`), and all
+  processing deferred to `ProcessPlatformWebhookEventJob` on the existing
+  `default` database queue — no new queue/cache infrastructure, same "no
+  Redis, ever" rule as the rest of this project.
+- A verified Facebook `feed` change triggers a real, immediate metrics
+  re-sync via the existing `PostMetricsSyncService` (not a guess at an
+  ambiguous delta payload); a verified Telegram `my_chat_member` update
+  showing the bot was removed/kicked immediately flips that page's status
+  to `invalid`, ahead of the next periodic health-check tick.
+- 14 new feature tests (`PlatformWebhookReceiverTest`) cover: real signature
+  verification (valid/missing/wrong-secret), the Facebook subscription
+  handshake (including fail-closed with no verify token configured),
+  secret-token verification for Telegram (missing/wrong/unknown-account),
+  idempotent replay handling for both providers (a byte-identical
+  redelivery produces exactly one stored row and exactly one dispatched
+  processing job, not two), and the job's own processing logic (page status
+  flip, real metrics re-sync via a faked Graph API call).
+- Backend 510 tests (507 passed, 3 skipped — unchanged from before this
+  work), Pint clean, PHPStan 0 errors.
+- **Not yet live-verified.** No delivery from Facebook or Telegram's real
+  infrastructure has been observed — that needs external configuration
+  (subscribing the app to Page webhooks in the Meta App Dashboard with a
+  matching `FACEBOOK_WEBHOOK_VERIFY_TOKEN`) that has not been done yet. The
+  Telegram side only needs a public HTTPS `APP_URL`, already true on Render
+  staging, and registers itself automatically on the next bot
+  connect/reconnect.
 
 ## What is covered by the launch-hardening work
 
