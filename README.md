@@ -7,15 +7,19 @@ Telegram and Facebook Pages. Instagram, WhatsApp, LinkedIn, X, and other
 providers are visible as `Coming soon` and are rejected server-side in
 production; the product must never fabricate a publish outcome for them.
 
-**Status (2026-08-15): launch hardening is in progress.** A real staging
-deployment exists (Render, with Aiven MySQL and Cloudflare R2) and a real
-Facebook Page publish has been live-verified against it, but the latest
-`main` — including the platform-admin and localization fixes from external
-report #3 — is **not yet deployed there**; see
-[`docs/audit/KNOWN_ISSUES.md`](docs/audit/KNOWN_ISSUES.md) for what is and
-isn't live. This repository is still not evidence that Meta App Review, a
-signed distribution artifact, or a real-device native-login test exist. The
-concrete gates are in
+**Status (2026-08-16): launch hardening is in progress.** A real staging
+deployment exists (Render, with Aiven MySQL and Cloudflare R2), and current
+`main` is confirmed live there (`smart_publisher_backend@ffc2625`,
+`smart_publisher@8324f5f`) — the earlier staging-currency gap is closed. A
+real Facebook Page publish and a real Telegram channel publish have both
+been live-verified end-to-end against it. A same-day incident (a Render
+Auto-Deploy/env-var mismatch that 500'd most of the API) and two other real
+bugs it surfaced (a CSP gap blanking the web build, a Telegram cross-org
+connect crash) were found and fixed the same session; see
+[`docs/audit/KNOWN_ISSUES.md`](docs/audit/KNOWN_ISSUES.md) for the full
+writeup and what is and isn't live. This repository is still not evidence
+that Meta App Review, a signed distribution artifact, or a real-device
+native-login test exist. The concrete gates are in
 [`docs/operations/closed_beta_release_checklist.md`](docs/operations/closed_beta_release_checklist.md).
 
 The supported release artifact is an **Android closed-beta AAB** only. Web and

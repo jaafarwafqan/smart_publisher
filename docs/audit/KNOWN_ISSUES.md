@@ -1,6 +1,6 @@
 # Known Issues & Incomplete Features — Smart Publisher
 
-**Last updated:** 2026-08-15
+**Last updated:** 2026-08-16
 **Purpose:** A single, current-as-of-today source of truth for "what's real, what's fake, and what's missing." This project has been through multiple audit rounds (see `ROUND1_CTO_AUDIT.md`, `ROUND2_CTO_AUDIT.md`, `PRODUCTION_READINESS_AUDIT.md`) — this document consolidates their outcomes plus everything found and fixed since, so a new reader doesn't have to reconstruct history from four long reports. Where a historical report and this document disagree, **this document is current**; the historical reports are point-in-time snapshots kept for audit trail, not living status.
 
 For test counts and CI status specifically, `docs/testing/STATUS.md` is the
@@ -11,7 +11,53 @@ Severity key: 🔴 P0 (blocks production/trust) · 🟠 P1 (real gap, should fix
 
 ---
 
-## Current launch-hardening override (2026-08-15)
+## Current launch-hardening override (2026-08-16)
+
+Supersedes the 2026-08-15 override below where they disagree:
+
+- **Staging currency gap (2026-08-15 entry below) is closed.** `main` on
+  both repos — including the primary-owner fix, ARB/tooltips/openapi/CSP
+  items from external report #3, and everything from this entry — is
+  confirmed live on Render staging (`smart_publisher_backend@ffc2625`,
+  `smart_publisher@8324f5f`), not just committed locally.
+- **Real staging incident found and fixed the same day, not just a code
+  audit finding**: Render's Auto-Deploy (confirmed on) had already shipped
+  the Redis-removal refactor to the Web service while a conflicting
+  service-level `CACHE_STORE=redis`/`SESSION_DRIVER=redis`/
+  `QUEUE_CONNECTION=redis` (overriding the correct linked-Environment-Group
+  `database` values) was still set directly on it — every cache/session-
+  touching request 500'd with `Class "Redis" not found`. Fixed by removing
+  the conflicting service-level vars; verified via repeated clean checks.
+  Full incident writeup: `docs/testing/STATUS.md`.
+- **A real blank-white-page bug on the staging web build, found and fixed**:
+  the CSP (both the `<meta>` tag and the separately-configured HTTP header)
+  never allow-listed `www.gstatic.com`/`fonts.gstatic.com`, so Flutter
+  Web's own CanvasKit renderer and Roboto font were blocked outright and
+  the app never finished booting. Fixed in both CSP sources; confirmed via
+  a fresh Incognito load with a clean console.
+- **A real Telegram-connect bug, found via a genuine connect attempt and
+  fixed**: a bot already linked to a different organization crashed the
+  connect endpoint with an uncaught 500 instead of a clear error, because
+  the platform-wide `(provider, provider_account_id)` uniqueness check was
+  implicitly scoped to the caller's own organization. Fixed with a clear
+  422; the stale conflicting row was removed via the normal authorized
+  delete endpoint (not a DB bypass).
+- **A real Telegram publish was end-to-end live-verified on staging** (not
+  just Facebook, as of the prior override): real login, real R2 media
+  round-trip (uploaded via Web, read back byte-for-byte via a signed URL),
+  real bot connect, real `publish-now` to `@UOK_Faculty_Nursing`, reached
+  `published` on the first attempt with no new `dead_letter_jobs` entry,
+  cleaned up after visual confirmation.
+- **Two secrets were pasted directly into a chat session this day**: a
+  scoped Render API key and a Telegram bot token. Neither was echoed back
+  or persisted beyond a scratchpad file deleted the same session, but both
+  should be treated as exposed — rotate/revoke when convenient. Not yet
+  done as of this entry; the API key has not been confirmed revoked, and
+  the several long-standing Aiven/AWS/mail/Facebook secrets pasted earlier
+  the same session (see the 2026-08-15 entry's own caveats) also remain
+  un-rotated.
+
+## Prior launch-hardening override (2026-08-15)
 
 Supersedes the 2026-07-30 override below where they disagree:
 
@@ -122,6 +168,9 @@ These were real, confirmed bugs at some point in this project's history. They ar
 | Posts always showed "0 platforms" even when delivered | `PostResource` never returned which pages a post targeted | Fixed — eager-loads `socialPages.socialAccount`, returns real providers |
 | Published posts showed a false "Scheduled" badge | Backend stamps `scheduled_at` even for immediate publish (an internal queue detail); UI didn't distinguish | Fixed — label now branches on `status`; Calendar query scoped to `status='scheduled'` only |
 | Login screen was an unbranded placeholder | Literally marked "simple demo screen" in a code comment | Redesigned into its own proper, branded screen this session |
+| **Staging 500'd on login/legal pages/openapi.json (2026-08-16)** | Auto-Deploy shipped the Redis-removal refactor while a conflicting service-level `CACHE_STORE=redis`/`SESSION_DRIVER=redis`/`QUEUE_CONNECTION=redis` still overrode the correct linked-group `database` values on the Web service — `Class "Redis" not found` on every cache/session-touching request | Fixed — removed the conflicting service-level vars |
+| **Staging web build was a blank white page (2026-08-16)** | CSP (`<meta>` tag and the separately-configured HTTP header) never allow-listed `www.gstatic.com`/`fonts.gstatic.com`, blocking Flutter Web's own CanvasKit renderer and Roboto font outright | Fixed in both CSP sources; confirmed via a clean Incognito console |
+| **Telegram connect 500'd for a bot already linked elsewhere (2026-08-16)** | `(provider, provider_account_id)` uniqueness is platform-wide, but the "already linked?" lookup was implicitly scoped to the caller's own organization — the INSERT collided with the real DB constraint | Fixed (`ffc2625`) — clear 422 instead, same SQLSTATE-23000 guard pattern as `PostController`/`MediaLibraryController` |
 
 ---
 
