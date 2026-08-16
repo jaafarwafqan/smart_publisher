@@ -142,12 +142,21 @@ session:
 - A signed AAB was not produced: `verifyReleaseSigning` correctly fails
   without `ANDROID_RELEASE_STORE_FILE`, `ANDROID_RELEASE_STORE_PASSWORD`,
   `ANDROID_RELEASE_KEY_ALIAS`, and `ANDROID_RELEASE_KEY_PASSWORD`.
-- Docker build/compose was not run — the `docker` CLI is absent in this
-  environment (checked again 2026-08-16, including the Laragon install this
-  machine has for MySQL/Redis binaries; no Docker there either). It remains
-  a required CI gate; Docker source hardening is covered by the passing
-  Laravel test above, but an actual `docker build`/`compose up` has never
-  been exercised on this machine.
+- Docker build/compose is not runnable on this machine — the `docker` CLI is
+  absent (checked 2026-08-16, including the Laragon install this machine
+  has for MySQL/Redis binaries; no Docker there either). **Resolved by
+  moving the check to CI instead**, where GitHub-hosted runners have Docker
+  preinstalled: a new `docker-build` job (backend `147708d`) builds both
+  `docker/Dockerfile` and `docker/render/Dockerfile` for real, then boots
+  the Render image against a real ephemeral MySQL 8.4 service container and
+  polls a real `/up` HTTP response. First attempt failed (a nested
+  `docker run ... key:generate --show` call used to derive a throwaway
+  APP_KEY died silently in under half a second, never even starting a
+  container); replaced with a fixed CI-only dummy key and split into
+  separate steps for attributable failures. Second attempt: green,
+  `/up` responded within 4 seconds of the container starting. Currently
+  informational-only (not yet in the branch-protection required-checks
+  list) pending a few more stable runs.
 - **Local gitleaks actually run 2026-08-16** (binary downloaded directly
   from GitHub releases, since the CLI isn't preinstalled): backend repo,
   full history, 39 commits — **zero leaks**. Flutter repo, full history, 43
