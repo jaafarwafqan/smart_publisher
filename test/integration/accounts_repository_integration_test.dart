@@ -264,6 +264,146 @@ void main() {
     );
 
     test(
+      // 2026-08: the Instagram placeholder used to stay AccountStatus.disconnected
+      // forever, even after a real, live-verified Instagram publish —
+      // _mergeRemoteAccounts() only ever updates the 'facebook' entry
+      // since an instagram_business page's SocialAccountResponseDtoV1 still
+      // carries provider 'facebook' (Instagram has no OAuth of its own).
+      'derives the Instagram card\'s connected status from a linked instagram_business page under the Facebook account',
+      () async {
+        final repository = AccountRepositoryImpl(
+          networkClient: FakeNetworkClient(
+            getHandler: (path) async {
+              if (path.contains('/pages')) {
+                return Response<dynamic>(
+                  requestOptions: RequestOptions(path: path),
+                  statusCode: 200,
+                  data: <String, dynamic>{
+                    'success': true,
+                    'data': <dynamic>[
+                      <String, dynamic>{
+                        'id': '1',
+                        'social_account_id': '42',
+                        'page_id': 'fb-page-1',
+                        'kind': 'page',
+                        'name': 'Business Page',
+                        'can_publish': true,
+                        'is_selected': true,
+                        'status': 'valid',
+                      },
+                      <String, dynamic>{
+                        'id': '2',
+                        'social_account_id': '42',
+                        'page_id': 'ig-1',
+                        'kind': 'instagram_business',
+                        'name': 'qolob_tantather_alnoor',
+                        'picture_url': 'https://example.com/ig.jpg',
+                        'can_publish': true,
+                        'is_selected': true,
+                        'status': 'valid',
+                      },
+                    ],
+                  },
+                );
+              }
+
+              return Response<dynamic>(
+                requestOptions: RequestOptions(path: path),
+                statusCode: 200,
+                data: <String, dynamic>{
+                  'success': true,
+                  'data': <dynamic>[
+                    <String, dynamic>{
+                      'id': '42',
+                      'provider': 'facebook',
+                      'provider_account_id': 'fb-acc-1',
+                      'account_name': 'Business Page',
+                      'status': 'connected',
+                      'discovery_mode': 'auto',
+                    },
+                  ],
+                },
+              );
+            },
+          ),
+        );
+
+        final result = await repository.getAccounts(userId: _userId);
+        final accounts = result.data ?? const [];
+        final instagram = accounts.firstWhere(
+          (account) => account.platform == 'instagram',
+        );
+
+        expect(instagram.isConnected, isTrue);
+        expect(instagram.name, 'qolob_tantather_alnoor');
+        expect(instagram.avatarUrl, 'https://example.com/ig.jpg');
+        // Deliberately not attached — page selection/sync stays a single
+        // source of truth under the Facebook card, see
+        // AccountRepositoryImpl._deriveInstagramStatusFromFacebookPages()'s
+        // own docblock for why.
+        expect(instagram.remoteId, isNull);
+        expect(instagram.pages, isEmpty);
+      },
+    );
+
+    test(
+      'the Instagram card stays disconnected when the Facebook account has no linked Instagram Business page',
+      () async {
+        final repository = AccountRepositoryImpl(
+          networkClient: FakeNetworkClient(
+            getHandler: (path) async {
+              if (path.contains('/pages')) {
+                return Response<dynamic>(
+                  requestOptions: RequestOptions(path: path),
+                  statusCode: 200,
+                  data: <String, dynamic>{
+                    'success': true,
+                    'data': <dynamic>[
+                      <String, dynamic>{
+                        'id': '1',
+                        'social_account_id': '42',
+                        'page_id': 'fb-page-1',
+                        'kind': 'page',
+                        'name': 'Business Page',
+                        'can_publish': true,
+                        'status': 'valid',
+                      },
+                    ],
+                  },
+                );
+              }
+
+              return Response<dynamic>(
+                requestOptions: RequestOptions(path: path),
+                statusCode: 200,
+                data: <String, dynamic>{
+                  'success': true,
+                  'data': <dynamic>[
+                    <String, dynamic>{
+                      'id': '42',
+                      'provider': 'facebook',
+                      'provider_account_id': 'fb-acc-1',
+                      'account_name': 'Business Page',
+                      'status': 'connected',
+                      'discovery_mode': 'auto',
+                    },
+                  ],
+                },
+              );
+            },
+          ),
+        );
+
+        final result = await repository.getAccounts(userId: _userId);
+        final instagram = (result.data ?? const []).firstWhere(
+          (account) => account.platform == 'instagram',
+        );
+
+        expect(instagram.isConnected, isFalse);
+      },
+    );
+
+    test(
       'testConnection posts to the test endpoint and parses the health result',
       () async {
         String? postedPath;

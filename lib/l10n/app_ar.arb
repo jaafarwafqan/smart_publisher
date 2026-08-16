@@ -154,6 +154,8 @@
   "whatsappBusinessIdSaveFailed": "فشل حفظ معرّف النشاط التجاري لواتساب.",
   "instagramDialogTitle": "إنستغرام يتصل عبر فيسبوك",
   "instagramDialogBody": "لا تملك حسابات إنستغرام للأعمال تسجيل دخول منفصلًا خاصًا بها — يتم اكتشافها تلقائيًا من خلال اتصال فيسبوك الخاص بك. اتصل بفيسبوك، ثم اضغط \"مزامنة الصفحات\" لجلب أي حساب إنستغرام للأعمال مرتبط.",
+  "instagramManagedRowConnected": "متصل عبر فيسبوك",
+  "instagramManagedRowNotConnected": "يتصل عبر فيسبوك",
   "gotIt": "فهمت",
   "pagesSyncedSuccess": "تمت مزامنة الصفحات لـ{name}.",
   "@pagesSyncedSuccess": {"placeholders": {"name": {"type": "String"}}},

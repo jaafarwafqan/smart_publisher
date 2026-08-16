@@ -902,6 +902,18 @@ abstract class AppLocalizations {
   /// **'لا تملك حسابات إنستغرام للأعمال تسجيل دخول منفصلًا خاصًا بها — يتم اكتشافها تلقائيًا من خلال اتصال فيسبوك الخاص بك. اتصل بفيسبوك، ثم اضغط \"مزامنة الصفحات\" لجلب أي حساب إنستغرام للأعمال مرتبط.'**
   String get instagramDialogBody;
 
+  /// No description provided for @instagramManagedRowConnected.
+  ///
+  /// In ar, this message translates to:
+  /// **'متصل عبر فيسبوك'**
+  String get instagramManagedRowConnected;
+
+  /// No description provided for @instagramManagedRowNotConnected.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتصل عبر فيسبوك'**
+  String get instagramManagedRowNotConnected;
+
   /// No description provided for @gotIt.
   ///
   /// In ar, this message translates to:

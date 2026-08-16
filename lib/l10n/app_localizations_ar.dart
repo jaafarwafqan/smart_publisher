@@ -447,6 +447,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا تملك حسابات إنستغرام للأعمال تسجيل دخول منفصلًا خاصًا بها — يتم اكتشافها تلقائيًا من خلال اتصال فيسبوك الخاص بك. اتصل بفيسبوك، ثم اضغط \"مزامنة الصفحات\" لجلب أي حساب إنستغرام للأعمال مرتبط.';
 
   @override
+  String get instagramManagedRowConnected => 'متصل عبر فيسبوك';
+
+  @override
+  String get instagramManagedRowNotConnected => 'يتصل عبر فيسبوك';
+
+  @override
   String get gotIt => 'فهمت';
 
   @override

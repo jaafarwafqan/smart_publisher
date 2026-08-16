@@ -145,11 +145,26 @@ class AccountCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: AppSpacing.md),
+            // Instagram has no OAuth/SocialAccount of its own — its card is
+            // always a derived read-only reflection of whether the Facebook
+            // account has a linked Instagram Business page
+            // (AccountRepositoryImpl._deriveInstagramStatusFromFacebookPages()),
+            // never a real, independently connectable/disconnectable
+            // account. Showing the normal _ActionRow here would offer
+            // Disconnect/Refresh Token/Test Connection buttons with no real
+            // account id behind them; showing AccountPagesPanel here would
+            // either render empty or duplicate the real one under the
+            // Facebook card. A dedicated informational row avoids both.
+            if (account.platform == 'instagram')
+              _InstagramManagedRow(
+                isConnected: account.isConnected,
+                onTap: onConnect,
+              )
             // Only Facebook and Telegram are approved for this closed beta.
             // A connected legacy/non-launch account may remain visible for
             // diagnosis, but it must never expose connect, publish-related,
             // token, or page-management actions as if those worked here.
-            if (!isBetaLaunchPlatform(account.platform))
+            else if (!isBetaLaunchPlatform(account.platform))
               _ComingSoonRow(platform: account.platform)
             else ...[
               _ActionRow(
@@ -163,7 +178,8 @@ class AccountCard extends StatelessWidget {
               ),
             ],
             if (account.isConnected &&
-                isBetaLaunchPlatform(account.platform)) ...<Widget>[
+                isBetaLaunchPlatform(account.platform) &&
+                account.platform != 'instagram') ...<Widget>[
               const SizedBox(height: AppSpacing.xs),
               AccountPagesPanel(
                 pages: account.pages,
@@ -176,6 +192,71 @@ class AccountCard extends StatelessWidget {
                 canSelect: operationAccess.canSelectPages,
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Instagram's card only ever shows this row (see the docblock at its call
+/// site) — never the normal Connect/Disconnect action row. Tapping it opens
+/// the same "managed via Facebook" explanation dashboard_screen.dart's
+/// Connect handler already shows for this platform; the tone/icon/text just
+/// reflect whether a linked Instagram Business page was actually found
+/// (AccountRepositoryImpl._deriveInstagramStatusFromFacebookPages()).
+class _InstagramManagedRow extends StatelessWidget {
+  const _InstagramManagedRow({required this.isConnected, required this.onTap});
+
+  final bool isConnected;
+  final Future<void> Function() onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final background = isConnected
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerHighest;
+    final foreground = isConnected
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurfaceVariant;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              isConnected ? Icons.link : Icons.info_outline,
+              size: 16,
+              color: foreground,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                isConnected
+                    ? l10n.instagramManagedRowConnected
+                    : l10n.instagramManagedRowNotConnected,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
         ),
       ),

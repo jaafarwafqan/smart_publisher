@@ -147,16 +147,56 @@ provider table. Summary:
   MySQL-only + 1 new opt-in `InstagramSandboxE2ETest`), Pint clean, PHPStan
   0 errors. Flutter 340 tests, `flutter analyze` 0 issues, `dart format`
   clean.
-- **Live verification: [PENDING — update this line once the staging test
-  below actually runs]**. Plan: deploy to Render staging (existing
-  Auto-Deploy), confirm the already-connected Facebook Page has a linked
-  Instagram professional account, re-sync pages, create a draft with one
-  real image targeting the discovered `instagram_business` page,
-  `publish-now`, confirm `published` with no new `dead_letter_jobs` row,
-  visually confirm the post on Instagram, then clean up via the real Graph
-  API `DELETE /{media-id}` (Instagram, unlike Facebook, supports this).
-  X has no live test this session — its automated PKCE round-trip test
-  (`SocialAccountOAuthTest`) is the extent of its verification for now.
+- **Live verification: DONE — a real Instagram publish reached `published`
+  on staging, after finding and fixing two real bugs in the process.**
+  Deployed to Render staging, confirmed the real "قلوب تنتظر النور"
+  Facebook Page has a linked Instagram Business Account
+  (`qolob_tantather_alnoor`, discovered correctly after Sync Pages),
+  created a real draft with one real R2-hosted image targeting it,
+  `publish-now`.
+  - **Bug 1** (attempt 1): landed in `dead_letter_jobs` with a real Meta
+    error — `(#10) Application does not have permission for this action`
+    on Instagram's container-create call. Root cause: the Facebook OAuth
+    scope list (`_facebookOAuthScopes` in `account_repository_impl.dart`,
+    mirrored in `FacebookNativeLoginService.permissions`) only ever
+    requested `pages_show_list`/`pages_read_engagement`/
+    `pages_manage_posts` — enough to *discover* the linked Instagram
+    account but not to *publish* to it. Fixed by adding
+    `instagram_basic`/`instagram_content_publish` to both scope lists
+    (frontend `580d918`, backend `1e728b6`). Required reconnecting Facebook
+    (Disconnect, then Connect again) to mint a token with the new scopes —
+    also required the operator to add the Instagram product and fix
+    App Domains / Valid OAuth Redirect URIs in the Meta App Dashboard,
+    which are external configuration, not code.
+  - **Bug 2** (attempt 2, after the scope fix): landed in `dead_letter_jobs`
+    again with a different real Meta error — `"Media ID is not available"`
+    (code 9007, subcode 2207027) on `media_publish`. Root cause:
+    `InstagramProvider` only polled a container's `status_code` before
+    publishing for *video* containers, on the wrong assumption that an
+    image container is always processed instantly — it isn't guaranteed to
+    be. Fixed (`b99229b`) by moving the poll into `publishContainer()`
+    itself so it runs before every publish call, regardless of media type;
+    added a regression test mirroring the existing video-polling test.
+  - **Attempt 3: success.** Post reached `status: published`,
+    `published_at` set, zero new `dead_letter_jobs` entries. Confirmed
+    directly via the real staging API (not just the Flutter UI's success
+    toast, which — as both bugs above prove — only confirms the job was
+    *queued*, not that the attempt actually settled successfully).
+  - **Follow-up UX fix** (same session): the Instagram entry in Flutter's
+    accounts list is a local placeholder never touched by
+    `_mergeRemoteAccounts()` (an `instagram_business` page's
+    `SocialAccountResponseDtoV1` still carries `provider: 'facebook'` —
+    Instagram has no OAuth of its own), so it stayed permanently
+    `disconnected` even after this real, verified publish — a real,
+    reported point of user confusion. Fixed with
+    `_deriveInstagramStatusFromFacebookPages()`: the Instagram card now
+    shows a distinct "Connected via Facebook" state (green, read-only, no
+    Disconnect/Refresh/Test/pages-panel actions — those stay a single
+    source of truth under the Facebook card) whenever the Facebook account
+    actually has a linked Instagram Business page.
+  - X still has no live test this session — its automated PKCE round-trip
+    test (`SocialAccountOAuthTest`) is the extent of its verification for
+    now.
 
 ## What is covered by the launch-hardening work
 

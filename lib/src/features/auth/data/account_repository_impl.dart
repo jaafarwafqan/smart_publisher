@@ -51,6 +51,7 @@ class AccountRepositoryImpl extends AccountRepository {
         );
 
         _mergeRemoteAccounts(withPages);
+        _deriveInstagramStatusFromFacebookPages();
         return _sortedAccounts();
       },
       operation: 'accounts.list.remote',
@@ -204,6 +205,41 @@ class AccountRepositoryImpl extends AccountRepository {
       operation: 'accounts.test_connection',
       fallbackMessage: 'Failed to test the connection',
     );
+  }
+
+  /// Instagram has no OAuth/SocialAccount of its own — its
+  /// SocialAccountResponseDtoV1 always carries provider 'facebook' (see
+  /// FacebookOAuthProvider::listPages() on the backend), so
+  /// _mergeRemoteAccounts() above only ever updates the 'facebook' entry
+  /// and the 'instagram' placeholder seeded by _defaultAccounts() is never
+  /// touched by it — it would stay permanently AccountStatus.disconnected
+  /// even after a real, live-verified Instagram publish. Derives its
+  /// displayed status from whether the Facebook account actually has a
+  /// linked instagram_business page instead, so the dashboard never shows
+  /// a misleadingly stale "Disconnected" pill for a platform that's
+  /// genuinely working. Deliberately does NOT attach real pages/remoteId
+  /// here — page selection/sync stays a single source of truth under the
+  /// Facebook card (see AccountPagesPanel there); duplicating it under
+  /// this derived entry would either show a broken empty panel or offer
+  /// Disconnect/Sync actions with no real account id behind them.
+  void _deriveInstagramStatusFromFacebookPages() {
+    final facebookAccount = _localAccounts['facebook'];
+    final instagramPage = facebookAccount?.pages
+        .where((page) => page.kind == 'instagram_business')
+        .firstOrNull;
+
+    final placeholder = _localAccounts['instagram'];
+    if (placeholder == null) {
+      return;
+    }
+
+    _localAccounts['instagram'] = instagramPage == null
+        ? placeholder.copyWith(status: AccountStatus.disconnected)
+        : placeholder.copyWith(
+            status: AccountStatus.connected,
+            name: instagramPage.name,
+            avatarUrl: instagramPage.pictureUrl,
+          );
   }
 
   void _mergeRemoteAccounts(List<AccountEntity> remoteAccounts) {

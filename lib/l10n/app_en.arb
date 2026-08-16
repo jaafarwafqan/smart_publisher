@@ -153,6 +153,8 @@
   "whatsappBusinessIdSaveFailed": "Failed to save the WhatsApp Business ID.",
   "instagramDialogTitle": "Instagram Connects via Facebook",
   "instagramDialogBody": "Instagram Business accounts have no separate login of their own — they are discovered automatically through your Facebook connection. Connect Facebook, then tap \"Sync Pages\" to bring in any linked Instagram Business account.",
+  "instagramManagedRowConnected": "Connected via Facebook",
+  "instagramManagedRowNotConnected": "Connects via Facebook",
   "gotIt": "Got it",
   "pagesSyncedSuccess": "Pages synced for {name}.",
   "@pagesSyncedSuccess": {"placeholders": {"name": {"type": "String"}}},

@@ -231,4 +231,87 @@ void main() {
       expect(find.text('Test Connection'), findsNothing);
     },
   );
+
+  group(
+    'Instagram — always a derived, read-only row (never a real Connect/Disconnect account)',
+    () {
+      testWidgets(
+        'not connected via Facebook: shows the neutral "Connects via Facebook" row, no Connect button',
+        (tester) async {
+          await _pump(
+            tester,
+            const AccountEntity(
+              id: 'instagram',
+              name: 'Instagram',
+              platform: 'instagram',
+              status: AccountStatus.disconnected,
+            ),
+          );
+
+          expect(find.text('Connects via Facebook'), findsOneWidget);
+          expect(find.widgetWithText(FilledButton, 'Connect'), findsNothing);
+          expect(find.text('Instagram — Coming soon'), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'connected via Facebook (a real linked Instagram Business page was found): shows the green "Connected via Facebook" row, never Disconnect/Refresh/Test or a pages panel',
+        (tester) async {
+          await _pump(
+            tester,
+            const AccountEntity(
+              id: 'instagram',
+              name: 'qolob_tantather_alnoor',
+              platform: 'instagram',
+              status: AccountStatus.connected,
+              discoveryMode: 'auto',
+            ),
+          );
+
+          expect(find.text('Connected via Facebook'), findsOneWidget);
+          expect(find.text('Disconnect'), findsNothing);
+          expect(find.text('Refresh Token'), findsNothing);
+          expect(find.text('Test Connection'), findsNothing);
+          expect(find.text('Nothing added yet.'), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'tapping the row invokes onConnect (shows the "managed via Facebook" explanation)',
+        (tester) async {
+          var tapped = false;
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: testLocalizationsDelegates,
+              supportedLocales: testSupportedLocales,
+              home: Scaffold(
+                body: AccountCard(
+                  account: const AccountEntity(
+                    id: 'instagram',
+                    name: 'Instagram',
+                    platform: 'instagram',
+                    status: AccountStatus.disconnected,
+                  ),
+                  onConnect: () async => tapped = true,
+                  onDisconnect: () async {},
+                  onRefreshToken: () async {},
+                  onTestConnection: () async {},
+                  onSyncPages: () async {},
+                  onAddChannel: () async {},
+                  onSaveSelection: (pageIds) async {},
+                  onDeletePage: (pageId) async {},
+                  operationAccess: _managerAccess,
+                ),
+              ),
+            ),
+          );
+
+          await tester.tap(find.text('Connects via Facebook'));
+          await tester.pump();
+
+          expect(tapped, isTrue);
+        },
+      );
+    },
+  );
 }

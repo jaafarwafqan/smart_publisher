@@ -449,6 +449,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Instagram Business accounts have no separate login of their own — they are discovered automatically through your Facebook connection. Connect Facebook, then tap \"Sync Pages\" to bring in any linked Instagram Business account.';
 
   @override
+  String get instagramManagedRowConnected => 'Connected via Facebook';
+
+  @override
+  String get instagramManagedRowNotConnected => 'Connects via Facebook';
+
+  @override
   String get gotIt => 'Got it';
 
   @override
