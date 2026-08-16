@@ -32,17 +32,28 @@
     connect-src includes both the local dev backend and the deployed
     staging API so this same file works for `flutter run -d chrome` and
     the built web app without per-environment templating.
+
+    2026-08-16 incident: the CSP above was too strict for Flutter Web's
+    own CanvasKit renderer, which fetches its WASM bundle from
+    https://www.gstatic.com/flutter-canvaskit/... and Roboto from
+    https://fonts.gstatic.com/... by default — neither host was
+    allow-listed, so both were blocked outright and the app never
+    finished booting (a real blank white page reproduced live, not a
+    hypothetical). Added the two required Google-hosted origins to
+    script-src/font-src/connect-src — this is Flutter's own documented
+    exception list for a strict-CSP CanvasKit deployment, not a general
+    loosening.
   -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     base-uri 'self';
     form-action 'self';
     object-src 'none';
-    script-src 'self' 'wasm-unsafe-eval' blob:;
+    script-src 'self' 'wasm-unsafe-eval' blob: https://www.gstatic.com;
     style-src 'self' 'unsafe-inline';
-    font-src 'self' data:;
+    font-src 'self' data: https://fonts.gstatic.com;
     img-src 'self' data: blob: https:;
-    connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://smart-publisher-api-staging.onrender.com;
+    connect-src 'self' https://www.gstatic.com https://fonts.gstatic.com http://127.0.0.1:8000 http://localhost:8000 https://smart-publisher-api-staging.onrender.com;
   ">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
