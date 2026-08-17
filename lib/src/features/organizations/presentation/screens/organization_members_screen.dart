@@ -4,6 +4,7 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/theme/theme_tokens.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../application/current_organization_access.dart';
 import '../../domain/entities/organization_member_entity.dart';
 
@@ -374,30 +375,49 @@ class _OrganizationMembersScreenState
     bool canRemove,
     bool canGrantOwner,
   ) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
+    // Code-quality review (2026-08-17), item B3/4.1: was a hand-rolled
+    // loading/error/empty if-chain, one of six screens duplicating the
+    // exact shape AppAsyncSwitcher already exists for (and is already used
+    // correctly by posts_list_screen.dart and others). The state-dependent
+    // `content` argument is guarded per AppAsyncSwitcher's own docblock —
+    // it's only actually built when _members is non-empty, but Dart still
+    // evaluates the expression eagerly every build, so `_buildMembersList`
+    // itself must never assume a non-empty/successful state.
+    return AppAsyncSwitcher(
+      state: _loading
+          ? AppAsyncState.loading
+          : _error != null
+          ? AppAsyncState.error
+          : _members.isEmpty
+          ? AppAsyncState.empty
+          : AppAsyncState.content,
+      loading: const Center(child: CircularProgressIndicator()),
+      error: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(_error!),
+              Text(_error ?? ''),
               const SizedBox(height: AppSpacing.md),
               FilledButton(onPressed: _load, child: Text(l10n.commonRetry)),
             ],
           ),
         ),
-      );
-    }
+      ),
+      empty: Center(child: Text(l10n.organizationMembersEmptyMessage)),
+      content: _members.isEmpty
+          ? const SizedBox.shrink()
+          : _buildMembersList(l10n, canChangeRole, canRemove, canGrantOwner),
+    );
+  }
 
-    if (_members.isEmpty) {
-      return Center(child: Text(l10n.organizationMembersEmptyMessage));
-    }
-
+  Widget _buildMembersList(
+    AppLocalizations l10n,
+    bool canChangeRole,
+    bool canRemove,
+    bool canGrantOwner,
+  ) {
     final assignableRoles = canGrantOwner
         ? _kAssignableRoles
         : _kAssignableRoles.where((role) => role != 'owner').toList();

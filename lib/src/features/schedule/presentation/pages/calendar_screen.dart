@@ -8,6 +8,7 @@ import '../../../../core/theme/app_curves.dart';
 import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../domain/entities/schedule_entity.dart';
 
@@ -179,16 +180,26 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              if (_loading)
-                const Center(child: CircularProgressIndicator())
-              else if (_error != null)
-                Card(
+              // Code-quality review (2026-08-17), item B3/4.1: was a
+              // hand-rolled loading/error/empty if-chain, one of six
+              // screens duplicating the exact shape AppAsyncSwitcher
+              // already exists for.
+              AppAsyncSwitcher(
+                state: _loading
+                    ? AppAsyncState.loading
+                    : _error != null
+                    ? AppAsyncState.error
+                    : dayPosts.isEmpty
+                    ? AppAsyncState.empty
+                    : AppAsyncState.content,
+                loading: const Center(child: CircularProgressIndicator()),
+                error: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(_error!),
+                        Text(_error ?? ''),
                         const SizedBox(height: AppSpacing.md),
                         OutlinedButton.icon(
                           onPressed: _loadScheduledPosts,
@@ -198,27 +209,38 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ],
                     ),
                   ),
-                )
-              else if (dayPosts.isEmpty)
-                AppEmptyState(
+                ),
+                empty: AppEmptyState(
                   message: l10n.calendarNoScheduledPosts,
                   icon: Icons.event_busy_outlined,
-                )
-              else
-                ...dayPosts.map(
-                  (entry) => Card(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: ListTile(
-                      leading: const Icon(Icons.schedule_outlined),
-                      title: Text(
-                        entry.title.isEmpty ? l10n.postUntitled : entry.title,
-                      ),
-                      subtitle: Text(
-                        '${_statusLabel(entry.status, l10n)}\n${_formatSchedule(entry.scheduledAt, l10n)}',
-                      ),
-                    ),
-                  ),
                 ),
+                content: dayPosts.isEmpty
+                    ? const SizedBox.shrink()
+                    : Column(
+                        children: dayPosts
+                            .map(
+                              (entry) => Card(
+                                margin: const EdgeInsets.only(
+                                  bottom: AppSpacing.md,
+                                ),
+                                child: ListTile(
+                                  leading: const Icon(
+                                    Icons.schedule_outlined,
+                                  ),
+                                  title: Text(
+                                    entry.title.isEmpty
+                                        ? l10n.postUntitled
+                                        : entry.title,
+                                  ),
+                                  subtitle: Text(
+                                    '${_statusLabel(entry.status, l10n)}\n${_formatSchedule(entry.scheduledAt, l10n)}',
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+              ),
             ],
           ),
         ),

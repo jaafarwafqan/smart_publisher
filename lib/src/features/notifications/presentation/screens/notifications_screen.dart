@@ -7,6 +7,7 @@ import '../../../../core/di/app_providers.dart';
 import '../../../../core/theme/app_curves.dart';
 import '../../../../core/theme/app_duration.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../domain/entities/notification_entity.dart';
 
@@ -152,9 +153,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   ),
                 ),
               ),
+              // Code-quality review (2026-08-17), item B3/4.1: was a
+              // hand-rolled loading/error/empty if-chain, one of six
+              // screens duplicating the exact shape AppAsyncSwitcher
+              // already exists for. Each non-content state is its own
+              // sliver (a single switcher can't itself span the content
+              // SliverList below, which needs to stay lazily built), same
+              // shape as posts_list_screen.dart's own conversion.
               if (_notifications.isLoading)
-                const SliverToBoxAdapter(
-                  child: Center(child: CircularProgressIndicator()),
+                SliverToBoxAdapter(
+                  child: AppAsyncSwitcher(
+                    state: AppAsyncState.loading,
+                    loading: const Center(child: CircularProgressIndicator()),
+                    error: const SizedBox.shrink(),
+                    empty: const SizedBox.shrink(),
+                    content: const SizedBox.shrink(),
+                  ),
                 )
               else if (_notifications.hasError)
                 SliverPadding(
@@ -162,22 +176,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     horizontal: AppSpacing.lg,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(l10n.notificationsLoadFailed),
-                            const SizedBox(height: AppSpacing.md),
-                            OutlinedButton.icon(
-                              onPressed: _loadNotifications,
-                              icon: const Icon(Icons.refresh),
-                              label: Text(l10n.commonRetry),
-                            ),
-                          ],
+                    child: AppAsyncSwitcher(
+                      state: AppAsyncState.error,
+                      loading: const SizedBox.shrink(),
+                      error: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(l10n.notificationsLoadFailed),
+                              const SizedBox(height: AppSpacing.md),
+                              OutlinedButton.icon(
+                                onPressed: _loadNotifications,
+                                icon: const Icon(Icons.refresh),
+                                label: Text(l10n.commonRetry),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
+                      empty: const SizedBox.shrink(),
+                      content: const SizedBox.shrink(),
                     ),
                   ),
                 )
@@ -187,9 +207,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     horizontal: AppSpacing.lg,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: AppEmptyState(
-                      message: l10n.notificationsEmpty,
-                      icon: Icons.notifications_none_outlined,
+                    child: AppAsyncSwitcher(
+                      state: AppAsyncState.empty,
+                      loading: const SizedBox.shrink(),
+                      error: const SizedBox.shrink(),
+                      empty: AppEmptyState(
+                        message: l10n.notificationsEmpty,
+                        icon: Icons.notifications_none_outlined,
+                      ),
+                      content: const SizedBox.shrink(),
                     ),
                   ),
                 )

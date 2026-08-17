@@ -11,6 +11,7 @@ import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../../posts/domain/entities/media_entity.dart';
@@ -361,9 +362,20 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                   ]),
                 ),
               ),
+              // Code-quality review (2026-08-17), item B3/4.1: was a
+              // hand-rolled loading/error/empty if-chain, one of six
+              // screens duplicating the exact shape AppAsyncSwitcher
+              // already exists for. Same per-branch-sliver shape as
+              // posts_list_screen.dart/notifications_screen.dart.
               if (_loading)
-                const SliverToBoxAdapter(
-                  child: Center(child: CircularProgressIndicator()),
+                SliverToBoxAdapter(
+                  child: AppAsyncSwitcher(
+                    state: AppAsyncState.loading,
+                    loading: const Center(child: CircularProgressIndicator()),
+                    error: const SizedBox.shrink(),
+                    empty: const SizedBox.shrink(),
+                    content: const SizedBox.shrink(),
+                  ),
                 )
               else if (_error != null)
                 SliverPadding(
@@ -371,22 +383,28 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                     horizontal: AppSpacing.lg,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(_error!),
-                            const SizedBox(height: AppSpacing.md),
-                            OutlinedButton.icon(
-                              onPressed: _loadMedia,
-                              icon: const Icon(Icons.refresh),
-                              label: Text(l10n.commonRetry),
-                            ),
-                          ],
+                    child: AppAsyncSwitcher(
+                      state: AppAsyncState.error,
+                      loading: const SizedBox.shrink(),
+                      error: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(_error ?? ''),
+                              const SizedBox(height: AppSpacing.md),
+                              OutlinedButton.icon(
+                                onPressed: _loadMedia,
+                                icon: const Icon(Icons.refresh),
+                                label: Text(l10n.commonRetry),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
+                      empty: const SizedBox.shrink(),
+                      content: const SizedBox.shrink(),
                     ),
                   ),
                 )
@@ -396,10 +414,16 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                     horizontal: AppSpacing.lg,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: AppEmptyState(
-                      title: l10n.mediaEmptyTitle,
-                      message: l10n.mediaEmptySubtitle,
-                      icon: Icons.perm_media_outlined,
+                    child: AppAsyncSwitcher(
+                      state: AppAsyncState.empty,
+                      loading: const SizedBox.shrink(),
+                      error: const SizedBox.shrink(),
+                      empty: AppEmptyState(
+                        title: l10n.mediaEmptyTitle,
+                        message: l10n.mediaEmptySubtitle,
+                        icon: Icons.perm_media_outlined,
+                      ),
+                      content: const SizedBox.shrink(),
                     ),
                   ),
                 )

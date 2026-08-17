@@ -7,6 +7,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/animated_count_text.dart';
+import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../dashboard/presentation/utils/platform_label.dart';
 import '../../application/analytics_dashboard_provider.dart';
@@ -127,16 +128,29 @@ class AnalyticsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              if (loading)
-                const Center(child: CircularProgressIndicator())
-              else if (errorMessage != null)
-                Card(
+              // Code-quality review (2026-08-17), item B3/4.1: was a
+              // hand-rolled loading/error/empty if-chain, one of six
+              // screens duplicating the exact shape AppAsyncSwitcher
+              // already exists for. `content` is guarded (rows.isEmpty ?
+              // SizedBox.shrink() : ...) per AppAsyncSwitcher's own
+              // docblock, since Dart evaluates it eagerly every build
+              // regardless of which branch actually renders.
+              AppAsyncSwitcher(
+                state: loading
+                    ? AppAsyncState.loading
+                    : errorMessage != null
+                    ? AppAsyncState.error
+                    : rows.isEmpty
+                    ? AppAsyncState.empty
+                    : AppAsyncState.content,
+                loading: const Center(child: CircularProgressIndicator()),
+                error: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(errorMessage),
+                        Text(errorMessage ?? ''),
                         const SizedBox(height: AppSpacing.md),
                         OutlinedButton.icon(
                           onPressed: () => ref
@@ -148,64 +162,80 @@ class AnalyticsScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                )
-              else if (rows.isEmpty)
-                AppEmptyState(
+                ),
+                empty: AppEmptyState(
                   message: l10n.analyticsNoPostsYet,
                   icon: Icons.insights_outlined,
-                )
-              else
-                ...rows.map(
-                  (row) => Card(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            row.post.title.isEmpty
-                                ? l10n.postUntitled
-                                : row.post.title,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Wrap(
-                            spacing: AppSpacing.md,
-                            runSpacing: AppSpacing.sm,
-                            children: <Widget>[
-                              _MiniStat(
-                                label: l10n.analyticsMetricReach,
-                                value: '${row.metric.reach}',
-                              ),
-                              _MiniStat(
-                                label: l10n.analyticsMetricImpressions,
-                                value: '${row.metric.impressions}',
-                              ),
-                              _MiniStat(
-                                label: l10n.analyticsMetricClicks,
-                                value: '${row.metric.clicks}',
-                              ),
-                              _MiniStat(
-                                label: l10n.analyticsMetricShares,
-                                value: '${row.metric.shares}',
-                              ),
-                              _MiniStat(
-                                label: l10n.analyticsMetricReactions,
-                                value: '${row.metric.reactions}',
-                              ),
-                              _MiniStat(
-                                label: l10n.analyticsMetricEngagementRate,
-                                value:
-                                    '${(row.metric.engagementRate * 100).toStringAsFixed(2)}%',
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
+                content: rows.isEmpty
+                    ? const SizedBox.shrink()
+                    : Column(
+                        children: rows
+                            .map(
+                              (row) => Card(
+                                margin: const EdgeInsets.only(
+                                  bottom: AppSpacing.md,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(
+                                    AppSpacing.lg,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        row.post.title.isEmpty
+                                            ? l10n.postUntitled
+                                            : row.post.title,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
+                                      ),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Wrap(
+                                        spacing: AppSpacing.md,
+                                        runSpacing: AppSpacing.sm,
+                                        children: <Widget>[
+                                          _MiniStat(
+                                            label: l10n.analyticsMetricReach,
+                                            value: '${row.metric.reach}',
+                                          ),
+                                          _MiniStat(
+                                            label: l10n
+                                                .analyticsMetricImpressions,
+                                            value:
+                                                '${row.metric.impressions}',
+                                          ),
+                                          _MiniStat(
+                                            label: l10n.analyticsMetricClicks,
+                                            value: '${row.metric.clicks}',
+                                          ),
+                                          _MiniStat(
+                                            label: l10n.analyticsMetricShares,
+                                            value: '${row.metric.shares}',
+                                          ),
+                                          _MiniStat(
+                                            label:
+                                                l10n.analyticsMetricReactions,
+                                            value: '${row.metric.reactions}',
+                                          ),
+                                          _MiniStat(
+                                            label: l10n
+                                                .analyticsMetricEngagementRate,
+                                            value:
+                                                '${(row.metric.engagementRate * 100).toStringAsFixed(2)}%',
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+              ),
             ],
           ),
         ),
