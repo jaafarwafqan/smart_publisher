@@ -167,91 +167,181 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
       body: AdaptiveContentWidth(
         child: RefreshIndicator(
           onRefresh: () => ref.read(postsListProvider.notifier).refresh(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.xl,
-            ),
-            children: <Widget>[
-              Text(
-                l10n.postsListHeadline,
-                style: theme.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(l10n.postsListSubtitle, style: theme.textTheme.bodyMedium),
-              const SizedBox(height: AppSpacing.lg),
-              TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: l10n.postsListSearchLabel,
-                  hintText: l10n.postsListSearchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  border: const OutlineInputBorder(),
+          // Code-quality review (2026-08-17), item B5/3.1: was a plain
+          // `ListView(children: [...])` — every post Card was built eagerly
+          // on every rebuild, not lazily as it scrolled into view, growing
+          // unbounded with the loaded post count (worse after `load more`).
+          // A `CustomScrollView` with the post list as its own `SliverList`
+          // is the genuinely lazy fix; nesting a shrinkWrap-ped
+          // `ListView.builder` inside the outer list would NOT actually
+          // achieve that (shrinkWrap still forces a full-extent layout pass
+          // over every child to size itself). The one disclosed trade-off:
+          // AppAsyncSwitcher's cross-fade animation between loading/error/
+          // empty and the real list no longer covers the transition INTO
+          // the list itself (each is now a distinct sliver rather than one
+          // animated box) — the loading/error/empty states still cross-fade
+          // among themselves exactly as before.
+          child: CustomScrollView(
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  0,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(<Widget>[
+                    Text(
+                      l10n.postsListHeadline,
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.postsListSubtitle,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        labelText: l10n.postsListSearchLabel,
+                        hintText: l10n.postsListSearchHint,
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: <Widget>[
+                        _StatusChip(
+                          label: l10n.postsListFilterAll,
+                          selected: _statusFilter == 'all',
+                          onSelected: () =>
+                              setState(() => _statusFilter = 'all'),
+                        ),
+                        _StatusChip(
+                          label: l10n.postsListFilterDraft,
+                          selected: _statusFilter == 'draft',
+                          onSelected: () =>
+                              setState(() => _statusFilter = 'draft'),
+                        ),
+                        _StatusChip(
+                          label: l10n.postsListFilterScheduled,
+                          selected: _statusFilter == 'scheduled',
+                          onSelected: () =>
+                              setState(() => _statusFilter = 'scheduled'),
+                        ),
+                        _StatusChip(
+                          label: l10n.postsListFilterPublished,
+                          selected: _statusFilter == 'published',
+                          onSelected: () =>
+                              setState(() => _statusFilter = 'published'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ]),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: <Widget>[
-                  _StatusChip(
-                    label: l10n.postsListFilterAll,
-                    selected: _statusFilter == 'all',
-                    onSelected: () => setState(() => _statusFilter = 'all'),
+              if (isInitialLoading)
+                SliverToBoxAdapter(
+                  child: AppAsyncSwitcher(
+                    state: AppAsyncState.loading,
+                    loading: const Center(child: CircularProgressIndicator()),
+                    error: const SizedBox.shrink(),
+                    empty: const SizedBox.shrink(),
+                    content: const SizedBox.shrink(),
                   ),
-                  _StatusChip(
-                    label: l10n.postsListFilterDraft,
-                    selected: _statusFilter == 'draft',
-                    onSelected: () => setState(() => _statusFilter = 'draft'),
+                )
+              else if (errorMessage != null)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
                   ),
-                  _StatusChip(
-                    label: l10n.postsListFilterScheduled,
-                    selected: _statusFilter == 'scheduled',
-                    onSelected: () =>
-                        setState(() => _statusFilter = 'scheduled'),
+                  sliver: SliverToBoxAdapter(
+                    child: AppAsyncSwitcher(
+                      state: AppAsyncState.error,
+                      loading: const SizedBox.shrink(),
+                      error: Text(
+                        errorMessage,
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                      empty: const SizedBox.shrink(),
+                      content: const SizedBox.shrink(),
+                    ),
                   ),
-                  _StatusChip(
-                    label: l10n.postsListFilterPublished,
-                    selected: _statusFilter == 'published',
-                    onSelected: () =>
-                        setState(() => _statusFilter = 'published'),
+                )
+              else if (posts.isEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              AppAsyncSwitcher(
-                state: isInitialLoading
-                    ? AppAsyncState.loading
-                    : errorMessage != null
-                    ? AppAsyncState.error
-                    : posts.isEmpty
-                    ? AppAsyncState.empty
-                    : AppAsyncState.content,
-                loading: const Center(child: CircularProgressIndicator()),
-                error: Text(
-                  errorMessage ?? '',
-                  style: TextStyle(color: theme.colorScheme.error),
+                  sliver: SliverToBoxAdapter(
+                    child: AppAsyncSwitcher(
+                      state: AppAsyncState.empty,
+                      loading: const SizedBox.shrink(),
+                      error: const SizedBox.shrink(),
+                      empty: AppEmptyState(message: l10n.postsListEmpty),
+                      content: const SizedBox.shrink(),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.md,
+                        ),
+                        child: _PostCard(
+                          post: posts[index],
+                          l10n: l10n,
+                          canEdit: _canEditPosts,
+                          canDelete: _canDeletePosts,
+                          isDeleting: _deletingIds.contains(posts[index].id),
+                          onEdit: () => context.push(
+                            RouteNames.postsCreatePath,
+                            extra: posts[index],
+                          ),
+                          onDelete: () =>
+                              _deletePostWithConfirmation(posts[index]),
+                        ),
+                      ),
+                      childCount: posts.length,
+                    ),
+                  ),
                 ),
-                empty: AppEmptyState(message: l10n.postsListEmpty),
-                content: _buildPostsContent(posts, l10n),
-              ),
               if (!isInitialLoading && errorMessage == null && hasMorePages)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: Center(
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMorePosts,
-                      icon: _loadingMore
-                          ? const SizedBox(
-                              width: AppSizes.iconSm,
-                              height: AppSizes.iconSm,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.expand_more),
-                      label: Text(l10n.postsListLoadMore),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.xl,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: OutlinedButton.icon(
+                        onPressed: _loadingMore ? null : _loadMorePosts,
+                        icon: _loadingMore
+                            ? const SizedBox(
+                                width: AppSizes.iconSm,
+                                height: AppSizes.iconSm,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.expand_more),
+                        label: Text(l10n.postsListLoadMore),
+                      ),
                     ),
                   ),
                 ),
@@ -264,112 +354,6 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         icon: const Icon(Icons.add),
         label: Text(l10n.postsListNewPostButton),
       ),
-    );
-  }
-
-  Widget _buildPostsContent(List<PostEntity> posts, AppLocalizations l10n) {
-    return Column(
-      children: posts
-          .map(
-            (post) => Card(
-              margin: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: ListTile(
-                leading: CircleAvatar(
-                  child: Text(
-                    post.title.isEmpty ? '?' : post.title[0].toUpperCase(),
-                  ),
-                ),
-                title: Text(
-                  post.title.isEmpty ? l10n.postUntitled : post.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      post.body,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.xs,
-                      children: <Widget>[
-                        StatusPill(
-                          label: _statusLabel(post.status, l10n),
-                          tone: _toneForStatus(post.status),
-                        ),
-                        if (post.status == 'published' &&
-                            post.publishedAt != null)
-                          StatusPill(
-                            label: l10n.postsListPublishedMeta(
-                              _formatDateTime(post.publishedAt!),
-                            ),
-                            icon: Icons.check_circle_outline,
-                          )
-                        else if (post.status == 'scheduled' &&
-                            post.scheduledAt != null)
-                          StatusPill(
-                            label: l10n.postsListScheduledMeta(
-                              _formatDateTime(post.scheduledAt!),
-                            ),
-                            icon: Icons.schedule,
-                          ),
-                        StatusPill(
-                          label: l10n.postsListMediaCountMeta(
-                            post.attachments.length,
-                          ),
-                          icon: Icons.attach_file,
-                        ),
-                        StatusPill(
-                          label: l10n.postsListPlatformsCountMeta(
-                            post.platforms.length,
-                          ),
-                          icon: Icons.public,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                trailing: !_canEditPosts && !_canDeletePosts
-                    ? null
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          if (_canEditPosts)
-                            IconButton(
-                              tooltip: l10n.postsListEditTooltip,
-                              onPressed: () => context.push(
-                                RouteNames.postsCreatePath,
-                                extra: post,
-                              ),
-                              icon: const Icon(Icons.edit_outlined),
-                            ),
-                          if (_canDeletePosts)
-                            IconButton(
-                              tooltip: l10n.postsListDeleteTooltip,
-                              onPressed: _deletingIds.contains(post.id)
-                                  ? null
-                                  : () => _deletePostWithConfirmation(post),
-                              icon: _deletingIds.contains(post.id)
-                                  ? const SizedBox(
-                                      width: AppSizes.iconSm,
-                                      height: AppSizes.iconSm,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.delete_outline),
-                            ),
-                        ],
-                      ),
-              ),
-            ),
-          )
-          .toList(growable: false),
     );
   }
 
@@ -484,6 +468,118 @@ class _StatusChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PostCard extends StatelessWidget {
+  const _PostCard({
+    required this.post,
+    required this.l10n,
+    required this.canEdit,
+    required this.canDelete,
+    required this.isDeleting,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final PostEntity post;
+  final AppLocalizations l10n;
+  final bool canEdit;
+  final bool canDelete;
+  final bool isDeleting;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Text(post.title.isEmpty ? '?' : post.title[0].toUpperCase()),
+        ),
+        title: Text(
+          post.title.isEmpty ? l10n.postUntitled : post.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const SizedBox(height: AppSpacing.xs),
+            Text(post.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              children: <Widget>[
+                StatusPill(
+                  label: _PostsListScreenState._statusLabel(post.status, l10n),
+                  tone: _PostsListScreenState._toneForStatus(post.status),
+                ),
+                if (post.status == 'published' && post.publishedAt != null)
+                  StatusPill(
+                    label: l10n.postsListPublishedMeta(
+                      _PostsListScreenState._formatDateTime(
+                        post.publishedAt!,
+                      ),
+                    ),
+                    icon: Icons.check_circle_outline,
+                  )
+                else if (post.status == 'scheduled' &&
+                    post.scheduledAt != null)
+                  StatusPill(
+                    label: l10n.postsListScheduledMeta(
+                      _PostsListScreenState._formatDateTime(
+                        post.scheduledAt!,
+                      ),
+                    ),
+                    icon: Icons.schedule,
+                  ),
+                StatusPill(
+                  label: l10n.postsListMediaCountMeta(
+                    post.attachments.length,
+                  ),
+                  icon: Icons.attach_file,
+                ),
+                StatusPill(
+                  label: l10n.postsListPlatformsCountMeta(
+                    post.platforms.length,
+                  ),
+                  icon: Icons.public,
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: !canEdit && !canDelete
+            ? null
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  if (canEdit)
+                    IconButton(
+                      tooltip: l10n.postsListEditTooltip,
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                  if (canDelete)
+                    IconButton(
+                      tooltip: l10n.postsListDeleteTooltip,
+                      onPressed: isDeleting ? null : onDelete,
+                      icon: isDeleting
+                          ? const SizedBox(
+                              width: AppSizes.iconSm,
+                              height: AppSizes.iconSm,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.delete_outline),
+                    ),
+                ],
+              ),
       ),
     );
   }

@@ -263,16 +263,41 @@ class _AuditLogList extends StatelessWidget {
     if (data == null) {
       return const SizedBox.shrink();
     }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        AppSpacing.xxl,
-      ),
-      children: <Widget>[
-        ...data.items.map((entry) => AuditLogTile(entry: entry)),
-        AuditLogPagination(page: page, onPage: onPage),
+    // Code-quality review (2026-08-17), item B5/3.1: was a plain
+    // `ListView(children: [...])` — every entry was built eagerly. See
+    // posts_list_screen.dart's own conversion for why a
+    // `CustomScrollView`+`SliverList` (not a shrinkWrap-ped nested
+    // ListView.builder) is the real fix. Smaller practical impact here
+    // than the other three screens (this one replaces the whole list per
+    // server-paginated page rather than accumulating via "load more"), but
+    // the same real fix applies.
+    return CustomScrollView(
+      slivers: <Widget>[
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            0,
+          ),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => AuditLogTile(entry: data.items[index]),
+              childCount: data.items.length,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.xxl,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: AuditLogPagination(page: page, onPage: onPage),
+          ),
+        ),
       ],
     );
   }
@@ -405,6 +430,15 @@ class AuditLogPagination extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final l10n = AppLocalizations.of(context)!;
+    // Code-quality review (2026-08-17), item B4/3.2: was hardcoded
+    // (chevron_right for Previous, chevron_left for Next) regardless of
+    // locale — correct for RTL (where "previous"/backward points right and
+    // "next"/forward points left, matching reading direction), but
+    // backward in LTR. Matches the isRtl-branching pattern already used
+    // correctly in administration_screen.dart.
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final previousIcon = isRtl ? Icons.chevron_right : Icons.chevron_left;
+    final nextIcon = isRtl ? Icons.chevron_left : Icons.chevron_right;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.lg),
       child: Row(
@@ -412,7 +446,7 @@ class AuditLogPagination extends StatelessWidget {
         children: <Widget>[
           OutlinedButton.icon(
             onPressed: data.page > 1 ? () => onPage(data.page - 1) : null,
-            icon: const Icon(Icons.chevron_right),
+            icon: Icon(previousIcon),
             label: Text(l10n.auditLogPreviousPage),
           ),
           Padding(
@@ -428,7 +462,7 @@ class AuditLogPagination extends StatelessWidget {
             onPressed: data.page < data.totalPages
                 ? () => onPage(data.page + 1)
                 : null,
-            icon: const Icon(Icons.chevron_left),
+            icon: Icon(nextIcon),
             label: Text(l10n.auditLogNextPage),
           ),
         ],

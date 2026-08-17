@@ -115,107 +115,174 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body: AdaptiveContentWidth(
         child: RefreshIndicator(
           onRefresh: _loadNotifications,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.xl,
-            ),
-            children: <Widget>[
-              Card(
-                child: ListTile(
-                  title: Text(l10n.notificationsInboxSummaryTitle),
-                  subtitle: Text(
-                    l10n.notificationsInboxSummarySubtitle(
-                      unreadCount,
-                      notifications.length,
-                    ),
+          // Code-quality review (2026-08-17), item B5/3.1: was a plain
+          // `ListView(children: [...])` — every notification tile was
+          // built eagerly. See posts_list_screen.dart's own conversion for
+          // why a `CustomScrollView`+`SliverList` (not a shrinkWrap-ped
+          // nested ListView.builder) is the real fix.
+          child: CustomScrollView(
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  0,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Card(
+                        child: ListTile(
+                          title: Text(l10n.notificationsInboxSummaryTitle),
+                          subtitle: Text(
+                            l10n.notificationsInboxSummarySubtitle(
+                              unreadCount,
+                              notifications.length,
+                            ),
+                          ),
+                          leading: const Icon(
+                            Icons.notifications_active_outlined,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                   ),
-                  leading: const Icon(Icons.notifications_active_outlined),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
               if (_notifications.isLoading)
-                const Center(child: CircularProgressIndicator())
+                const SliverToBoxAdapter(
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (_notifications.hasError)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(l10n.notificationsLoadFailed),
-                        const SizedBox(height: AppSpacing.md),
-                        OutlinedButton.icon(
-                          onPressed: _loadNotifications,
-                          icon: const Icon(Icons.refresh),
-                          label: Text(l10n.commonRetry),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(l10n.notificationsLoadFailed),
+                            const SizedBox(height: AppSpacing.md),
+                            OutlinedButton.icon(
+                              onPressed: _loadNotifications,
+                              icon: const Icon(Icons.refresh),
+                              label: Text(l10n.commonRetry),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 )
               else if (notifications.isEmpty)
-                AppEmptyState(
-                  message: l10n.notificationsEmpty,
-                  icon: Icons.notifications_none_outlined,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: AppEmptyState(
+                      message: l10n.notificationsEmpty,
+                      icon: Icons.notifications_none_outlined,
+                    ),
+                  ),
                 )
               else
-                ...notifications.map((notification) {
-                  final isUnread = !notification.isRead;
-                  return AnimatedScale(
-                    scale: isUnread ? 1 : 0.99,
-                    duration: AppDuration.fast,
-                    curve: AppCurves.standard,
-                    child: AnimatedContainer(
-                      duration: AppDuration.normal,
-                      curve: AppCurves.standard,
-                      child: Card(
-                        color: isUnread
-                            ? Theme.of(context).colorScheme.secondaryContainer
-                                  .withValues(alpha: 0.42)
-                            : null,
-                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: ListTile(
-                          leading: AnimatedSwitcher(
-                            duration: AppDuration.fast,
-                            switchInCurve: AppCurves.standard,
-                            switchOutCurve: AppCurves.standard,
-                            child: Icon(
-                              notification.isRead
-                                  ? Icons.mark_email_read_outlined
-                                  : Icons.mark_email_unread_outlined,
-                              key: ValueKey<bool>(notification.isRead),
-                            ),
-                          ),
-                          title: Text(notification.title),
-                          subtitle: Text(notification.body),
-                          trailing: AnimatedSwitcher(
-                            duration: AppDuration.normal,
-                            switchInCurve: AppCurves.standard,
-                            switchOutCurve: AppCurves.standard,
-                            child: notification.isRead
-                                ? const Icon(
-                                    Icons.check,
-                                    key: ValueKey<String>('read'),
-                                    size: 18,
-                                  )
-                                : TextButton(
-                                    key: const ValueKey<String>('unread'),
-                                    onPressed: () async =>
-                                        _markRead(notification.id),
-                                    child: Text(
-                                      l10n.notificationsMarkReadButton,
-                                    ),
-                                  ),
-                          ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.xl,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.md,
+                        ),
+                        child: _NotificationTile(
+                          notification: notifications[index],
+                          l10n: l10n,
+                          onMarkRead: () =>
+                              _markRead(notifications[index].id),
                         ),
                       ),
+                      childCount: notifications.length,
                     ),
-                  );
-                }),
+                  ),
+                ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationTile extends StatelessWidget {
+  const _NotificationTile({
+    required this.notification,
+    required this.l10n,
+    required this.onMarkRead,
+  });
+
+  final NotificationEntity notification;
+  final AppLocalizations l10n;
+  final VoidCallback onMarkRead;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUnread = !notification.isRead;
+    return AnimatedScale(
+      scale: isUnread ? 1 : 0.99,
+      duration: AppDuration.fast,
+      curve: AppCurves.standard,
+      child: AnimatedContainer(
+        duration: AppDuration.normal,
+        curve: AppCurves.standard,
+        child: Card(
+          color: isUnread
+              ? Theme.of(
+                  context,
+                ).colorScheme.secondaryContainer.withValues(alpha: 0.42)
+              : null,
+          child: ListTile(
+            leading: AnimatedSwitcher(
+              duration: AppDuration.fast,
+              switchInCurve: AppCurves.standard,
+              switchOutCurve: AppCurves.standard,
+              child: Icon(
+                notification.isRead
+                    ? Icons.mark_email_read_outlined
+                    : Icons.mark_email_unread_outlined,
+                key: ValueKey<bool>(notification.isRead),
+              ),
+            ),
+            title: Text(notification.title),
+            subtitle: Text(notification.body),
+            trailing: AnimatedSwitcher(
+              duration: AppDuration.normal,
+              switchInCurve: AppCurves.standard,
+              switchOutCurve: AppCurves.standard,
+              child: notification.isRead
+                  ? const Icon(
+                      Icons.check,
+                      key: ValueKey<String>('read'),
+                      size: 18,
+                    )
+                  : TextButton(
+                      key: const ValueKey<String>('unread'),
+                      onPressed: onMarkRead,
+                      child: Text(l10n.notificationsMarkReadButton),
+                    ),
+            ),
           ),
         ),
       ),

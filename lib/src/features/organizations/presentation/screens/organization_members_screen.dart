@@ -216,7 +216,7 @@ class _OrganizationMembersScreenState
                   onPressed: submitting
                       ? null
                       : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.commonCancel),
                 ),
                 FilledButton(
                   onPressed: submitting ? null : submit,
@@ -292,7 +292,7 @@ class _OrganizationMembersScreenState
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -387,7 +387,7 @@ class _OrganizationMembersScreenState
             children: <Widget>[
               Text(_error!),
               const SizedBox(height: AppSpacing.md),
-              FilledButton(onPressed: _load, child: const Text('Retry')),
+              FilledButton(onPressed: _load, child: Text(l10n.commonRetry)),
             ],
           ),
         ),

@@ -287,270 +287,349 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
       body: AdaptiveContentWidth(
         child: RefreshIndicator(
           onRefresh: _loadMedia,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.xl,
-            ),
-            children: <Widget>[
-              Text(
-                l10n.mediaSubtitle,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  labelText: l10n.mediaSearchLabel,
-                  hintText: l10n.mediaSearchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  border: const OutlineInputBorder(),
+          // Code-quality review (2026-08-17), item B5/3.1: was a plain
+          // `ListView(children: [...])` — every asset card was built
+          // eagerly, not lazily as it scrolled into view. See
+          // posts_list_screen.dart's own conversion for why a
+          // `CustomScrollView`+`SliverList` (not a shrinkWrap-ped nested
+          // ListView.builder) is the real fix.
+          child: CustomScrollView(
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  0,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.sm,
-                children: <Widget>[
-                  _TypeChip(
-                    label: l10n.mediaFilterAll,
-                    selected: _typeFilter == 'all',
-                    onTap: () {
-                      setState(() => _typeFilter = 'all');
-                      _loadMedia();
-                    },
-                  ),
-                  _TypeChip(
-                    label: l10n.mediaFilterImages,
-                    selected: _typeFilter == 'image',
-                    onTap: () {
-                      setState(() => _typeFilter = 'image');
-                      _loadMedia();
-                    },
-                  ),
-                  _TypeChip(
-                    label: l10n.mediaFilterVideos,
-                    selected: _typeFilter == 'video',
-                    onTap: () {
-                      setState(() => _typeFilter = 'video');
-                      _loadMedia();
-                    },
-                  ),
-                  _TypeChip(
-                    label: l10n.mediaFilterDocuments,
-                    selected: _typeFilter == 'document',
-                    onTap: () {
-                      setState(() => _typeFilter = 'document');
-                      _loadMedia();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              if (_loading)
-                const Center(child: CircularProgressIndicator())
-              else if (_error != null)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(<Widget>[
+                    Text(
+                      l10n.mediaSubtitle,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        labelText: l10n.mediaSearchLabel,
+                        hintText: l10n.mediaSearchHint,
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.sm,
                       children: <Widget>[
-                        Text(_error!),
-                        const SizedBox(height: AppSpacing.md),
-                        OutlinedButton.icon(
-                          onPressed: _loadMedia,
-                          icon: const Icon(Icons.refresh),
-                          label: Text(l10n.commonRetry),
+                        _TypeChip(
+                          label: l10n.mediaFilterAll,
+                          selected: _typeFilter == 'all',
+                          onTap: () {
+                            setState(() => _typeFilter = 'all');
+                            _loadMedia();
+                          },
+                        ),
+                        _TypeChip(
+                          label: l10n.mediaFilterImages,
+                          selected: _typeFilter == 'image',
+                          onTap: () {
+                            setState(() => _typeFilter = 'image');
+                            _loadMedia();
+                          },
+                        ),
+                        _TypeChip(
+                          label: l10n.mediaFilterVideos,
+                          selected: _typeFilter == 'video',
+                          onTap: () {
+                            setState(() => _typeFilter = 'video');
+                            _loadMedia();
+                          },
+                        ),
+                        _TypeChip(
+                          label: l10n.mediaFilterDocuments,
+                          selected: _typeFilter == 'document',
+                          onTap: () {
+                            setState(() => _typeFilter = 'document');
+                            _loadMedia();
+                          },
                         ),
                       ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ]),
+                ),
+              ),
+              if (_loading)
+                const SliverToBoxAdapter(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(_error!),
+                            const SizedBox(height: AppSpacing.md),
+                            OutlinedButton.icon(
+                              onPressed: _loadMedia,
+                              icon: const Icon(Icons.refresh),
+                              label: Text(l10n.commonRetry),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 )
               else if (_items.isEmpty)
-                AppEmptyState(
-                  title: l10n.mediaEmptyTitle,
-                  message: l10n.mediaEmptySubtitle,
-                  icon: Icons.perm_media_outlined,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: AppEmptyState(
+                      title: l10n.mediaEmptyTitle,
+                      message: l10n.mediaEmptySubtitle,
+                      icon: Icons.perm_media_outlined,
+                    ),
+                  ),
                 )
               else
-                ..._items.map((item) {
-                  final type = _typeOf(item);
-                  final isImage = type == 'image';
-                  final isSelected = _selectedMediaId == item.id;
-                  return AnimatedScale(
-                    scale: isSelected ? 1.01 : 1,
-                    duration: AppDuration.normal,
-                    curve: AppCurves.standard,
-                    child: AnimatedContainer(
-                      duration: AppDuration.normal,
-                      curve: AppCurves.standard,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        boxShadow: isSelected
-                            ? <BoxShadow>[
-                                BoxShadow(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.16),
-                                  blurRadius: AppSpacing.md,
-                                  offset: const Offset(0, AppSpacing.xs),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Card(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : null,
-                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: InkWell(
-                          onTap: () => setState(() {
-                            _selectedMediaId = isSelected ? null : item.id;
-                          }),
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    if (isImage && item.thumbnailUrl != null)
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          AppRadius.sm,
-                                        ),
-                                        child: Image.network(
-                                          item.thumbnailUrl!,
-                                          width: 64,
-                                          height: 64,
-                                          fit: BoxFit.cover,
-                                          excludeFromSemantics: true,
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  CircleAvatar(
-                                                    child: Icon(
-                                                      _iconForType(type),
-                                                    ),
-                                                  ),
-                                        ),
-                                      )
-                                    else
-                                      CircleAvatar(
-                                        child: Icon(_iconForType(type)),
-                                      ),
-                                    const SizedBox(width: AppSpacing.md),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Text(
-                                            _displayName(item.url),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.titleSmall,
-                                          ),
-                                          const SizedBox(height: AppSpacing.xs),
-                                          Text(
-                                            '${item.collection} • ${_formatDate(item.createdAt, l10n)}',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall,
-                                          ),
-                                          if (item.tags.isNotEmpty) ...<Widget>[
-                                            const SizedBox(
-                                              height: AppSpacing.sm,
-                                            ),
-                                            Wrap(
-                                              spacing: AppSpacing.xs,
-                                              runSpacing: AppSpacing.xs,
-                                              children: item.tags
-                                                  .map(
-                                                    (tag) => Chip(
-                                                      label: Text(tag),
-                                                      visualDensity:
-                                                          VisualDensity.compact,
-                                                      materialTapTargetSize:
-                                                          MaterialTapTargetSize
-                                                              .shrinkWrap,
-                                                    ),
-                                                  )
-                                                  .toList(growable: false),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Wrap(
-                                  spacing: AppSpacing.sm,
-                                  runSpacing: AppSpacing.sm,
-                                  alignment: WrapAlignment.end,
-                                  children: <Widget>[
-                                    if (_canCompressMedia)
-                                      Tooltip(
-                                        message: isImage
-                                            ? l10n.mediaCompressTooltipImage
-                                            : l10n.mediaCompressTooltipOther,
-                                        child: OutlinedButton.icon(
-                                          onPressed: isImage
-                                              ? () => _compressAsset(item)
-                                              : null,
-                                          icon: const Icon(
-                                            Icons.compress,
-                                            size: 18,
-                                          ),
-                                          label: Text(l10n.mediaCompressButton),
-                                        ),
-                                      ),
-                                    OutlinedButton.icon(
-                                      onPressed: () => _reuseInPost(item),
-                                      icon: const Icon(Icons.repeat, size: 18),
-                                      label: Text(l10n.mediaReuseInPostButton),
-                                    ),
-                                    if (_canDeleteMedia)
-                                      IconButton(
-                                        tooltip: l10n.mediaDeleteTooltip,
-                                        onPressed: () => _deleteAsset(item),
-                                        icon: const Icon(Icons.delete_outline),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = _items[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppSpacing.md,
                           ),
-                        ),
-                      ),
+                          child: _MediaCard(
+                            item: item,
+                            isSelected: _selectedMediaId == item.id,
+                            canCompress: _canCompressMedia,
+                            canDelete: _canDeleteMedia,
+                            l10n: l10n,
+                            onTap: () => setState(() {
+                              _selectedMediaId =
+                                  _selectedMediaId == item.id ? null : item.id;
+                            }),
+                            onCompress: () => _compressAsset(item),
+                            onReuse: () => _reuseInPost(item),
+                            onDelete: () => _deleteAsset(item),
+                          ),
+                        );
+                      },
+                      childCount: _items.length,
                     ),
-                  );
-                }),
+                  ),
+                ),
               if (!_loading && _error == null && _hasMorePages)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: Center(
-                    child: OutlinedButton.icon(
-                      onPressed: _loadingMore ? null : _loadMoreMedia,
-                      icon: _loadingMore
-                          ? const SizedBox(
-                              width: AppSizes.iconSm,
-                              height: AppSizes.iconSm,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.expand_more),
-                      label: Text(l10n.mediaLoadMore),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.xl,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: OutlinedButton.icon(
+                        onPressed: _loadingMore ? null : _loadMoreMedia,
+                        icon: _loadingMore
+                            ? const SizedBox(
+                                width: AppSizes.iconSm,
+                                height: AppSizes.iconSm,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.expand_more),
+                        label: Text(l10n.mediaLoadMore),
+                      ),
                     ),
                   ),
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MediaCard extends StatelessWidget {
+  const _MediaCard({
+    required this.item,
+    required this.isSelected,
+    required this.canCompress,
+    required this.canDelete,
+    required this.l10n,
+    required this.onTap,
+    required this.onCompress,
+    required this.onReuse,
+    required this.onDelete,
+  });
+
+  final MediaEntity item;
+  final bool isSelected;
+  final bool canCompress;
+  final bool canDelete;
+  final AppLocalizations l10n;
+  final VoidCallback onTap;
+  final VoidCallback onCompress;
+  final VoidCallback onReuse;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final type = _MediaLibraryScreenState._typeOf(item);
+    final isImage = type == 'image';
+
+    return AnimatedScale(
+      scale: isSelected ? 1.01 : 1,
+      duration: AppDuration.normal,
+      curve: AppCurves.standard,
+      child: AnimatedContainer(
+        duration: AppDuration.normal,
+        curve: AppCurves.standard,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: isSelected
+              ? <BoxShadow>[
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.16),
+                    blurRadius: AppSpacing.md,
+                    offset: const Offset(0, AppSpacing.xs),
+                  ),
+                ]
+              : null,
+        ),
+        child: Card(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer
+              : null,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (isImage && item.thumbnailUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          child: Image.network(
+                            item.thumbnailUrl!,
+                            width: 64,
+                            height: 64,
+                            fit: BoxFit.cover,
+                            excludeFromSemantics: true,
+                            errorBuilder: (context, error, stackTrace) =>
+                                CircleAvatar(
+                                  child: Icon(
+                                    _MediaLibraryScreenState._iconForType(
+                                      type,
+                                    ),
+                                  ),
+                                ),
+                          ),
+                        )
+                      else
+                        CircleAvatar(
+                          child: Icon(
+                            _MediaLibraryScreenState._iconForType(type),
+                          ),
+                        ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              _MediaLibraryScreenState._displayName(item.url),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              '${item.collection} • ${_MediaLibraryScreenState._formatDate(item.createdAt, l10n)}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            if (item.tags.isNotEmpty) ...<Widget>[
+                              const SizedBox(height: AppSpacing.sm),
+                              Wrap(
+                                spacing: AppSpacing.xs,
+                                runSpacing: AppSpacing.xs,
+                                children: item.tags
+                                    .map(
+                                      (tag) => Chip(
+                                        label: Text(tag),
+                                        visualDensity: VisualDensity.compact,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    alignment: WrapAlignment.end,
+                    children: <Widget>[
+                      if (canCompress)
+                        Tooltip(
+                          message: isImage
+                              ? l10n.mediaCompressTooltipImage
+                              : l10n.mediaCompressTooltipOther,
+                          child: OutlinedButton.icon(
+                            onPressed: isImage ? onCompress : null,
+                            icon: const Icon(Icons.compress, size: 18),
+                            label: Text(l10n.mediaCompressButton),
+                          ),
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: onReuse,
+                        icon: const Icon(Icons.repeat, size: 18),
+                        label: Text(l10n.mediaReuseInPostButton),
+                      ),
+                      if (canDelete)
+                        IconButton(
+                          tooltip: l10n.mediaDeleteTooltip,
+                          onPressed: onDelete,
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

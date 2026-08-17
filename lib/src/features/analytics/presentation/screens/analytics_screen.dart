@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/animated_count_text.dart';
@@ -310,7 +311,12 @@ class _MiniStat extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
+        // Code-quality review (2026-08-17), item B3/3.4: was a magic
+        // number (10) instead of the app's own radius tokens; AppRadius.sm
+        // (8) is the closest existing value and the one already used for
+        // other small compact elements (e.g. media_library_screen.dart's
+        // thumbnail rounding).
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Text('$label: $value'),
     );

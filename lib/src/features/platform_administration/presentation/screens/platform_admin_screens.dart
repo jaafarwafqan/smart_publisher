@@ -1819,6 +1819,12 @@ class _Pagination<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     if (page.lastPage <= 1) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
+    // Code-quality review (2026-08-17), item B4/3.2: same fix as
+    // AuditLogPagination in organization_audit_log_screen.dart — was
+    // hardcoded regardless of locale (correct for RTL, backward in LTR).
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final previousIcon = isRtl ? Icons.chevron_right : Icons.chevron_left;
+    final nextIcon = isRtl ? Icons.chevron_left : Icons.chevron_right;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.lg),
       child: Row(
@@ -1828,7 +1834,7 @@ class _Pagination<T> extends StatelessWidget {
             onPressed: page.currentPage > 1
                 ? () => onPage(page.currentPage - 1)
                 : null,
-            icon: const Icon(Icons.chevron_right),
+            icon: Icon(previousIcon),
             label: Text(l10n.platformAdminPreviousPageButton),
           ),
           Padding(
@@ -1841,7 +1847,7 @@ class _Pagination<T> extends StatelessWidget {
             onPressed: page.currentPage < page.lastPage
                 ? () => onPage(page.currentPage + 1)
                 : null,
-            icon: const Icon(Icons.chevron_left),
+            icon: Icon(nextIcon),
             label: Text(l10n.commonNext),
           ),
         ],
