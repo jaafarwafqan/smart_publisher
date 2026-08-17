@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/feature_flags/feature_flags.dart';
-import '../../../../core/result/app_result.dart';
 import '../../../../core/router/guard_state_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/storage/storage_provider.dart';
@@ -22,14 +21,13 @@ import '../../../../shared/widgets/adaptive_card_grid.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/status_pill.dart';
-import '../../../analytics/domain/entities/analytics_summary_entity.dart';
 import '../../../auth/application/auth_session_controller.dart';
 import '../../../auth/application/facebook_native_login_service.dart';
 import '../../../auth/domain/entities/account_entity.dart';
-import '../../../notifications/domain/entities/notification_entity.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../../posts/domain/entities/post_entity.dart';
 import '../../application/account_operation_access.dart';
+import '../../application/dashboard_data_provider.dart';
 import '../utils/dashboard_post_filters.dart';
 import '../utils/platform_label.dart';
 import '../widgets/accounts_grid.dart';
@@ -86,85 +84,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       DashboardScreen.oauthRedirectUriFor(isWeb: kIsWeb);
 
   late final Future<AuthSession?> _sessionFuture;
-  AsyncValue<_DashboardData> _dashboard = const AsyncLoading();
 
   @override
   void initState() {
     super.initState();
     _sessionFuture = ref.read(authSessionControllerProvider).currentSession();
-    unawaited(_refreshDashboard());
     _maybeCompleteOAuth();
-  }
-
-  Future<List<PostEntity>> _loadPosts() async {
-    final result = await ref.read(postRepositoryProvider).getPosts();
-    return _requireData(result, 'Posts could not be loaded.');
-  }
-
-  Future<List<AccountEntity>> _loadAccounts(String userId) async {
-    final result = await ref
-        .read(accountRepositoryProvider)
-        .getAccounts(userId: userId);
-    return _requireData(result, 'Accounts could not be loaded.');
-  }
-
-  Future<AnalyticsSummaryEntity> _loadSummary() async {
-    final result = await ref.read(analyticsRepositoryProvider).getSummary();
-    return _requireData(result, 'Analytics summary could not be loaded.');
-  }
-
-  Future<List<NotificationEntity>> _loadNotifications() async {
-    final result = await ref
-        .read(notificationRepositoryProvider)
-        .getNotifications();
-    return _requireData(result, 'Notifications could not be loaded.');
-  }
-
-  Future<_DashboardData> _loadDashboard() async {
-    final session = await _sessionFuture;
-    if (session == null) {
-      throw StateError('No authenticated session is available.');
-    }
-
-    final results = await Future.wait<Object>(<Future<Object>>[
-      _loadPosts(),
-      _loadAccounts(session.user.id),
-      _loadSummary(),
-      _loadNotifications(),
-    ]);
-
-    return _DashboardData(
-      session: session,
-      posts: results[0] as List<PostEntity>,
-      accounts: results[1] as List<AccountEntity>,
-      summary: results[2] as AnalyticsSummaryEntity,
-      notifications: results[3] as List<NotificationEntity>,
-    );
-  }
-
-  T _requireData<T>(AppResult<T> result, String fallbackMessage) {
-    final data = result.data;
-    if (!result.isSuccess || data == null) {
-      throw StateError(result.message ?? fallbackMessage);
-    }
-
-    return data;
   }
 
   Future<String?> _currentUserId() async {
     final session = await _sessionFuture;
     return session?.user.id;
-  }
-
-  Future<void> _refreshDashboard() async {
-    setState(() {
-      _dashboard = const AsyncLoading();
-    });
-    final dashboard = await AsyncValue.guard(_loadDashboard);
-    if (!mounted) {
-      return;
-    }
-    setState(() => _dashboard = dashboard);
   }
 
   void _showFeedback(String message) {
@@ -223,7 +153,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -247,7 +177,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -320,7 +250,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final l10n = AppLocalizations.of(context)!;
     if (result.isSuccess) {
-      unawaited(_refreshDashboard());
+      unawaited(ref.read(dashboardDataProvider.notifier).refresh());
       _showFeedback(l10n.platformConnectedSuccess(_platformLabel('facebook')));
       return;
     }
@@ -434,7 +364,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
     if (result.isSuccess) {
-      unawaited(_refreshDashboard());
+      unawaited(ref.read(dashboardDataProvider.notifier).refresh());
       _showFeedback(
         AppLocalizations.of(
           context,
@@ -474,7 +404,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
     if (result.isSuccess) {
-      unawaited(_refreshDashboard());
+      unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     }
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
@@ -518,7 +448,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -542,7 +472,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -565,7 +495,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -585,7 +515,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -605,7 +535,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -625,7 +555,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) {
       return;
     }
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     final l10n = AppLocalizations.of(context)!;
     _showFeedback(
       result.isSuccess
@@ -648,7 +578,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // A real check can flip the account's status server-side (self-healing
     // or newly-expired), so the list is always reloaded regardless of
     // whether the check itself succeeded as a request.
-    unawaited(_refreshDashboard());
+    unawaited(ref.read(dashboardDataProvider.notifier).refresh());
     _showFeedback(
       result.isSuccess
           ? result.data!.message
@@ -671,10 +601,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         );
     final accountOperationAccess =
         AccountOperationAccess.fromOrganizationAccess(organizationAccess);
-    final dashboard = _dashboard.valueOrNull;
-    final dashboardState = _dashboard.isLoading
+    final dashboardAsync = ref.watch(dashboardDataProvider);
+    final dashboard = dashboardAsync.valueOrNull;
+    // AsyncLoading only means "no cached value to show yet" — refresh()
+    // keeps the previous dashboard visible (copyWithPrevious) rather than
+    // blanking the screen.
+    final dashboardState = dashboardAsync.isLoading && !dashboardAsync.hasValue
         ? AppAsyncState.loading
-        : _dashboard.hasError
+        : dashboardAsync.hasError
         ? AppAsyncState.error
         : AppAsyncState.content;
     return Scaffold(
@@ -749,7 +683,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Text(l10n.dashboardLoadFailed, textAlign: TextAlign.center),
                   const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
-                    onPressed: _refreshDashboard,
+                    onPressed: () =>
+                        ref.read(dashboardDataProvider.notifier).refresh(),
                     icon: const Icon(Icons.refresh),
                     label: Text(l10n.commonRetry),
                   ),
@@ -772,7 +707,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildDashboardContent(
     BuildContext context,
-    _DashboardData dashboard,
+    DashboardData dashboard,
     AccountOperationAccess accountOperationAccess,
     OrganizationAccessState? organizationAccess,
   ) {
@@ -818,7 +753,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         .length;
 
     return RefreshIndicator(
-      onRefresh: _refreshDashboard,
+      onRefresh: () => ref.read(dashboardDataProvider.notifier).refresh(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.xl,
@@ -980,22 +915,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ],
     ];
   }
-}
-
-class _DashboardData {
-  const _DashboardData({
-    required this.session,
-    required this.posts,
-    required this.accounts,
-    required this.summary,
-    required this.notifications,
-  });
-
-  final AuthSession session;
-  final List<PostEntity> posts;
-  final List<AccountEntity> accounts;
-  final AnalyticsSummaryEntity summary;
-  final List<NotificationEntity> notifications;
 }
 
 /// The badge previously showed [AuthSession.role] — a legacy, account-wide

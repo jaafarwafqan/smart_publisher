@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/di/app_providers.dart';
 import '../../../../core/theme/app_curves.dart';
 import '../../../../core/theme/app_duration.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -15,6 +14,7 @@ import '../../../../shared/widgets/app_async_switcher.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/status_pill.dart';
 import '../../../organizations/application/current_organization_access.dart';
+import '../../application/posts_list_provider.dart';
 import '../../domain/entities/post_entity.dart';
 
 class PostsListScreen extends ConsumerStatefulWidget {
@@ -27,19 +27,13 @@ class PostsListScreen extends ConsumerStatefulWidget {
 class _PostsListScreenState extends ConsumerState<PostsListScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  List<PostEntity> _posts = const <PostEntity>[];
-  bool _loading = true;
-  bool _loadingMore = false;
-  int _currentPage = 1;
-  bool _hasMorePages = false;
   String _statusFilter = 'all';
-  String? _error;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadPosts();
-  }
+  // Load-more-in-flight is transient, screen-local UI state (a spinner on
+  // one button) — it deliberately stays local rather than living in
+  // PostsListNotifier, which only tracks the data itself, not this
+  // widget's own in-progress-tap feedback.
+  bool _loadingMore = false;
 
   @override
   void dispose() {
@@ -47,63 +41,9 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
     super.dispose();
   }
 
-  Future<void> _loadPosts() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    final result = await ref.read(postRepositoryProvider).getPostsPage(page: 1);
-    if (!mounted) {
-      return;
-    }
-
-    final l10n = AppLocalizations.of(context)!;
-    setState(() {
-      _loading = false;
-      if (result.isSuccess) {
-        final page = result.data;
-        _posts = page?.items ?? const <PostEntity>[];
-        _currentPage = page?.page ?? 1;
-        _hasMorePages = page != null && _currentPage < page.totalPages;
-      } else {
-        _error = result.message ?? l10n.postsListFailedToLoad;
-      }
-    });
-  }
-
-  Future<void> _loadMorePosts() async {
-    setState(() {
-      _loadingMore = true;
-    });
-
-    final result = await ref
-        .read(postRepositoryProvider)
-        .getPostsPage(page: _currentPage + 1);
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _loadingMore = false;
-      if (result.isSuccess) {
-        final page = result.data;
-        if (page != null) {
-          _posts = <PostEntity>[..._posts, ...page.items];
-          _currentPage = page.page;
-          _hasMorePages = _currentPage < page.totalPages;
-        }
-      }
-      // A failed "load more" leaves the already-loaded posts on screen —
-      // only the initial load surfaces a page-replacing error state, since
-      // a load-more failure isn't "we have nothing to show," just "we
-      // couldn't get the next batch." The button stays available to retry.
-    });
-  }
-
-  List<PostEntity> get _filteredPosts {
+  List<PostEntity> _filterPosts(List<PostEntity> posts) {
     final query = _searchController.text.trim().toLowerCase();
-    return _posts
+    return posts
         .where((post) {
           final statusMatches =
               _statusFilter == 'all' || post.status == _statusFilter;
@@ -142,6 +82,15 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
 
   final Set<String> _deletingIds = <String>{};
 
+  Future<void> _loadMorePosts() async {
+    setState(() => _loadingMore = true);
+    await ref.read(postsListProvider.notifier).loadMore();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _loadingMore = false);
+  }
+
   Future<void> _deletePostWithConfirmation(PostEntity post) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
@@ -168,24 +117,19 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
 
     setState(() => _deletingIds.add(post.id));
 
-    final result = await ref.read(postRepositoryProvider).deletePost(post.id);
+    final success = await ref
+        .read(postsListProvider.notifier)
+        .deletePost(post.id);
     if (!mounted) {
       return;
     }
 
-    setState(() {
-      _deletingIds.remove(post.id);
-      if (result.isSuccess) {
-        _posts = _posts.where((item) => item.id != post.id).toList();
-      }
-    });
+    setState(() => _deletingIds.remove(post.id));
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          result.isSuccess
-              ? l10n.postsListDeleteSuccess
-              : result.message ?? l10n.postsListDeleteFailed,
+          success ? l10n.postsListDeleteSuccess : l10n.postsListDeleteFailed,
         ),
       ),
     );
@@ -193,9 +137,21 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final posts = _filteredPosts;
+    final postsAsync = ref.watch(postsListProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+
+    final posts = _filterPosts(postsAsync.valueOrNull?.items ?? const []);
+    final hasMorePages = postsAsync.valueOrNull?.hasMorePages ?? false;
+    // AsyncLoading only means "no cached value to show yet" here — a
+    // refresh() keeps the previous list visible (copyWithPrevious) rather
+    // than blanking the screen, matching the prior _loading flag's role.
+    final isInitialLoading = postsAsync.isLoading && !postsAsync.hasValue;
+    final errorMessage = postsAsync.hasError
+        ? (postsAsync.error is StateError
+              ? (postsAsync.error! as StateError).message
+              : postsAsync.error.toString())
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -210,7 +166,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
       ),
       body: AdaptiveContentWidth(
         child: RefreshIndicator(
-          onRefresh: _loadPosts,
+          onRefresh: () => ref.read(postsListProvider.notifier).refresh(),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -267,22 +223,22 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               AppAsyncSwitcher(
-                state: _loading
+                state: isInitialLoading
                     ? AppAsyncState.loading
-                    : _error != null
+                    : errorMessage != null
                     ? AppAsyncState.error
                     : posts.isEmpty
                     ? AppAsyncState.empty
                     : AppAsyncState.content,
                 loading: const Center(child: CircularProgressIndicator()),
                 error: Text(
-                  _error ?? '',
+                  errorMessage ?? '',
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
                 empty: AppEmptyState(message: l10n.postsListEmpty),
                 content: _buildPostsContent(posts, l10n),
               ),
-              if (!_loading && _error == null && _hasMorePages)
+              if (!isInitialLoading && errorMessage == null && hasMorePages)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.sm),
                   child: Center(

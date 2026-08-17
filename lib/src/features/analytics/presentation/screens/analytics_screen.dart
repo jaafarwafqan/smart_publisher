@@ -4,132 +4,58 @@ import 'package:intl/intl.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/di/app_providers.dart';
 import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/animated_count_text.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../dashboard/presentation/utils/platform_label.dart';
-import '../../domain/entities/analytics_dashboard_entity.dart';
-import '../../domain/entities/analytics_metric_entity.dart';
-import '../../../posts/domain/entities/post_entity.dart';
+import '../../application/analytics_dashboard_provider.dart';
 
-class AnalyticsScreen extends ConsumerStatefulWidget {
+class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dataAsync = ref.watch(analyticsDashboardProvider);
+    final data = dataAsync.valueOrNull;
+    final rows = data?.rows ?? const <PostAnalyticsViewModel>[];
+    final dashboard = data?.dashboard;
 
-class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
-  bool _loading = true;
-  List<_PostAnalyticsViewModel> _rows = const <_PostAnalyticsViewModel>[];
-  AnalyticsDashboardEntity? _dashboard;
-  String? _error;
+    // AsyncLoading only means "no cached value to show yet" — a refresh()
+    // keeps the previous rows/dashboard visible (copyWithPrevious) rather
+    // than blanking the screen.
+    final loading = dataAsync.isLoading && !dataAsync.hasValue;
+    final errorMessage = dataAsync.hasError
+        ? (dataAsync.error is StateError
+              ? (dataAsync.error! as StateError).message
+              : dataAsync.error.toString())
+        : data?.dashboardErrorMessage;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadAnalytics();
-  }
-
-  Future<void> _loadAnalytics() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    final postsResult = await ref.read(postRepositoryProvider).getPosts();
-
-    if (postsResult.isFailure) {
-      if (!mounted) {
-        return;
-      }
-      final l10n = AppLocalizations.of(context)!;
-      setState(() {
-        _loading = false;
-        _error = postsResult.message ?? l10n.analyticsFailedToLoad;
-      });
-      return;
-    }
-
-    final posts = postsResult.data ?? const <PostEntity>[];
-    final repository = ref.read(analyticsRepositoryProvider);
-    final rows = <_PostAnalyticsViewModel>[];
-
-    if (posts.isNotEmpty) {
-      final metricsResult = await repository.getPostsMetrics(
-        posts.map((post) => post.id).toList(growable: false),
-      );
-
-      if (metricsResult.isFailure) {
-        if (!mounted) {
-          return;
-        }
-        final l10n = AppLocalizations.of(context)!;
-        setState(() {
-          _loading = false;
-          _error = metricsResult.message ?? l10n.analyticsFailedToLoad;
-        });
-        return;
-      }
-
-      final metricsByPostId = <String, AnalyticsMetricEntity>{
-        for (final metric
-            in metricsResult.data ?? const <AnalyticsMetricEntity>[])
-          metric.postId: metric,
-      };
-
-      for (final post in posts) {
-        final metric = metricsByPostId[post.id];
-        if (metric != null) {
-          rows.add(_PostAnalyticsViewModel(post: post, metric: metric));
-        }
-      }
-    }
-
-    rows.sort((a, b) => b.metric.engagement.compareTo(a.metric.engagement));
-
-    final dashboardResult = await repository.getDashboard();
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _rows = rows;
-      _dashboard = dashboardResult.data;
-      _error = dashboardResult.isFailure ? dashboardResult.message : null;
-      _loading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final totalReach =
-        _dashboard?.totalReach ??
-        _rows.fold<int>(0, (sum, row) => sum + row.metric.reach);
+        dashboard?.totalReach ??
+        rows.fold<int>(0, (sum, row) => sum + row.metric.reach);
     final totalImpressions =
-        _dashboard?.totalImpressions ??
-        _rows.fold<int>(0, (sum, row) => sum + row.metric.impressions);
+        dashboard?.totalImpressions ??
+        rows.fold<int>(0, (sum, row) => sum + row.metric.impressions);
     final totalEngagement =
-        _dashboard?.totalEngagement ??
-        _rows.fold<int>(0, (sum, row) => sum + row.metric.engagement);
+        dashboard?.totalEngagement ??
+        rows.fold<int>(0, (sum, row) => sum + row.metric.engagement);
     final averageRate =
-        _dashboard?.averageEngagementRate ??
-        (_rows.isEmpty
+        dashboard?.averageEngagementRate ??
+        (rows.isEmpty
             ? 0.0
-            : _rows.fold<double>(
+            : rows.fold<double>(
                     0,
                     (sum, row) => sum + row.metric.engagementRate,
                   ) /
-                  _rows.length);
+                  rows.length);
 
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.analyticsAppBarTitle)),
       body: AdaptiveContentWidth(
         child: RefreshIndicator(
-          onRefresh: _loadAnalytics,
+          onRefresh: () =>
+              ref.read(analyticsDashboardProvider.notifier).refresh(),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -177,10 +103,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         child: _RecommendationTile(
                           icon: Icons.schedule_outlined,
                           label: l10n.analyticsBestTimeToPost,
-                          value: _dashboard?.bestPublishHour == null
+                          value: dashboard?.bestPublishHour == null
                               ? l10n.analyticsNotEnoughData
                               : _formatHour(
-                                  _dashboard!.bestPublishHour!,
+                                  dashboard!.bestPublishHour!,
                                   l10n.localeName,
                                 ),
                         ),
@@ -190,9 +116,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         child: _RecommendationTile(
                           icon: Icons.trending_up_outlined,
                           label: l10n.analyticsBestPlatform,
-                          value: _dashboard?.bestPlatform == null
+                          value: dashboard?.bestPlatform == null
                               ? l10n.analyticsNotEnoughData
-                              : platformLabel(_dashboard!.bestPlatform!),
+                              : platformLabel(dashboard!.bestPlatform!),
                         ),
                       ),
                     ],
@@ -200,19 +126,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              if (_loading)
+              if (loading)
                 const Center(child: CircularProgressIndicator())
-              else if (_error != null)
+              else if (errorMessage != null)
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(_error!),
+                        Text(errorMessage),
                         const SizedBox(height: AppSpacing.md),
                         OutlinedButton.icon(
-                          onPressed: _loadAnalytics,
+                          onPressed: () => ref
+                              .read(analyticsDashboardProvider.notifier)
+                              .refresh(),
                           icon: const Icon(Icons.refresh),
                           label: Text(l10n.commonRetry),
                         ),
@@ -220,13 +148,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     ),
                   ),
                 )
-              else if (_rows.isEmpty)
+              else if (rows.isEmpty)
                 AppEmptyState(
                   message: l10n.analyticsNoPostsYet,
                   icon: Icons.insights_outlined,
                 )
               else
-                ..._rows.map(
+                ...rows.map(
                   (row) => Card(
                     margin: const EdgeInsets.only(bottom: AppSpacing.md),
                     child: Padding(
@@ -324,13 +252,6 @@ class _RecommendationTile extends StatelessWidget {
       ],
     );
   }
-}
-
-class _PostAnalyticsViewModel {
-  const _PostAnalyticsViewModel({required this.post, required this.metric});
-
-  final PostEntity post;
-  final AnalyticsMetricEntity metric;
 }
 
 class _MetricCard extends StatelessWidget {
