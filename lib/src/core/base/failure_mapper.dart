@@ -46,6 +46,15 @@ class DefaultFailureMapper implements FailureMapper {
           code: 'AUTHZ_403',
         );
       }
+      if (statusCode == 422) {
+        return ValidationFailure(
+          message: message,
+          exception: error,
+          stackTrace: stackTrace,
+          code: 'VALIDATION_422',
+          fieldErrors: _extractFieldErrors(error.response?.data),
+        );
+      }
       if ((statusCode ?? 0) >= 500) {
         return ServerFailure(
           message: message,
@@ -80,5 +89,37 @@ class DefaultFailureMapper implements FailureMapper {
       stackTrace: stackTrace,
       code: 'UNKNOWN',
     );
+  }
+
+  /// Parses Laravel's 422 `errors` object (`{"field": ["msg", ...]}`) into
+  /// a typed map, tolerating the shapes actually seen in practice — a
+  /// single string per field, not just a list — same leniency
+  /// [extractBackendErrorMessage] already applies. Returns null (not an
+  /// empty map) when there's nothing usable, so callers can tell "no
+  /// field-level detail was sent" apart from "sent, but empty".
+  Map<String, List<String>>? _extractFieldErrors(dynamic responseData) {
+    if (responseData is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final errors = responseData['errors'];
+    if (errors is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final result = <String, List<String>>{};
+    for (final entry in errors.entries) {
+      final value = entry.value;
+      if (value is List) {
+        final messages = value.whereType<String>().toList(growable: false);
+        if (messages.isNotEmpty) {
+          result[entry.key] = messages;
+        }
+      } else if (value is String && value.isNotEmpty) {
+        result[entry.key] = <String>[value];
+      }
+    }
+
+    return result.isEmpty ? null : result;
   }
 }

@@ -39,8 +39,79 @@ void main() {
           fallbackMessage: 'Failed to add member',
         );
 
-        expect(failure, isA<NetworkFailure>());
+        expect(failure, isA<ValidationFailure>());
         expect(failure.message, 'The email has already been taken.');
+      },
+    );
+
+    test(
+      'a 422 exposes the full per-field errors map, not just the first message',
+      () {
+        final error = _dioException(
+          statusCode: 422,
+          data: <String, dynamic>{
+            'message': 'Validation failed',
+            'errors': <String, dynamic>{
+              'title': <String>['The title field is required.'],
+              'scheduled_at': <String>[
+                'The scheduled at field must be a date after now.',
+              ],
+            },
+          },
+        );
+
+        final failure = mapper.map(
+          error,
+          StackTrace.empty,
+          fallbackMessage: 'Failed to schedule post',
+        );
+
+        expect(failure, isA<ValidationFailure>());
+        final validationFailure = failure as ValidationFailure;
+        expect(validationFailure.fieldErrors, <String, List<String>>{
+          'title': ['The title field is required.'],
+          'scheduled_at': [
+            'The scheduled at field must be a date after now.',
+          ],
+        });
+      },
+    );
+
+    test(
+      'a 422 with no errors object still classifies as ValidationFailure with a null fieldErrors map',
+      () {
+        final error = _dioException(
+          statusCode: 422,
+          data: <String, dynamic>{'message': 'Validation failed'},
+        );
+
+        final failure = mapper.map(
+          error,
+          StackTrace.empty,
+          fallbackMessage: 'Failed to submit',
+        );
+
+        expect(failure, isA<ValidationFailure>());
+        expect((failure as ValidationFailure).fieldErrors, isNull);
+      },
+    );
+
+    test(
+      'a real connection failure (no response at all) is still classified as NetworkFailure, not ValidationFailure',
+      () {
+        final requestOptions = RequestOptions(path: '/test');
+        final error = DioException(
+          requestOptions: requestOptions,
+          type: DioExceptionType.connectionError,
+        );
+
+        final failure = mapper.map(
+          error,
+          StackTrace.empty,
+          fallbackMessage: 'Failed to load posts',
+        );
+
+        expect(failure, isA<NetworkFailure>());
       },
     );
 
