@@ -71,29 +71,61 @@ class AnalyticsScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: AppSpacing.lg),
-              Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.md,
-                children: <Widget>[
-                  _MetricCard(
-                    label: l10n.analyticsMetricReach,
-                    value: totalReach,
-                  ),
-                  _MetricCard(
-                    label: l10n.analyticsMetricImpressions,
-                    value: totalImpressions,
-                  ),
-                  _MetricCard(
-                    label: l10n.analyticsMetricEngagement,
-                    value: totalEngagement,
-                  ),
-                  _MetricCard(
-                    label: l10n.analyticsMetricAvgEngagementRate,
-                    value: averageRate * 100,
-                    suffix: '%',
-                    fractionDigits: 2,
-                  ),
-                ],
+              // Code-quality review (2026-08-17), item C/5.4 (user decision
+              // 2026-08-18, Option A): the 4 metric cards used to be
+              // visually identical, with no hierarchy signalling which
+              // number actually matters most when scanning the screen.
+              // Avg Engagement Rate is the only composite metric of the
+              // four (a rate summarizing real performance, vs. the other
+              // three raw counts that need more context to interpret
+              // alone) — featured first, double-width, and in
+              // primaryContainer instead of the neutral surface color the
+              // other three keep.
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Mirrors AdaptiveCardGrid's own narrow-layout breakpoint
+                  // (shared/widgets/adaptive_card_grid.dart) rather than a
+                  // new arbitrary threshold: below it there isn't room for
+                  // a double-width card beside the other three without an
+                  // awkward mid-row wrap, so the featured card takes the
+                  // full available width and the rest wrap beneath it —
+                  // Wrap already reflows correctly in both RTL and LTR
+                  // (it lays out along the ambient TextDirection), so no
+                  // separate RTL-specific handling is needed here.
+                  final isNarrow = constraints.maxWidth < 640;
+                  final featuredWidth = isNarrow
+                      ? constraints.maxWidth
+                      : (_MetricCard.width * 2) + AppSpacing.md;
+
+                  return Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.md,
+                    children: <Widget>[
+                      SizedBox(
+                        width: featuredWidth,
+                        child: _MetricCard(
+                          label: l10n.analyticsMetricAvgEngagementRate,
+                          value: averageRate * 100,
+                          suffix: '%',
+                          fractionDigits: 2,
+                          featured: true,
+                        ),
+                      ),
+                      _MetricCard(
+                        label: l10n.analyticsMetricReach,
+                        value: totalReach,
+                      ),
+                      _MetricCard(
+                        label: l10n.analyticsMetricImpressions,
+                        value: totalImpressions,
+                      ),
+                      _MetricCard(
+                        label: l10n.analyticsMetricEngagement,
+                        value: totalEngagement,
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.lg),
               Card(
@@ -291,32 +323,50 @@ class _MetricCard extends StatelessWidget {
     required this.value,
     this.suffix = '',
     this.fractionDigits = 0,
+    this.featured = false,
   });
+
+  /// A single (non-featured) card's own width — the featured card's
+  /// double-width span (see the LayoutBuilder above) is computed from this
+  /// plus one AppSpacing.md gap, not a second, separately-chosen number.
+  static const double width = 165;
 
   final String label;
   final num value;
   final String suffix;
   final int fractionDigits;
+  final bool featured;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return SizedBox(
-      width: 165,
+      width: featured ? null : width,
       child: Card(
+        color: featured ? colorScheme.primaryContainer : null,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(label, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                label,
+                style: textTheme.bodySmall?.copyWith(
+                  color: featured ? colorScheme.onPrimaryContainer : null,
+                ),
+              ),
               const SizedBox(height: AppSpacing.sm),
               AnimatedCountText(
                 value: value,
                 suffix: suffix,
                 fractionDigits: fractionDigits,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: (featured ? textTheme.headlineMedium : textTheme.titleLarge)
+                    ?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: featured ? colorScheme.onPrimaryContainer : null,
+                    ),
               ),
             ],
           ),
