@@ -154,16 +154,13 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.postsListAppBarTitle),
-        actions: <Widget>[
-          IconButton(
-            tooltip: l10n.postsListCreateTooltip,
-            onPressed: () => context.push(RouteNames.postsCreatePath),
-            icon: const Icon(Icons.add_circle_outline),
-          ),
-        ],
-      ),
+      // Code-quality review (2026-08-17), item C/5.3 (user decision
+      // 2026-08-18): "new post" was available both here (an icon-only
+      // AppBar action) and as the FloatingActionButton below — the same
+      // action exposed twice with no functional difference. Kept the FAB
+      // (clearer, more universally discoverable across platforms) and
+      // removed this AppBar duplicate per explicit sign-off.
+      appBar: AppBar(title: Text(l10n.postsListAppBarTitle)),
       body: AdaptiveContentWidth(
         child: RefreshIndicator(
           onRefresh: () => ref.read(postsListProvider.notifier).refresh(),
