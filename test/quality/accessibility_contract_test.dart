@@ -3,37 +3,51 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // Was calling _dartSources() (a full recursive Directory.listSync over
+  // lib/) separately in each test() below, and re-reading every matched
+  // file's content once per test — walking the whole source tree and
+  // re-reading every file from disk twice per run for two independent regex
+  // checks that could share one pass. Read once here instead; both tests
+  // below reuse the same in-memory map.
+  late final Map<String, String> sources;
+
+  setUpAll(() {
+    sources = <String, String>{
+      for (final file in _dartSources()) file.path: file.readAsStringSync(),
+    };
+  });
+
   test('icon-only controls expose a tooltip in every source file', () {
-    for (final file in _dartSources()) {
-      final source = file.readAsStringSync();
-      final iconButtons = RegExp(r'IconButton\s*\(').allMatches(source).length;
-      final tooltips = RegExp(r'\btooltip\s*:').allMatches(source).length;
+    for (final entry in sources.entries) {
+      final iconButtons = RegExp(
+        r'IconButton\s*\(',
+      ).allMatches(entry.value).length;
+      final tooltips = RegExp(r'\btooltip\s*:').allMatches(entry.value).length;
 
       expect(
         tooltips,
         greaterThanOrEqualTo(iconButtons),
         reason:
-            '${file.path} has $iconButtons IconButton controls but only '
+            '${entry.key} has $iconButtons IconButton controls but only '
             '$tooltips accessible tooltips.',
       );
     }
   });
 
   test('custom tap targets declare a semantic boundary', () {
-    for (final file in _dartSources()) {
-      final source = file.readAsStringSync();
+    for (final entry in sources.entries) {
       final hasCustomTapTarget = RegExp(
         r'\b(?:InkWell|GestureDetector)\s*\(',
-      ).hasMatch(source);
+      ).hasMatch(entry.value);
       if (!hasCustomTapTarget) {
         continue;
       }
 
       expect(
-        source,
+        entry.value,
         contains('Semantics('),
         reason:
-            '${file.path} contains a custom tap target without a '
+            '${entry.key} contains a custom tap target without a '
             'Semantics boundary.',
       );
     }
