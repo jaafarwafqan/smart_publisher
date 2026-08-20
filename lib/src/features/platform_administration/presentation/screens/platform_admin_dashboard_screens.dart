@@ -10,6 +10,11 @@ class PlatformAdministrationScreen extends ConsumerWidget {
     ref.invalidate(currentUserRoleProvider);
     ref.invalidate(currentPlatformAdminProvider);
     ref.invalidate(currentOrganizationAccessProvider);
+    // See login_screen.dart: RouteGuardSnapshotCache is not a Riverpod
+    // provider and survives the invalidations above — without this, the
+    // next account to sign in on this tab can inherit this super_admin
+    // session's cached platform-admin decision.
+    ref.read(routeGuardSnapshotCacheProvider).invalidate();
     if (!context.mounted) {
       return;
     }

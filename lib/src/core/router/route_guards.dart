@@ -53,9 +53,6 @@ final class RouteGuards {
     }
 
     final snapshotCache = ref.read(routeGuardSnapshotCacheProvider);
-    final isPlatformAdmin = await snapshotCache.platformAdmin(
-      () => ref.refresh(currentPlatformAdminProvider.future),
-    );
 
     // /platform/* and oauthProviderSettingsPath (Sprint D: platform-level
     // OAuth client credentials, super_admin-gated on the backend — see
@@ -63,8 +60,16 @@ final class RouteGuards {
     // directions, but a super_admin is no longer forced to live inside
     // them: everything else below (dashboard, posts, ...) is reachable too,
     // same as any other authenticated account.
+    //
+    // isPlatformAdmin is only fetched inside this branch — it used to be
+    // fetched unconditionally above, before this path check, costing every
+    // single guarded navigation (dashboard, posts, media, ...) a wasted
+    // /me-equivalent round trip whose result nothing but this branch reads.
     if (_isPlatformAdministrationRoute(path) ||
         path.startsWith(RouteNames.oauthProviderSettingsPath)) {
+      final isPlatformAdmin = await snapshotCache.platformAdmin(
+        () => ref.refresh(currentPlatformAdminProvider.future),
+      );
       if (!isPlatformAdmin) {
         // Two distinct non-admin targets, preserved from before this
         // change: /platform/* bounces to the regular dashboard,

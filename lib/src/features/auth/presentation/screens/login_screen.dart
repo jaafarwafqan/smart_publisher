@@ -6,6 +6,7 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/router/guard_state_provider.dart';
+import '../../../../core/router/route_guard_snapshot_cache.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/theme_tokens.dart';
 import '../../../organizations/application/current_organization_access.dart';
@@ -64,6 +65,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ref.invalidate(currentUserRoleProvider);
           ref.invalidate(currentOrganizationAccessProvider);
           ref.invalidate(firstLaunchProvider);
+          // On Flutter Web the ProviderContainer (and therefore
+          // RouteGuardSnapshotCache) survives a full logout->login cycle in
+          // the same tab. Without this, RouteGuards.guardPath can keep
+          // serving the PREVIOUS account's cached platform-admin/org-access
+          // decision to this new account for up to the cache's 20s TTL.
+          ref.read(routeGuardSnapshotCacheProvider).invalidate();
           context.go(RouteNames.dashboardPath);
       }
     } catch (error) {

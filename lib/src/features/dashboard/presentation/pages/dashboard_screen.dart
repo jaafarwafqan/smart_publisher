@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/feature_flags/feature_flags.dart';
 import '../../../../core/router/guard_state_provider.dart';
+import '../../../../core/router/route_guard_snapshot_cache.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/storage/storage_provider.dart';
 import '../../../../core/theme/app_curves.dart';
@@ -638,6 +639,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ref.invalidate(authStateProvider);
               ref.invalidate(currentUserRoleProvider);
               ref.invalidate(currentOrganizationAccessProvider);
+              // See login_screen.dart: RouteGuardSnapshotCache is not a
+              // Riverpod provider and survives the invalidations above —
+              // without this, the next account to sign in on this tab can
+              // inherit this session's cached route-guard decision.
+              ref.read(routeGuardSnapshotCacheProvider).invalidate();
               if (!context.mounted) {
                 return;
               }

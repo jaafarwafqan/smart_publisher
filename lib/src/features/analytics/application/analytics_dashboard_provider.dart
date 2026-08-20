@@ -80,9 +80,7 @@ class AnalyticsDashboardNotifier extends AsyncNotifier<AnalyticsScreenData> {
       }
     }
 
-    rows.sort(
-      (a, b) => b.metric.engagement.compareTo(a.metric.engagement),
-    );
+    rows.sort((a, b) => b.metric.engagement.compareTo(a.metric.engagement));
 
     final dashboardResult = await dashboardFuture;
 

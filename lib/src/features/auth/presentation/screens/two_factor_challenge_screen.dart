@@ -5,6 +5,7 @@ import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/router/guard_state_provider.dart';
+import '../../../../core/router/route_guard_snapshot_cache.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/theme_tokens.dart';
 import '../../../organizations/application/current_organization_access.dart';
@@ -63,6 +64,9 @@ class _TwoFactorChallengeScreenState
       ref.invalidate(currentUserRoleProvider);
       ref.invalidate(currentOrganizationAccessProvider);
       ref.invalidate(firstLaunchProvider);
+      // See login_screen.dart: RouteGuardSnapshotCache is not a Riverpod
+      // provider and survives the provider invalidations above.
+      ref.read(routeGuardSnapshotCacheProvider).invalidate();
       if (!mounted) {
         return;
       }

@@ -15,7 +15,21 @@ import 'package:smart_publisher/src/core/performance/startup_profiler.dart';
 import 'package:smart_publisher/src/core/network/laravel_api.dart';
 
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
-  final CrashReporter crashReporter = await _createCrashReporter();
+  // Was `final crashReporter = await _createCrashReporter();` — a real
+  // Sentry.init() does native-channel setup and SDK bootstrapping, and
+  // awaiting it here serialized that work in front of runApp() on every
+  // single release-build cold start, not just the rare crash-reporting
+  // path. crashReporter starts as the free, synchronous ConsoleCrashReporter
+  // and is swapped in-place once Sentry.init resolves, in the background —
+  // every closure below captures the variable itself (Dart closures capture
+  // by reference), so FlutterError.onError etc. automatically pick up
+  // SentryCrashReporter the moment it's ready, with no restructuring needed.
+  // Same "telemetry must never gate the app" reasoning _createCrashReporter
+  // already applied to a failed init now also applies to a slow one.
+  CrashReporter crashReporter = const ConsoleCrashReporter();
+  unawaited(
+    _createCrashReporter().then((reporter) => crashReporter = reporter),
+  );
   const imageCacheManager = ImageCacheManager();
   final backgroundTaskManager = BackgroundTaskManager();
 
@@ -168,7 +182,18 @@ Future<CrashReporter> _createCrashReporter() async {
   } catch (error, stackTrace) {
     // Error telemetry is never allowed to make the app unavailable. The
     // fallback retains the full local diagnostic signal if the SDK/DSN is
-    // misconfigured during a release.
+    // misconfigured during a release. Paired with AppLogger.structured, same
+    // as every other error site in this file (FlutterError.onError,
+    // PlatformDispatcher.instance.onError, the zone error handler below) —
+    // this one previously only reached ConsoleCrashReporter's print(),
+    // skipping the structured/JSON log every other failure mode gets.
+    AppLogger.structured(
+      'ERROR',
+      'Sentry initialization failed',
+      error: error,
+      stackTrace: stackTrace,
+      context: const <String, Object?>{'stage': 'sentry_initialization'},
+    );
     await const ConsoleCrashReporter().record(
       error,
       stackTrace,

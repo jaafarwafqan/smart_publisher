@@ -97,15 +97,24 @@ class AppNavigationShell extends StatelessWidget {
           );
         }
 
-        // Compact navigation prioritizes the five daily workflow surfaces;
+        // Compact navigation prioritizes the four daily workflow surfaces;
         // the desktop rail exposes the complete workspace without forcing a
-        // cramped, overflowing bottom bar on phones/tablets.
-        final compactDestinations = destinations
-            .take(5)
+        // cramped, overflowing bottom bar on phones/tablets. The 5th slot is
+        // normally Analytics, but — unlike a naive first-5 slice — swaps to
+        // whichever destination is actually current when the user is on one
+        // of the screens outside the primary four (Media Library,
+        // Organizations, Settings, Help Center). A fixed 5-item slice used
+        // to fall back to index 0 for all of those, silently highlighting
+        // "Dashboard" as selected while the user was really on, say,
+        // Settings.
+        final current = destinations[selectedIndex];
+        final primaryDestinations = destinations
+            .take(4)
             .toList(growable: false);
-        final compactIndex = selectedIndex >= compactDestinations.length
-            ? 0
-            : selectedIndex;
+        final compactDestinations = primaryDestinations.contains(current)
+            ? <_Destination>[...primaryDestinations, destinations[4]]
+            : <_Destination>[...primaryDestinations, current];
+        final compactIndex = compactDestinations.indexOf(current);
         return Scaffold(
           body: child,
           bottomNavigationBar: NavigationBar(

@@ -334,10 +334,15 @@ class AuthSessionController {
   }
 
   Future<AuthSession?> currentSession() async {
-    final tokens = await tokenLifecycleManager.readTokens();
-    final sessionMarker = await storageService.readString(
-      GuardStorageKeys.authToken,
-    );
+    // Called on every visit to Dashboard/Create Post/Organization
+    // Switcher/Organization Members (each screen's initState). The reads
+    // below don't depend on each other — running each independent group
+    // through Future.wait instead of one-at-a-time roughly halves this
+    // call's storage-round-trip latency, on every one of those screen loads.
+    final (tokens, sessionMarker) = await (
+      tokenLifecycleManager.readTokens(),
+      storageService.readString(GuardStorageKeys.authToken),
+    ).wait;
     final hasBrowserSession =
         WebSessionConfig.usesHttpOnlyCookies &&
         sessionMarker == 'browser-session';
@@ -346,13 +351,13 @@ class AuthSessionController {
       return null;
     }
 
-    final userId = await storageService.readString(_userIdKey);
-    final userName = await storageService.readString(_userNameKey);
-    final userEmail = await storageService.readString(_userEmailKey);
-    final roleRaw = await storageService.readString(GuardStorageKeys.userRole);
-    final isPlatformAdmin = await storageService.readString(
-      GuardStorageKeys.platformAdmin,
-    );
+    final (userId, userName, userEmail, roleRaw, isPlatformAdmin) = await (
+      storageService.readString(_userIdKey),
+      storageService.readString(_userNameKey),
+      storageService.readString(_userEmailKey),
+      storageService.readString(GuardStorageKeys.userRole),
+      storageService.readString(GuardStorageKeys.platformAdmin),
+    ).wait;
 
     if (userId == null || userName == null || userEmail == null) {
       return null;
