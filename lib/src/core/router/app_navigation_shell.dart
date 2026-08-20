@@ -19,23 +19,8 @@ class AppNavigationShell extends StatelessWidget {
   final String location;
   final Widget child;
 
-  static const _unframedPaths = <String>{
-    RouteNames.splashPath,
-    RouteNames.welcomePath,
-    RouteNames.loginPath,
-    RouteNames.registerPath,
-    RouteNames.forgotPasswordPath,
-    RouteNames.resetPasswordPath,
-    RouteNames.twoFactorChallengePath,
-    RouteNames.aboutPath,
-  };
-
   @override
   Widget build(BuildContext context) {
-    if (_unframedPaths.contains(location)) {
-      return child;
-    }
-
     final l10n = AppLocalizations.of(context)!;
     final destinations = <_Destination>[
       _Destination(

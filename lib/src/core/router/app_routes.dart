@@ -417,3 +417,62 @@ final List<GoRoute> appRoutes = [
     },
   ),
 ];
+
+/// Routes that must remain outside the persistent workspace shell. This keeps
+/// public screens distraction-free and ensures the sensitive two-factor setup
+/// flow is disposed as soon as the user leaves it instead of being retained in
+/// an inactive navigation branch.
+final rootAppRoutes = _routesFor(<String>{
+  RouteNames.splashPath,
+  RouteNames.welcomePath,
+  RouteNames.loginPath,
+  RouteNames.registerPath,
+  RouteNames.forgotPasswordPath,
+  RouteNames.resetPasswordPath,
+  RouteNames.twoFactorChallengePath,
+  RouteNames.twoFactorSetupPath,
+  RouteNames.aboutPath,
+});
+
+/// Independent navigation stacks for the persistent workspace shell. A branch
+/// owns its own Navigator, so a user can switch between work areas without
+/// destroying scroll position, form state, or the branch back stack.
+final workspaceNavigationBranches = <List<GoRoute>>[
+  _routesFor(<String>{
+    RouteNames.dashboardPath,
+    RouteNames.publisherPath,
+    RouteNames.adminPath,
+    RouteNames.performanceDevPath,
+    RouteNames.platformAdministrationPath,
+    RouteNames.platformOrganizationsPath,
+    RouteNames.platformOrganizationDetailPath,
+    RouteNames.platformUsersPath,
+    RouteNames.platformAuditLogPath,
+  }),
+  _routesFor(<String>{RouteNames.postsListPath, RouteNames.postsApprovalsPath}),
+  _routesFor(<String>{RouteNames.postsCreatePath}),
+  _routesFor(<String>{RouteNames.calendarPath}),
+  _routesFor(<String>{RouteNames.analyticsPath}),
+  _routesFor(<String>{RouteNames.mediaLibraryPath}),
+  _routesFor(<String>{
+    RouteNames.organizationsPath,
+    RouteNames.organizationMembersPath,
+    RouteNames.organizationAuditLogPath,
+  }),
+  _routesFor(<String>{
+    RouteNames.settingsPath,
+    RouteNames.notificationsPath,
+    RouteNames.administrationPath,
+    RouteNames.oauthProviderSettingsPath,
+    RouteNames.accountDataExportPath,
+    RouteNames.accountDataDeletionPath,
+    RouteNames.productionReleasePath,
+  }),
+  _routesFor(<String>{RouteNames.helpCenterPath, RouteNames.userGuidePath}),
+];
+
+List<GoRoute> _routesFor(Set<String> paths) {
+  return paths
+      .map((path) => appRoutes.singleWhere((route) => route.path == path))
+      .toList(growable: false);
+}

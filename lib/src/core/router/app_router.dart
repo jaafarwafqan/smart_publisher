@@ -33,10 +33,15 @@ GoRouter router(RouterRef ref) {
 
     // جميع مسارات التطبيق
     routes: <RouteBase>[
-      ShellRoute(
-        builder: (context, state, child) =>
-            AppNavigationShell(location: state.uri.path, child: child),
-        routes: appRoutes,
+      ...rootAppRoutes,
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => AppNavigationShell(
+          location: state.uri.path,
+          child: navigationShell,
+        ),
+        branches: workspaceNavigationBranches
+            .map((routes) => StatefulShellBranch(routes: routes))
+            .toList(growable: false),
       ),
     ],
 

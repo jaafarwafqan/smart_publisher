@@ -433,31 +433,27 @@ class _MediaLibraryScreenState extends ConsumerState<MediaLibraryScreen> {
                     horizontal: AppSpacing.lg,
                   ),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final item = _items[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: AppSpacing.md,
-                          ),
-                          child: _MediaCard(
-                            item: item,
-                            isSelected: _selectedMediaId == item.id,
-                            canCompress: _canCompressMedia,
-                            canDelete: _canDeleteMedia,
-                            l10n: l10n,
-                            onTap: () => setState(() {
-                              _selectedMediaId =
-                                  _selectedMediaId == item.id ? null : item.id;
-                            }),
-                            onCompress: () => _compressAsset(item),
-                            onReuse: () => _reuseInPost(item),
-                            onDelete: () => _deleteAsset(item),
-                          ),
-                        );
-                      },
-                      childCount: _items.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final item = _items[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: _MediaCard(
+                          item: item,
+                          isSelected: _selectedMediaId == item.id,
+                          canCompress: _canCompressMedia,
+                          canDelete: _canDeleteMedia,
+                          l10n: l10n,
+                          onTap: () => setState(() {
+                            _selectedMediaId = _selectedMediaId == item.id
+                                ? null
+                                : item.id;
+                          }),
+                          onCompress: () => _compressAsset(item),
+                          onReuse: () => _reuseInPost(item),
+                          onDelete: () => _deleteAsset(item),
+                        ),
+                      );
+                    }, childCount: _items.length),
                   ),
                 ),
               if (!_loading && _error == null && _hasMorePages)
@@ -547,111 +543,115 @@ class _MediaCard extends StatelessWidget {
           color: isSelected
               ? Theme.of(context).colorScheme.primaryContainer
               : null,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      if (isImage && item.thumbnailUrl != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                          child: Image.network(
-                            item.thumbnailUrl!,
-                            width: 64,
-                            height: 64,
-                            fit: BoxFit.cover,
-                            excludeFromSemantics: true,
-                            errorBuilder: (context, error, stackTrace) =>
-                                CircleAvatar(
-                                  child: Icon(
-                                    _MediaLibraryScreenState._iconForType(
-                                      type,
+          child: Semantics(
+            button: true,
+            label: _MediaLibraryScreenState._displayName(item.url),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        if (isImage && item.thumbnailUrl != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            child: Image.network(
+                              item.thumbnailUrl!,
+                              width: 64,
+                              height: 64,
+                              fit: BoxFit.cover,
+                              excludeFromSemantics: true,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  CircleAvatar(
+                                    child: Icon(
+                                      _MediaLibraryScreenState._iconForType(
+                                        type,
+                                      ),
                                     ),
                                   ),
-                                ),
-                          ),
-                        )
-                      else
-                        CircleAvatar(
-                          child: Icon(
-                            _MediaLibraryScreenState._iconForType(type),
-                          ),
-                        ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              _MediaLibraryScreenState._displayName(item.url),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleSmall,
                             ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              '${item.collection} • ${_MediaLibraryScreenState._formatDate(item.createdAt, l10n)}',
-                              style: Theme.of(context).textTheme.bodySmall,
+                          )
+                        else
+                          CircleAvatar(
+                            child: Icon(
+                              _MediaLibraryScreenState._iconForType(type),
                             ),
-                            if (item.tags.isNotEmpty) ...<Widget>[
-                              const SizedBox(height: AppSpacing.sm),
-                              Wrap(
-                                spacing: AppSpacing.xs,
-                                runSpacing: AppSpacing.xs,
-                                children: item.tags
-                                    .map(
-                                      (tag) => Chip(
-                                        label: Text(tag),
-                                        visualDensity: VisualDensity.compact,
-                                        materialTapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                    )
-                                    .toList(growable: false),
+                          ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                _MediaLibraryScreenState._displayName(item.url),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleSmall,
                               ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                '${item.collection} • ${_MediaLibraryScreenState._formatDate(item.createdAt, l10n)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (item.tags.isNotEmpty) ...<Widget>[
+                                const SizedBox(height: AppSpacing.sm),
+                                Wrap(
+                                  spacing: AppSpacing.xs,
+                                  runSpacing: AppSpacing.xs,
+                                  children: item.tags
+                                      .map(
+                                        (tag) => Chip(
+                                          label: Text(tag),
+                                          visualDensity: VisualDensity.compact,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      )
+                                      .toList(growable: false),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    alignment: WrapAlignment.end,
-                    children: <Widget>[
-                      if (canCompress)
-                        Tooltip(
-                          message: isImage
-                              ? l10n.mediaCompressTooltipImage
-                              : l10n.mediaCompressTooltipOther,
-                          child: OutlinedButton.icon(
-                            onPressed: isImage ? onCompress : null,
-                            icon: const Icon(Icons.compress, size: 18),
-                            label: Text(l10n.mediaCompressButton),
                           ),
                         ),
-                      OutlinedButton.icon(
-                        onPressed: onReuse,
-                        icon: const Icon(Icons.repeat, size: 18),
-                        label: Text(l10n.mediaReuseInPostButton),
-                      ),
-                      if (canDelete)
-                        IconButton(
-                          tooltip: l10n.mediaDeleteTooltip,
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete_outline),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      alignment: WrapAlignment.end,
+                      children: <Widget>[
+                        if (canCompress)
+                          Tooltip(
+                            message: isImage
+                                ? l10n.mediaCompressTooltipImage
+                                : l10n.mediaCompressTooltipOther,
+                            child: OutlinedButton.icon(
+                              onPressed: isImage ? onCompress : null,
+                              icon: const Icon(Icons.compress, size: 18),
+                              label: Text(l10n.mediaCompressButton),
+                            ),
+                          ),
+                        OutlinedButton.icon(
+                          onPressed: onReuse,
+                          icon: const Icon(Icons.repeat, size: 18),
+                          label: Text(l10n.mediaReuseInPostButton),
                         ),
-                    ],
-                  ),
-                ],
+                        if (canDelete)
+                          IconButton(
+                            tooltip: l10n.mediaDeleteTooltip,
+                            onPressed: onDelete,
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
