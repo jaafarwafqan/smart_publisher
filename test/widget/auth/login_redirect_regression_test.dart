@@ -11,7 +11,6 @@ import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
     as app_events;
 import 'package:smart_publisher/src/core/locale/locale_provider.dart';
 import 'package:smart_publisher/src/core/router/guard_state_provider.dart';
-import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
@@ -54,7 +53,6 @@ void main() {
       final storage = InMemoryStorageService();
       final tokenStorage = EncryptedTokenStorage(
         secretsManager: InMemorySecretsManager(),
-        encryptionService: const DefaultEncryptionService(),
       );
       final networkClient = FakeNetworkClient(
         postHandler: (path, data) async {

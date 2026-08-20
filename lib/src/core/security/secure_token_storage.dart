@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'encryption_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'secrets_manager.dart';
 import 'token_bundle.dart';
 
@@ -12,43 +13,55 @@ abstract interface class SecureTokenStorage {
   Future<void> clearTokens();
 }
 
+// Was wrapping the JSON payload in DefaultEncryptionService (XOR + base64)
+// before handing it to secretsManager, with the "encryption key" stored via
+// the very same secretsManager next to the ciphertext it was meant to
+// protect — a lock with the key taped to the door, and a well-known
+// plaintext prefix ({"access_token":") on top of that. Removed: the inner
+// layer added no real confidentiality, only the appearance of it.
+//
+// secretsManager (PlatformSecureSecretsManager) is flutter_secure_storage,
+// which is already the real protection here — Keychain on iOS, Keystore on
+// Android, hardware-backed where the device supports it. Storing JSON
+// directly in it is not "unencrypted"; it's one fewer, worthless layer.
+//
+// On web, flutter_secure_storage falls back to the browser's own storage
+// (see storage_provider.dart), which any page XSS can read. refresh_token is
+// therefore never persisted on web — only access_token is — so a successful
+// XSS caps out at stealing a short-lived access token instead of the full
+// 30-day refresh window. access_token itself must still be persisted (not
+// memory-only) on web: the Facebook OAuth consent redirect reinitializes the
+// whole Flutter app on return, and an in-memory-only token would be lost at
+// exactly that point (see storage_provider.dart for the incident this fixed).
 class EncryptedTokenStorage implements SecureTokenStorage {
   EncryptedTokenStorage({
     required this.secretsManager,
-    required this.encryptionService,
     this.storageKey = 'auth.tokens',
-    this.encryptionKeyName = 'auth.encryption.key',
   });
 
   final SecretsManager secretsManager;
-  final EncryptionService encryptionService;
   final String storageKey;
-  final String encryptionKeyName;
 
   @override
   Future<void> saveTokens(TokenBundle bundle) async {
-    final encryptionKey = await _resolveEncryptionKey();
     final payload = jsonEncode(<String, dynamic>{
       'access_token': bundle.accessToken,
-      'refresh_token': bundle.refreshToken,
+      'refresh_token': kIsWeb ? '' : bundle.refreshToken,
       'expires_at': bundle.expiresAt.toIso8601String(),
       'token_type': bundle.tokenType,
       'scopes': bundle.scopes.toList(),
     });
-    final cipher = encryptionService.encrypt(payload, encryptionKey);
-    await secretsManager.setSecret(storageKey, cipher);
+    await secretsManager.setSecret(storageKey, payload);
   }
 
   @override
   Future<TokenBundle?> readTokens() async {
-    final cipher = await secretsManager.getSecret(storageKey);
-    if (cipher == null || cipher.isEmpty) {
+    final raw = await secretsManager.getSecret(storageKey);
+    if (raw == null || raw.isEmpty) {
       return null;
     }
 
-    final encryptionKey = await _resolveEncryptionKey();
-    final payload = encryptionService.decrypt(cipher, encryptionKey);
-    final data = jsonDecode(payload) as Map<String, dynamic>;
+    final data = jsonDecode(raw) as Map<String, dynamic>;
 
     return TokenBundle(
       accessToken: (data['access_token'] ?? '') as String,
@@ -64,17 +77,5 @@ class EncryptedTokenStorage implements SecureTokenStorage {
   @override
   Future<void> clearTokens() async {
     await secretsManager.removeSecret(storageKey);
-  }
-
-  Future<String> _resolveEncryptionKey() async {
-    final existing = await secretsManager.getSecret(encryptionKeyName);
-    if (existing != null && existing.isNotEmpty) {
-      return existing;
-    }
-
-    final generated =
-        'spk-${DateTime.now().microsecondsSinceEpoch}-${DateTime.now().millisecondsSinceEpoch}';
-    await secretsManager.setSecret(encryptionKeyName, generated);
-    return generated;
   }
 }

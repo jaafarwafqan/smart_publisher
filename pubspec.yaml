@@ -14,7 +14,6 @@ dependencies:
     sdk: flutter
   intl: any
   cupertino_icons: ^1.0.8
-  google_fonts: ^8.2.0
 
   # State Management & Code Generation Core
   flutter_riverpod: ^2.5.0
@@ -25,6 +24,7 @@ dependencies:
 
   # Networking & Advanced API Clients
   dio: ^5.4.0
+  dio_web_adapter: ^2.2.0
   json_annotation: ^4.8.1
   flutter_secure_storage: ^9.2.2
   file_picker: ^11.0.2
@@ -38,6 +38,15 @@ dependencies:
   # Native social sign-in (Android/iOS only — web/desktop keep the existing
   # browser-based OAuth flow in dashboard_screen.dart unchanged).
   flutter_facebook_auth: ^7.1.5
+
+  # Crash/error reporting (SentryCrashReporter, core/observability). Uses
+  # plain Sentry.init — not SentryFlutter.init's convenience wrapper — so it
+  # does not install its own FlutterError.onError/PlatformDispatcher.onError,
+  # which would silently replace bootstrap.dart's existing handlers instead
+  # of composing with them. Those handlers already funnel every error through
+  # CrashReporter.record(); SentryCrashReporter is just another
+  # implementation of that same interface.
+  sentry_flutter: ^9.0.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +63,14 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
+    - assets/fonts/
     - docs/legal/privacy_policy.md
     - docs/legal/terms_of_service.md
     - docs/legal/support.md
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700

@@ -7,7 +7,8 @@ import 'package:smart_publisher/src/offline/sync/resumable_upload_manager.dart';
 void main() {
   group('Integration - Media Upload', () {
     test(
-      'upload uses media engine then stores outbox/session locally',
+      'upload uses media engine then stores outbox/session locally, without '
+      'fabricating a compression result the upload never performed',
       () async {
         final outbox = OutboxStore();
         final resumable = ResumableUploadManager();
@@ -26,7 +27,11 @@ void main() {
 
         final result = await repository.uploadMedia(media);
         expect(result.isSuccess, isTrue);
-        expect(result.data?.isCompressed, isTrue);
+        // Upload never compresses anything — real compression is a separate
+        // backend step (POST /media/{id}/compress). isCompressed/sizeInBytes
+        // must reflect the file actually sent, not a local estimate.
+        expect(result.data?.isCompressed, isFalse);
+        expect(result.data?.sizeInBytes, media.sizeInBytes);
 
         final queued = await outbox.dueItems();
         expect(queued.length, greaterThan(0));

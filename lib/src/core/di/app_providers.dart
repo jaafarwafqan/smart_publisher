@@ -15,15 +15,17 @@ import '../network/dio_network_client.dart';
 import '../network/laravel_api.dart';
 import '../network/network_client.dart';
 import '../network/network_interceptor.dart';
+import '../network/web_cookie_adapter.dart';
 import '../release/release_config.dart';
 import '../router/guard_storage_keys.dart';
-import '../security/encryption_service.dart';
+import '../router/route_guard_snapshot_cache.dart';
 import '../security/oauth_manager.dart';
 import '../security/scope_authorizer.dart';
 import '../security/secrets_manager.dart';
 import '../security/secure_token_storage.dart';
 import '../security/token_lifecycle_manager.dart';
 import '../security/token_bundle.dart';
+import '../security/web_session_config.dart';
 import '../storage/storage_provider.dart';
 import '../tenancy/active_organization_store.dart';
 import '../../backend_contracts/v1/api_envelope_v1.dart';
@@ -72,25 +74,29 @@ final activeOrganizationStoreProvider = Provider<ActiveOrganizationStore>((
 @Riverpod(keepAlive: true)
 NetworkClient networkClient(NetworkClientRef ref) {
   final releaseConfig = ReleaseConfig.fromEnvironment();
-  return DioNetworkClient(
-    dio: Dio(
-      BaseOptions(
-        baseUrl: LaravelApi.apiBaseUrl,
-        headers: <String, Object>{
-          'Accept': LaravelApi.acceptHeader(),
-          'X-Api-Version': LaravelApi.apiVersionHeaderValue(),
-          'X-Release-Channel': releaseConfig.wireValue,
-        },
-        // Without these, Dio has no default at all — a hung/unresponsive
-        // backend (or a socket that never completes) leaves the request
-        // (and whatever screen is awaiting it) stuck loading indefinitely.
-        // Per-call timeoutInSeconds (DioNetworkClient._withTimeout) still
-        // overrides receiveTimeout for callers that pass it explicitly.
-        connectTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-      ),
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: LaravelApi.apiBaseUrl,
+      headers: <String, Object>{
+        'Accept': LaravelApi.acceptHeader(),
+        'X-Api-Version': LaravelApi.apiVersionHeaderValue(),
+        'X-Release-Channel': releaseConfig.wireValue,
+        // Opt in to the httpOnly-cookie transport only in Flutter Web. The
+        // backend rejects a cookie unless this header is present, which makes
+        // the CORS preflight an additional CSRF barrier.
+        if (WebSessionConfig.usesHttpOnlyCookies) 'X-SP-Web-Client': '1',
+      },
+      connectTimeout: const Duration(seconds: 15),
+      sendTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
     ),
+  );
+  if (WebSessionConfig.usesHttpOnlyCookies) {
+    configureBrowserCookieTransport(dio);
+  }
+
+  return DioNetworkClient(
+    dio: dio,
     interceptors: <NetworkInterceptor>[
       AuthorizationInterceptor(
         tokenLifecycleManager: ref.read(tokenLifecycleManagerProvider),
@@ -103,6 +109,11 @@ NetworkClient networkClient(NetworkClientRef ref) {
       LocaleHeaderInterceptor(localeReader: () => ref.read(localeProvider)),
       RefreshTokenInterceptor(
         tokenLifecycleManager: ref.read(tokenLifecycleManagerProvider),
+      ),
+      AuthorizationStateInvalidationInterceptor(
+        onForbidden: () {
+          ref.read(routeGuardSnapshotCacheProvider).invalidate();
+        },
       ),
       RateLimiterInterceptor(),
       const RetryInterceptor(),
@@ -166,15 +177,9 @@ SecretsManager secretsManager(SecretsManagerRef ref) {
 }
 
 @Riverpod(keepAlive: true)
-EncryptionService encryptionService(EncryptionServiceRef ref) {
-  return const DefaultEncryptionService();
-}
-
-@Riverpod(keepAlive: true)
 SecureTokenStorage secureTokenStorage(SecureTokenStorageRef ref) {
   return EncryptedTokenStorage(
     secretsManager: ref.read(secretsManagerProvider),
-    encryptionService: ref.read(encryptionServiceProvider),
   );
 }
 

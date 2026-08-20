@@ -9,6 +9,7 @@ import '../observability/metrics_registry.dart';
 import '../observability/trace_context.dart';
 import '../security/scope_authorizer.dart';
 import '../security/token_lifecycle_manager.dart';
+import '../security/web_session_config.dart';
 import '../tenancy/active_organization_store.dart';
 
 abstract interface class NetworkInterceptor {
@@ -43,7 +44,8 @@ class AuthorizationInterceptor implements NetworkInterceptor {
   ) async {
     final requiredScopes =
         requiredScopesResolver?.call(options) ?? const <String>{};
-    if (requiredScopes.isNotEmpty &&
+    if (!WebSessionConfig.usesHttpOnlyCookies &&
+        requiredScopes.isNotEmpty &&
         scopeAuthorizer != null &&
         tokenLifecycleManager != null) {
       final tokens = await tokenLifecycleManager!.readTokens();
@@ -392,6 +394,43 @@ class RefreshTokenInterceptor implements NetworkInterceptor {
         handler.resolve(await Dio().fetch(error.requestOptions));
         return;
       }
+    }
+    handler.next(error);
+  }
+}
+
+/// Keeps client-side route guards honest after Laravel denies a request. A
+/// 403 never grants access on its own, but retaining a successful 20-second
+/// guard snapshot afterward makes a revoked role feel briefly valid; callers
+/// supply a single invalidation callback from the provider layer.
+class AuthorizationStateInvalidationInterceptor implements NetworkInterceptor {
+  const AuthorizationStateInvalidationInterceptor({required this.onForbidden});
+
+  final void Function() onForbidden;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    handler.next(options);
+  }
+
+  @override
+  Future<void> onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    handler.next(response);
+  }
+
+  @override
+  Future<void> onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (error.response?.statusCode == 403) {
+      onForbidden();
     }
     handler.next(error);
   }

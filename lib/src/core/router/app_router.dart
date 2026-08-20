@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import 'app_navigation_observer.dart';
+import 'app_navigation_shell.dart';
 import 'app_routes.dart';
 import 'route_guards.dart';
 import 'route_names.dart';
@@ -31,7 +32,13 @@ GoRouter router(RouterRef ref) {
     observers: [AppNavigationObserver()],
 
     // جميع مسارات التطبيق
-    routes: appRoutes,
+    routes: <RouteBase>[
+      ShellRoute(
+        builder: (context, state, child) =>
+            AppNavigationShell(location: state.uri.path, child: child),
+        routes: appRoutes,
+      ),
+    ],
 
     // حماية المسارات
     redirect: (_, state) => RouteGuards.guard(state, ref),

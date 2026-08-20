@@ -13,6 +13,7 @@ import '../../../core/network/network_client.dart';
 import '../../../core/router/guard_state_provider.dart';
 import '../../../core/security/token_bundle.dart';
 import '../../../core/security/token_lifecycle_manager.dart';
+import '../../../core/security/web_session_config.dart';
 import '../../../core/storage/storage_service.dart';
 import '../domain/entities/user_entity.dart';
 import 'auth_event_publisher.dart';
@@ -334,7 +335,14 @@ class AuthSessionController {
 
   Future<AuthSession?> currentSession() async {
     final tokens = await tokenLifecycleManager.readTokens();
-    if (tokens == null || tokens.accessToken.trim().isEmpty) {
+    final sessionMarker = await storageService.readString(
+      GuardStorageKeys.authToken,
+    );
+    final hasBrowserSession =
+        WebSessionConfig.usesHttpOnlyCookies &&
+        sessionMarker == 'browser-session';
+    if (!hasBrowserSession &&
+        (tokens == null || tokens.accessToken.trim().isEmpty)) {
       return null;
     }
 
@@ -362,7 +370,9 @@ class AuthSessionController {
   /// refresh token pair + user) and must persist it identically.
   Future<AuthSession> _finalizeSession(Map<String, dynamic> payload) async {
     final dto = LoginResponseDtoV1.fromJson(payload);
-    if (dto.accessToken.trim().isEmpty) {
+    final usesBrowserCookies =
+        WebSessionConfig.usesHttpOnlyCookies && dto.accessToken.trim().isEmpty;
+    if (!usesBrowserCookies && dto.accessToken.trim().isEmpty) {
       throw const AuthSessionException(
         'Authentication access token is missing from server response.',
       );
@@ -374,17 +384,24 @@ class AuthSessionController {
         .toSet();
     final role = UserRoleStorage.fromStorageValue(dto.user.role);
 
-    await tokenLifecycleManager.writeTokens(
-      TokenBundle(
-        accessToken: dto.accessToken,
-        refreshToken: dto.refreshToken?.trim() ?? '',
-        expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
-        scopes: scopes,
-      ),
-    );
+    if (usesBrowserCookies) {
+      // Never retain raw API tokens in browser-accessible state. The backend
+      // has placed both in Secure, httpOnly cookies and will authenticate
+      // requests sent by the browser's credentialed HTTP adapter.
+      await tokenLifecycleManager.clearTokens();
+    } else {
+      await tokenLifecycleManager.writeTokens(
+        TokenBundle(
+          accessToken: dto.accessToken,
+          refreshToken: dto.refreshToken?.trim() ?? '',
+          expiresAt: DateTime.now().add(Duration(seconds: dto.expiresIn)),
+          scopes: scopes,
+        ),
+      );
+    }
     await storageService.writeString(
       GuardStorageKeys.authToken,
-      dto.accessToken,
+      usesBrowserCookies ? 'browser-session' : dto.accessToken,
     );
     await storageService.writeString(
       GuardStorageKeys.userRole,

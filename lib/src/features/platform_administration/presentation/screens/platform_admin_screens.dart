@@ -85,9 +85,7 @@ class _PlatformAdministrationScreenState
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
+      builder: (dialogContext) => AlertDialog(
           title: Text(l10n.platformAdminGuideDialogTitle),
           content: SizedBox(
             width: 480,
@@ -127,16 +125,13 @@ class _PlatformAdministrationScreenState
             ),
           ],
         ),
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Text(l10n.platformAdminAppBarTitle),
           actions: <Widget>[
@@ -207,8 +202,7 @@ class _PlatformAdministrationScreenState
             },
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -502,9 +496,7 @@ class _PlatformOrganizationsScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text(l10n.platformAdminOrgsAppBarTitle)),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _createOrganization,
@@ -602,8 +594,7 @@ class _PlatformOrganizationsScreenState
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -670,9 +661,7 @@ class _PlatformOrganizationDetailScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text(l10n.platformAdminOrgDetailAppBarTitle)),
         body: AdaptiveContentWidth(
           child: FutureBuilder<PlatformOrganizationDetails>(
@@ -701,8 +690,7 @@ class _PlatformOrganizationDetailScreenState
             },
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -872,9 +860,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text(l10n.platformAdminUsersAppBarTitle)),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _createUser,
@@ -1036,8 +1022,7 @@ class _PlatformUsersScreenState extends ConsumerState<PlatformUsersScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -1095,9 +1080,7 @@ class _PlatformAuditLogScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text(l10n.platformAdminAuditLogButton)),
         body: AdaptiveContentWidth(
           child: Column(
@@ -1206,8 +1189,7 @@ class _PlatformAuditLogScreenState
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 

@@ -6,7 +6,7 @@ part of 'app_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$networkClientHash() => r'76ad1034bb7cd1d709a4663035d2a1cdadab184c';
+String _$networkClientHash() => r'93565f02a57d9ef6694e38d6bd18bb366ef886bf';
 
 /// See also [networkClient].
 @ProviderFor(networkClient)
@@ -23,7 +23,7 @@ final networkClientProvider = Provider<NetworkClient>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef NetworkClientRef = ProviderRef<NetworkClient>;
-String _$secretsManagerHash() => r'5d501b893a3f8b964e89883630cd678ff089cf3f';
+String _$secretsManagerHash() => r'a66dee27689cb49cd3f26c37ecb8e8a35145cd9a';
 
 /// See also [secretsManager].
 @ProviderFor(secretsManager)
@@ -40,25 +40,8 @@ final secretsManagerProvider = Provider<SecretsManager>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SecretsManagerRef = ProviderRef<SecretsManager>;
-String _$encryptionServiceHash() => r'88add38b0cfb7e6ebf269e504016ef291fc2492b';
-
-/// See also [encryptionService].
-@ProviderFor(encryptionService)
-final encryptionServiceProvider = Provider<EncryptionService>.internal(
-  encryptionService,
-  name: r'encryptionServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$encryptionServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef EncryptionServiceRef = ProviderRef<EncryptionService>;
 String _$secureTokenStorageHash() =>
-    r'c2ca61bed7c920726d74cdcfe9788d79277c5ad7';
+    r'f69399767f42ebb914bb899b8dcf96725e96d518';
 
 /// See also [secureTokenStorage].
 @ProviderFor(secureTokenStorage)
@@ -179,7 +162,7 @@ final authEventPublisherProvider = Provider<AuthEventPublisher>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AuthEventPublisherRef = ProviderRef<AuthEventPublisher>;
-String _$draftStorageHash() => r'e08e8541e4e93ae9f0810f85a982965608d57d09';
+String _$draftStorageHash() => r'2460ce56f643f4d94f38e25a503be6fe504cfb09';
 
 /// See also [draftStorage].
 @ProviderFor(draftStorage)
@@ -284,7 +267,7 @@ final postRepositoryProvider = Provider<PostRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PostRepositoryRef = ProviderRef<PostRepository>;
-String _$mediaRepositoryHash() => r'1c346df6393657cd9a0d8636106ede189cade8f9';
+String _$mediaRepositoryHash() => r'58585994c63f959f8a072373695d43eb63a7ef27';
 
 /// See also [mediaRepository].
 @ProviderFor(mediaRepository)
