@@ -75,32 +75,40 @@ class _ModuleTile extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: module.onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Icon(module.icon, color: colorScheme.primary),
-                  if (module.badge != null)
-                    StatusPill(label: module.badge!, tone: PillTone.success),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(module.title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                module.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+      child: Semantics(
+        button: true,
+        label: module.title,
+        hint: module.description,
+        child: InkWell(
+          onTap: module.onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Icon(module.icon, color: colorScheme.primary),
+                    if (module.badge != null)
+                      StatusPill(label: module.badge!, tone: PillTone.success),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  module.title,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  module.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
           ),
         ),
       ),

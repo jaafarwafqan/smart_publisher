@@ -5,7 +5,6 @@ import 'package:smart_publisher/src/features/auth/application/auth_session_contr
 import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
     as app_events;
 import 'package:smart_publisher/src/core/events/event_bus.dart';
-import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
@@ -44,7 +43,6 @@ void main() {
       final storage = InMemoryStorageService();
       final tokenStorage = EncryptedTokenStorage(
         secretsManager: InMemorySecretsManager(),
-        encryptionService: const DefaultEncryptionService(),
       );
       final controller = AuthSessionController(
         networkClient: client,

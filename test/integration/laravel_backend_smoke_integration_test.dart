@@ -11,7 +11,6 @@ import 'package:smart_publisher/src/core/network/dio_network_client.dart';
 import 'package:smart_publisher/src/core/network/laravel_api.dart';
 import 'package:smart_publisher/src/core/network/network_client.dart';
 import 'package:smart_publisher/src/core/network/network_interceptor.dart';
-import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
 import 'package:smart_publisher/src/core/security/token_bundle.dart';
@@ -53,7 +52,6 @@ void main() {
       final storage = InMemoryStorageService();
       final tokenStorage = EncryptedTokenStorage(
         secretsManager: InMemorySecretsManager(),
-        encryptionService: const DefaultEncryptionService(),
       );
       final tokenLifecycleManager = _buildTokenLifecycleManager(tokenStorage);
       final organizationStore = ActiveOrganizationStore(storage: storage);

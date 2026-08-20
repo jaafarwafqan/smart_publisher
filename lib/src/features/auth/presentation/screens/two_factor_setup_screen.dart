@@ -16,6 +16,49 @@ enum _Stage {
   disabling,
 }
 
+class _TwoFactorSetupViewState {
+  const _TwoFactorSetupViewState({
+    this.stage = _Stage.loading,
+    this.secret,
+    this.otpauthUrl,
+    this.recoveryCodes = const <String>[],
+    this.error,
+    this.busy = false,
+  });
+
+  static const _unset = Object();
+
+  final _Stage stage;
+  final String? secret;
+  final String? otpauthUrl;
+  final List<String> recoveryCodes;
+  final String? error;
+  final bool busy;
+
+  _TwoFactorSetupViewState copyWith({
+    _Stage? stage,
+    String? secret,
+    String? otpauthUrl,
+    List<String>? recoveryCodes,
+    Object? error = _unset,
+    bool? busy,
+  }) {
+    return _TwoFactorSetupViewState(
+      stage: stage ?? this.stage,
+      secret: secret ?? this.secret,
+      otpauthUrl: otpauthUrl ?? this.otpauthUrl,
+      recoveryCodes: recoveryCodes ?? this.recoveryCodes,
+      error: identical(error, _unset) ? this.error : error as String?,
+      busy: busy ?? this.busy,
+    );
+  }
+}
+
+final _twoFactorSetupViewStateProvider =
+    StateProvider.autoDispose<_TwoFactorSetupViewState>(
+      (ref) => const _TwoFactorSetupViewState(),
+    );
+
 /// Sprint 4 (Commercial SaaS): enable/confirm/disable TOTP-based MFA for
 /// the currently authenticated user. Reached from Settings ->
 /// "Two-factor authentication".
@@ -28,17 +71,26 @@ class TwoFactorSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
-  _Stage _stage = _Stage.loading;
-  String? _secret;
-  String? _otpauthUrl;
-  List<String> _recoveryCodes = const <String>[];
-  String? _error;
-  bool _busy = false;
-
   final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmFormKey = GlobalKey<FormState>();
   final _disableFormKey = GlobalKey<FormState>();
+
+  _TwoFactorSetupViewState get _viewState =>
+      ref.read(_twoFactorSetupViewStateProvider);
+  _Stage get _stage => _viewState.stage;
+  String? get _secret => _viewState.secret;
+  String? get _otpauthUrl => _viewState.otpauthUrl;
+  List<String> get _recoveryCodes => _viewState.recoveryCodes;
+  String? get _error => _viewState.error;
+  bool get _busy => _viewState.busy;
+
+  void _updateState(
+    _TwoFactorSetupViewState Function(_TwoFactorSetupViewState state) update,
+  ) {
+    final controller = ref.read(_twoFactorSetupViewStateProvider.notifier);
+    controller.state = update(controller.state);
+  }
 
   @override
   void initState() {
@@ -54,10 +106,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
   }
 
   Future<void> _loadStatus() async {
-    setState(() {
-      _stage = _Stage.loading;
-      _error = null;
-    });
+    _updateState((state) => state.copyWith(stage: _Stage.loading, error: null));
     try {
       final status = await ref
           .read(authSessionControllerProvider)
@@ -65,49 +114,54 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
       if (!mounted) {
         return;
       }
-      setState(() {
-        _stage = status.twoFactorEnabled ? _Stage.enabled : _Stage.disabled;
-      });
+      _updateState(
+        (state) => state.copyWith(
+          stage: status.twoFactorEnabled ? _Stage.enabled : _Stage.disabled,
+        ),
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      setState(() {
-        _stage = _Stage.disabled;
-        _error = error is AuthSessionException
-            ? error.message
-            : error.toString().replaceFirst('Exception: ', '');
-      });
+      _updateState(
+        (state) => state.copyWith(
+          stage: _Stage.disabled,
+          error: error is AuthSessionException
+              ? error.message
+              : error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
     }
   }
 
   Future<void> _startEnable() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    _updateState((state) => state.copyWith(busy: true, error: null));
     try {
       final response = await ref.read(twoFactorControllerProvider).enable();
       if (!mounted) {
         return;
       }
-      setState(() {
-        _secret = response.secret;
-        _otpauthUrl = response.otpauthUrl;
-        _stage = _Stage.enabling;
-      });
+      _updateState(
+        (state) => state.copyWith(
+          secret: response.secret,
+          otpauthUrl: response.otpauthUrl,
+          stage: _Stage.enabling,
+        ),
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      setState(() {
-        _error = error is AuthSessionException
-            ? error.message
-            : error.toString().replaceFirst('Exception: ', '');
-      });
+      _updateState(
+        (state) => state.copyWith(
+          error: error is AuthSessionException
+              ? error.message
+              : error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
     } finally {
       if (mounted) {
-        setState(() => _busy = false);
+        _updateState((state) => state.copyWith(busy: false));
       }
     }
   }
@@ -116,10 +170,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
     if (!_confirmFormKey.currentState!.validate()) {
       return;
     }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    _updateState((state) => state.copyWith(busy: true, error: null));
     try {
       final response = await ref
           .read(twoFactorControllerProvider)
@@ -127,22 +178,26 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
       if (!mounted) {
         return;
       }
-      setState(() {
-        _recoveryCodes = response.recoveryCodes;
-        _stage = _Stage.showRecoveryCodes;
-      });
+      _updateState(
+        (state) => state.copyWith(
+          recoveryCodes: response.recoveryCodes,
+          stage: _Stage.showRecoveryCodes,
+        ),
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
-      setState(() {
-        _error = error is AuthSessionException
-            ? error.message
-            : error.toString().replaceFirst('Exception: ', '');
-      });
+      _updateState(
+        (state) => state.copyWith(
+          error: error is AuthSessionException
+              ? error.message
+              : error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
     } finally {
       if (mounted) {
-        setState(() => _busy = false);
+        _updateState((state) => state.copyWith(busy: false));
       }
     }
   }
@@ -151,10 +206,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
     if (!_disableFormKey.currentState!.validate()) {
       return;
     }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    _updateState((state) => state.copyWith(busy: true, error: null));
     try {
       await ref
           .read(twoFactorControllerProvider)
@@ -163,19 +215,21 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
         return;
       }
       _passwordController.clear();
-      setState(() => _stage = _Stage.disabled);
+      _updateState((state) => state.copyWith(stage: _Stage.disabled));
     } catch (error) {
       if (!mounted) {
         return;
       }
-      setState(() {
-        _error = error is AuthSessionException
-            ? error.message
-            : error.toString().replaceFirst('Exception: ', '');
-      });
+      _updateState(
+        (state) => state.copyWith(
+          error: error is AuthSessionException
+              ? error.message
+              : error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
     } finally {
       if (mounted) {
-        setState(() => _busy = false);
+        _updateState((state) => state.copyWith(busy: false));
       }
     }
   }
@@ -192,6 +246,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(_twoFactorSetupViewStateProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -315,7 +370,9 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                 child: OutlinedButton(
                   onPressed: _busy
                       ? null
-                      : () => setState(() => _stage = _Stage.disabled),
+                      : () => _updateState(
+                          (state) => state.copyWith(stage: _Stage.disabled),
+                        ),
                   child: Text(l10n.twoFactorSetupCancelButton),
                 ),
               ),
@@ -400,7 +457,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
         ),
         const SizedBox(height: AppSpacing.lg),
         FilledButton(
-          onPressed: () => setState(() => _stage = _Stage.enabled),
+          onPressed: () =>
+              _updateState((state) => state.copyWith(stage: _Stage.enabled)),
           child: Text(l10n.twoFactorSetupDoneButton),
         ),
       ],
@@ -423,10 +481,9 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
         const SizedBox(height: AppSpacing.lg),
         if (_error != null) _ErrorBanner(message: _error!),
         OutlinedButton(
-          onPressed: () => setState(() {
-            _stage = _Stage.disabling;
-            _error = null;
-          }),
+          onPressed: () => _updateState(
+            (state) => state.copyWith(stage: _Stage.disabling, error: null),
+          ),
           child: Text(l10n.twoFactorSetupDisableButton),
         ),
       ],
@@ -462,10 +519,12 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                 child: OutlinedButton(
                   onPressed: _busy
                       ? null
-                      : () => setState(() {
-                          _stage = _Stage.enabled;
-                          _error = null;
-                        }),
+                      : () => _updateState(
+                          (state) => state.copyWith(
+                            stage: _Stage.enabled,
+                            error: null,
+                          ),
+                        ),
                   child: Text(l10n.twoFactorSetupCancelButton),
                 ),
               ),

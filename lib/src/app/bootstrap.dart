@@ -3,17 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:smart_publisher/src/core/logger/app_logger.dart';
 import 'package:smart_publisher/src/core/observability/crash_reporter.dart';
 import 'package:smart_publisher/src/core/observability/error_correlation.dart';
 import 'package:smart_publisher/src/core/observability/trace_context.dart';
+import 'package:smart_publisher/src/core/observability/sentry_config.dart';
 import 'package:smart_publisher/src/core/performance/background_task_manager.dart';
 import 'package:smart_publisher/src/core/performance/image_cache_manager.dart';
 import 'package:smart_publisher/src/core/performance/startup_profiler.dart';
 import 'package:smart_publisher/src/core/network/laravel_api.dart';
 
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
-  const crashReporter = ConsoleCrashReporter();
+  final CrashReporter crashReporter = await _createCrashReporter();
   const imageCacheManager = ImageCacheManager();
   final backgroundTaskManager = BackgroundTaskManager();
 
@@ -147,6 +149,33 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     ),
     traceId: bootstrapTraceId,
   );
+}
+
+Future<CrashReporter> _createCrashReporter() async {
+  if (!SentryConfig.isEnabled) {
+    return const ConsoleCrashReporter();
+  }
+
+  try {
+    await Sentry.init((options) {
+      options
+        ..dsn = SentryConfig.dsn
+        ..environment = SentryConfig.environment
+        ..attachStacktrace = true
+        ..sendDefaultPii = false;
+    });
+    return const SentryCrashReporter();
+  } catch (error, stackTrace) {
+    // Error telemetry is never allowed to make the app unavailable. The
+    // fallback retains the full local diagnostic signal if the SDK/DSN is
+    // misconfigured during a release.
+    await const ConsoleCrashReporter().record(
+      error,
+      stackTrace,
+      context: const <String, Object?>{'stage': 'sentry_initialization'},
+    );
+    return const ConsoleCrashReporter();
+  }
 }
 
 /// Shown instead of the app itself when [LaravelApi.assertReleaseConfiguration]

@@ -67,22 +67,27 @@ void main() {
       },
     );
 
-    test('compress marks media as compressed in local mode', () async {
-      final repo = MediaRepositoryImpl();
-      const media = MediaEntity(
-        id: 'm1',
-        postId: 'p1',
-        url: 'https://cdn.example.com/video.mp4',
-        mimeType: 'video/mp4',
-        sizeInBytes: 2000000,
-      );
+    test(
+      'compress in local/offline mode leaves the media untouched — no networkClient means '
+      'no real compression happened, so it must not be reported as compressed '
+      '(the real work is POST /media/{id}/compress, replayed once the outbox syncs)',
+      () async {
+        final repo = MediaRepositoryImpl();
+        const media = MediaEntity(
+          id: 'm1',
+          postId: 'p1',
+          url: 'https://cdn.example.com/video.mp4',
+          mimeType: 'video/mp4',
+          sizeInBytes: 2000000,
+        );
 
-      final result = await repo.compressMedia(media);
+        final result = await repo.compressMedia(media);
 
-      expect(result.isSuccess, isTrue);
-      expect(result.data?.isCompressed, isTrue);
-      expect(result.data!.sizeInBytes, lessThan(media.sizeInBytes));
-    });
+        expect(result.isSuccess, isTrue);
+        expect(result.data?.isCompressed, isFalse);
+        expect(result.data!.sizeInBytes, media.sizeInBytes);
+      },
+    );
 
     test('upload queues resumable session in local mode', () async {
       final outbox = OutboxStore();

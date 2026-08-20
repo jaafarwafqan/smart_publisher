@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
@@ -14,7 +13,10 @@ final class AppTextTheme {
     final materialTextTheme = isDark
         ? Typography.material2021().white
         : Typography.material2021().black;
-    final baseTextTheme = GoogleFonts.tajawalTextTheme(materialTextTheme);
+    // Bundled locally so the first Arabic/English render is deterministic in
+    // offline, captive-portal, and strict-CSP web deployments. google_fonts
+    // otherwise fetches the family at runtime on web.
+    final baseTextTheme = materialTextTheme.apply(fontFamily: 'Tajawal');
 
     return baseTextTheme.copyWith(
       displayLarge: baseTextTheme.displayLarge?.copyWith(color: primaryColor),

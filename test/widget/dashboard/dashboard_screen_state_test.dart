@@ -7,7 +7,6 @@ import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
     as app_events;
 import 'package:smart_publisher/src/core/result/app_result.dart';
 import 'package:smart_publisher/src/core/router/guard_state_provider.dart';
-import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
@@ -46,7 +45,6 @@ class _AuthenticatedSessionController extends AuthSessionController {
         tokenLifecycleManager: TokenLifecycleManager(
           tokenStorage: EncryptedTokenStorage(
             secretsManager: InMemorySecretsManager(),
-            encryptionService: const DefaultEncryptionService(),
           ),
         ),
         storageService: InMemoryStorageService(),

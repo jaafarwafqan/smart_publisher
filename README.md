@@ -26,6 +26,12 @@ The supported release artifact is an **Android closed-beta AAB** only. Web and
 desktop builds remain developer targets; this repository does not claim a web
 deployment, backend deployment, canary rollout, or automated rollback.
 
+For a hosted Flutter Web build, pass
+`--dart-define=SP_WEB_COOKIE_AUTH_ENABLED=true` together with the secure API
+endpoints. The backend must set `AUTH_WEB_COOKIE_ENABLED=true` and exact
+credentialed CORS origins; this moves access and refresh tokens into Secure,
+httpOnly cookies rather than browser-accessible storage.
+
 ## What this app actually does
 
 - **Compose**: title/content with hashtag/mention highlighting, a formatting toolbar (bold/italic honestly rendered only where the target platform actually supports it — Telegram via real HTML `parse_mode`, everyone else gets clean stripped plain text, never literal asterisks), a real emoji picker (`emoji_picker_flutter`), per-platform caption overrides, and a per-platform live preview that shows exactly what each destination will really display.

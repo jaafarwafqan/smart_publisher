@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_publisher/src/core/security/encryption_service.dart';
 import 'package:smart_publisher/src/core/security/secrets_manager.dart';
 import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
 import 'package:smart_publisher/src/core/security/token_bundle.dart';
@@ -12,7 +11,6 @@ void main() {
       () async {
         final tokenStorage = EncryptedTokenStorage(
           secretsManager: InMemorySecretsManager(),
-          encryptionService: const DefaultEncryptionService(),
         );
 
         await tokenStorage.saveTokens(
@@ -51,7 +49,6 @@ void main() {
     test('returns null when refresh token is missing', () async {
       final tokenStorage = EncryptedTokenStorage(
         secretsManager: InMemorySecretsManager(),
-        encryptionService: const DefaultEncryptionService(),
       );
 
       await tokenStorage.saveTokens(
@@ -80,7 +77,6 @@ void main() {
       () async {
         final tokenStorage = EncryptedTokenStorage(
           secretsManager: InMemorySecretsManager(),
-          encryptionService: const DefaultEncryptionService(),
         );
 
         await tokenStorage.saveTokens(

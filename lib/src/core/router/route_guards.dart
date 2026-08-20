@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/organizations/application/current_organization_access.dart';
 import 'guard_state_provider.dart';
+import 'route_guard_snapshot_cache.dart';
 import 'route_names.dart';
 
 /// Resolves navigation from authentication plus the selected organization's
@@ -51,8 +52,9 @@ final class RouteGuards {
       return RouteNames.loginPath;
     }
 
-    final isPlatformAdmin = await ref.refresh(
-      currentPlatformAdminProvider.future,
+    final snapshotCache = ref.read(routeGuardSnapshotCacheProvider);
+    final isPlatformAdmin = await snapshotCache.platformAdmin(
+      () => ref.refresh(currentPlatformAdminProvider.future),
     );
 
     // /platform/* and oauthProviderSettingsPath (Sprint D: platform-level
@@ -115,10 +117,9 @@ final class RouteGuards {
 
     OrganizationAccessState access;
     try {
-      // Refresh for every guarded navigation. This prevents a membership
-      // revoked in another session from remaining trusted in a long-lived
-      // Flutter ProviderScope.
-      access = await ref.refresh(currentOrganizationAccessProvider.future);
+      access = await snapshotCache.organizationAccess(
+        () => ref.refresh(currentOrganizationAccessProvider.future),
+      );
     } on OrganizationAccessException {
       return RouteNames.organizationsPath;
     } catch (_) {
