@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_publisher/l10n/app_localizations.dart';
@@ -17,10 +19,11 @@ import '../../../dashboard/presentation/utils/platform_label.dart';
 import '../../../organizations/application/current_organization_access.dart';
 import '../../../posts/domain/entities/media_entity.dart';
 import '../../../posts/domain/entities/post_entity.dart';
+import '../../../ai/data/ai_repository.dart';
 import '../../domain/lite_markdown.dart';
-import '../widgets/composer_formatting_toolbar.dart';
+import '../../domain/rich_content_codec.dart';
 import '../widgets/composer_readiness.dart';
-import '../widgets/highlighting_text_editing_controller.dart';
+import '../widgets/composer_rich_text_editor.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key, this.initialDraft});
@@ -33,7 +36,8 @@ class CreatePostScreen extends ConsumerStatefulWidget {
 
 class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _titleController = TextEditingController();
-  final _contentController = HighlightingTextEditingController();
+  late final quill.QuillController _contentController;
+  final _contentFocusNode = FocusNode();
   final _mediaController = TextEditingController();
   final Set<String> _selectedPageIds = <String>{};
   final List<String> _mediaUrls = <String>[];
@@ -49,12 +53,25 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   DateTime? _scheduledAt;
   bool _submitting = false;
+  bool _aiLoading = false;
   String? _feedback;
   bool _isError = false;
+  AiTone _aiTone = AiTone.formal;
+  String _translationLanguage = 'en';
+  AiSuggestion? _aiSuggestion;
+  final Map<String, AiSuggestion> _platformAiSuggestions =
+      <String, AiSuggestion>{};
+  List<Map<String, dynamic>>? _contentBeforeAiApply;
 
   @override
   void initState() {
     super.initState();
+    final draft = widget.initialDraft;
+    _contentController = RichContentCodec.controllerFromStorage(
+      body: draft?.body ?? '',
+      richContent: draft?.richContent ?? const <Map<String, dynamic>>[],
+    );
+    _contentController.addListener(_onContentChanged);
     _hydrateFromInitialDraft();
     _connectedAccountsFuture = _loadConnectedAccounts();
   }
@@ -67,7 +84,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     _draftId = draft.id;
     _titleController.text = draft.title;
-    _contentController.text = draft.body;
     _scheduledAt = draft.scheduledAt;
     _mediaUrls.addAll(draft.attachments);
     _selectedPageIds.addAll(draft.targetPageIds);
@@ -99,12 +115,21 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _contentFocusNode.dispose();
     _mediaController.dispose();
     for (final controller in _platformContentControllers.values) {
       controller.dispose();
     }
     super.dispose();
   }
+
+  void _onContentChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  String get _contentText => RichContentCodec.toPlainText(_contentController);
 
   List<AccountEntity> _lastLoadedAccounts = const <AccountEntity>[];
 
@@ -256,7 +281,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   bool _validateDraftFields() {
     final title = _titleController.text.trim();
-    final content = _contentController.text.trim();
+    final content = _contentText.trim();
 
     if (title.isEmpty || content.isEmpty) {
       _showFeedback(
@@ -310,7 +335,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     return PostEntity(
       id: _draftId ?? 'post-${now.microsecondsSinceEpoch}',
       title: _titleController.text.trim(),
-      body: _contentController.text.trim(),
+      body: RichContentCodec.toPublishText(_contentController),
       status: status,
       createdAt: now,
       updatedAt: now,
@@ -320,6 +345,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       platforms: _derivedPlatforms(),
       targetPageIds: _selectedEligiblePageIds(),
       platformContent: _resolvedPlatformContent(),
+      richContent: RichContentCodec.toDelta(_contentController),
     );
   }
 
@@ -373,6 +399,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     await _runSubmission(() async {
       final savedDraft = await _saveOrUpdateDraftEntity();
+      if (!await _confirmPrePublishCheck(savedDraft)) {
+        return;
+      }
 
       final scheduledPost = savedDraft.copyWith(
         status: 'scheduled',
@@ -411,6 +440,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     await _runSubmission(() async {
       final savedDraft = await _saveOrUpdateDraftEntity();
+      if (!await _confirmPrePublishCheck(savedDraft)) {
+        return;
+      }
 
       // Real delivery (e.g. an actual Telegram sendMessage) happens
       // server-side via PublishPostJob against the selected pages — the
@@ -591,6 +623,223 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     });
   }
 
+  Future<bool> _confirmPrePublishCheck(PostEntity post) async {
+    // Local/offline drafts have no server id. Existing client validations keep
+    // the composer usable offline; the authoritative endpoint runs once the
+    // draft has a real Laravel id.
+    if (int.tryParse(post.id) == null) {
+      return true;
+    }
+    final report = await ref
+        .read(aiRepositoryProvider)
+        .prePublishCheck(post.id);
+    if (report.hasBlockingErrors) {
+      _showFeedback(report.errors.join('\n'), isError: true);
+      return false;
+    }
+    if (report.warnings.isEmpty || !mounted) {
+      return true;
+    }
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('تنبيهات قبل النشر'),
+            content: Text(report.warnings.join('\n')),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('العودة للمراجعة'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('المتابعة رغم التنبيهات'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _runAi(AiOperation operation, {String? targetPlatform}) async {
+    if (_aiLoading) {
+      return;
+    }
+    if (operation == AiOperation.adaptPlatforms && targetPlatform == null) {
+      await _adaptAllPlatforms();
+      return;
+    }
+    final selectedText = RichContentCodec.selectedText(_contentController);
+    final sourceText = selectedText.isNotEmpty ? selectedText : _contentText;
+    if (sourceText.trim().isEmpty) {
+      _showFeedback('اكتب نصًا أو حدّد جزءًا منه أولًا.', isError: true);
+      return;
+    }
+
+    setState(() {
+      _aiLoading = true;
+      _feedback = null;
+    });
+    try {
+      final result = await ref
+          .read(aiRepositoryProvider)
+          .request(
+            operation: operation,
+            text: sourceText,
+            tone: _aiTone,
+            appliesToSelection: selectedText.isNotEmpty,
+            postId: _draftId,
+            targetLanguage: operation == AiOperation.translate
+                ? _translationLanguage
+                : null,
+            platforms: operation == AiOperation.adaptPlatforms
+                ? <String>[targetPlatform!]
+                : const <String>[],
+          );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        if (targetPlatform == null) {
+          _aiSuggestion = result;
+        } else {
+          _platformAiSuggestions[targetPlatform] = result;
+        }
+      });
+    } catch (error) {
+      _showFeedback(
+        error.toString().replaceFirst('Bad state: ', ''),
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _aiLoading = false);
+      }
+    }
+  }
+
+  Future<void> _adaptAllPlatforms() async {
+    final platforms = _derivedPlatforms();
+    if (platforms.isEmpty) {
+      _showFeedback(
+        'حدّد صفحة أو قناة قبل تكييف المحتوى للمنصات.',
+        isError: true,
+      );
+      return;
+    }
+    final sourceText = _contentText;
+    if (sourceText.trim().isEmpty) {
+      _showFeedback('اكتب محتوى المنشور أولًا.', isError: true);
+      return;
+    }
+    setState(() => _aiLoading = true);
+    final suggestions = <String, AiSuggestion>{};
+    var failed = 0;
+    for (final platform in platforms) {
+      try {
+        suggestions[platform] = await ref
+            .read(aiRepositoryProvider)
+            .request(
+              operation: AiOperation.adaptPlatforms,
+              text: sourceText,
+              tone: _aiTone,
+              appliesToSelection: false,
+              postId: _draftId,
+              platforms: <String>[platform],
+            );
+      } catch (_) {
+        failed++;
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _platformAiSuggestions.addAll(suggestions);
+      _aiLoading = false;
+    });
+    if (failed > 0) {
+      _showFeedback(
+        'تعذر تكييف بعض المنصات؛ راجع المقترحات المتاحة.',
+        isError: true,
+      );
+    }
+  }
+
+  void _applyPlatformSuggestion(String platform) {
+    final suggestion = _platformAiSuggestions[platform];
+    if (suggestion == null) {
+      return;
+    }
+    _platformContentController(platform).text = suggestion.proposedText;
+    setState(() => _platformAiSuggestions.remove(platform));
+  }
+
+  void _applyAiSuggestion({
+    bool forceSelection = false,
+    bool insertBelow = false,
+    String? resultText,
+  }) {
+    final suggestion = _aiSuggestion;
+    if (suggestion == null) {
+      return;
+    }
+    _contentBeforeAiApply = RichContentCodec.toDelta(_contentController);
+    final proposedText = resultText ?? suggestion.proposedText;
+    final addsSuggestion = <AiOperation>{
+      AiOperation.suggestClosing,
+      AiOperation.suggestCallToAction,
+      AiOperation.suggestHashtags,
+    }.contains(suggestion.operation);
+
+    if (suggestion.operation == AiOperation.suggestTitles) {
+      _titleController.text =
+          resultText ??
+          (suggestion.suggestions.isNotEmpty
+              ? suggestion.suggestions.first
+              : proposedText);
+    } else if (insertBelow || addsSuggestion) {
+      final end = _contentController.document.length - 1;
+      final leadingBreak = _contentText.trim().isEmpty ? '' : '\n';
+      _contentController.replaceText(
+        end,
+        0,
+        '$leadingBreak$proposedText',
+        TextSelection.collapsed(
+          offset: end + leadingBreak.length + proposedText.length,
+        ),
+      );
+    } else if ((forceSelection || suggestion.appliesToSelection) &&
+        _contentController.selection.isValid &&
+        !_contentController.selection.isCollapsed) {
+      final selection = _contentController.selection;
+      _contentController.replaceText(
+        selection.start,
+        selection.end - selection.start,
+        proposedText,
+        TextSelection.collapsed(offset: selection.start + proposedText.length),
+      );
+    } else {
+      _contentController.document = RichContentCodec.documentFromPlainText(
+        proposedText,
+      );
+      _contentController.updateSelection(
+        TextSelection.collapsed(offset: proposedText.length),
+        quill.ChangeSource.local,
+      );
+    }
+    setState(() => _aiSuggestion = null);
+  }
+
+  void _restoreContentBeforeAi() {
+    final previous = _contentBeforeAiApply;
+    if (previous == null) {
+      return;
+    }
+    _contentController.document = quill.Document.fromJson(previous);
+    _contentBeforeAiApply = null;
+    setState(() {});
+  }
+
   bool _canSubmitPostAction() {
     return ref
             .read(currentOrganizationAccessProvider)
@@ -599,9 +848,178 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         false;
   }
 
+  Widget _buildAiAssistant(ThemeData theme) {
+    const operations = <AiOperation>[
+      AiOperation.spellCheck,
+      AiOperation.improve,
+      AiOperation.rewrite,
+      AiOperation.shorten,
+      AiOperation.expand,
+      AiOperation.simplify,
+      AiOperation.officialNews,
+      AiOperation.advertisement,
+      AiOperation.academicFormat,
+      AiOperation.mediaFormat,
+      AiOperation.suggestTitles,
+      AiOperation.suggestClosing,
+      AiOperation.suggestCallToAction,
+      AiOperation.suggestHashtags,
+      AiOperation.addEmojis,
+      AiOperation.translate,
+      AiOperation.adaptPlatforms,
+    ];
+    return Card(
+      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.45),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Icon(Icons.auto_awesome_outlined),
+                const SizedBox(width: AppSpacing.sm),
+                Text('المساعد الذكي', style: theme.textTheme.titleSmall),
+                if (_aiLoading) ...<Widget>[
+                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              RichContentCodec.selectedText(_contentController).isEmpty
+                  ? 'ستُعالَج كامل الكتابة. حدّد جزءًا لتعمل الأداة عليه فقط.'
+                  : 'ستُعالَج الكتابة المحددة فقط.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: <Widget>[
+                DropdownButton<AiTone>(
+                  value: _aiTone,
+                  hint: const Text('النبرة'),
+                  onChanged: _aiLoading
+                      ? null
+                      : (tone) => setState(() => _aiTone = tone ?? _aiTone),
+                  items: AiTone.values
+                      .map(
+                        (tone) => DropdownMenuItem<AiTone>(
+                          value: tone,
+                          child: Text(_aiToneLabel(tone)),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+                if (_translationLanguage == 'en')
+                  TextButton(
+                    onPressed: _aiLoading
+                        ? null
+                        : () => setState(() => _translationLanguage = 'ar'),
+                    child: const Text('الترجمة إلى العربية'),
+                  )
+                else
+                  TextButton(
+                    onPressed: _aiLoading
+                        ? null
+                        : () => setState(() => _translationLanguage = 'en'),
+                    child: const Text('الترجمة إلى الإنجليزية'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            if (MediaQuery.sizeOf(context).width < 600)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: OutlinedButton.icon(
+                  onPressed: _aiLoading
+                      ? null
+                      : () => _openAiActionsSheet(operations),
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  label: const Text('اختر عملية المساعد الذكي'),
+                ),
+              )
+            else
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: operations
+                    .map(
+                      (operation) => Tooltip(
+                        message: operation.label,
+                        child: OutlinedButton(
+                          onPressed: _aiLoading
+                              ? null
+                              : () => _runAi(operation),
+                          child: Text(operation.label),
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _aiToneLabel(AiTone tone) {
+    return switch (tone) {
+      AiTone.formal => 'رسمية',
+      AiTone.academic => 'أكاديمية',
+      AiTone.media => 'إعلامية',
+      AiTone.marketing => 'تسويقية',
+      AiTone.friendly => 'ودية',
+      AiTone.concise => 'مختصرة',
+      AiTone.enthusiastic => 'حماسية',
+    };
+  }
+
+  Future<void> _openAiActionsSheet(List<AiOperation> operations) async {
+    final operation = await showModalBottomSheet<AiOperation>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: operations
+              .map(
+                (item) => ListTile(
+                  leading: const Icon(Icons.auto_awesome_outlined),
+                  title: Text(item.label),
+                  onTap: () => Navigator.pop(context, item),
+                ),
+              )
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (operation != null && mounted) {
+      await _runAi(operation);
+    }
+  }
+
+  int? _platformCharacterLimit(String platform) {
+    // Keep this tied to active, implemented integrations only. Telegram's
+    // sendMessage limit is enforced in Laravel; Facebook has no hard caption
+    // limit modeled by the live provider implementation, so show a count
+    // rather than inventing one.
+    return switch (platform) {
+      'telegram' => 4096,
+      _ => null,
+    };
+  }
+
   void _openPreviewSheet() {
     final title = _titleController.text.trim();
-    final content = _contentController.text.trim();
+    final content = _contentText.trim();
     final l10n = AppLocalizations.of(context)!;
     final requiresApproval =
         ref
@@ -682,7 +1100,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final readiness =
         <bool>[
           _titleController.text.trim().isNotEmpty,
-          _contentController.text.trim().isNotEmpty,
+          _contentText.trim().isNotEmpty,
           _selectedEligiblePageIds().isNotEmpty,
         ].where((isReady) => isReady).length /
         3;
@@ -740,29 +1158,46 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Text(
-                            l10n.composerContentLabel,
-                            style: theme.textTheme.labelLarge,
-                          ),
-                          ComposerFormattingToolbar(
-                            controller: _contentController,
-                          ),
-                        ],
+                      Text(
+                        l10n.composerContentLabel,
+                        style: theme.textTheme.labelLarge,
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      TextField(
+                      ComposerRichTextEditor(
                         controller: _contentController,
-                        minLines: 5,
-                        maxLines: 9,
-                        decoration: InputDecoration(
-                          hintText: l10n.composerContentHint,
-                          border: const OutlineInputBorder(),
-                        ),
-                        onChanged: (_) => setState(() {}),
+                        focusNode: _contentFocusNode,
+                        enabled: !_submitting,
+                        onChanged: _onContentChanged,
                       ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildAiAssistant(theme),
+                      if (_aiSuggestion != null) ...<Widget>[
+                        const SizedBox(height: AppSpacing.md),
+                        _AiSuggestionReview(
+                          suggestion: _aiSuggestion!,
+                          onApply: () => _applyAiSuggestion(),
+                          onReplaceSelection: () =>
+                              _applyAiSuggestion(forceSelection: true),
+                          onInsertBelow: () =>
+                              _applyAiSuggestion(insertBelow: true),
+                          onUseSuggestion: (text) =>
+                              _applyAiSuggestion(resultText: text),
+                          onCopy: () => Clipboard.setData(
+                            ClipboardData(text: _aiSuggestion!.proposedText),
+                          ),
+                          onRetry: () => _runAi(_aiSuggestion!.operation),
+                          onDismiss: () => setState(() => _aiSuggestion = null),
+                        ),
+                      ],
+                      if (_contentBeforeAiApply != null)
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: TextButton.icon(
+                            onPressed: _restoreContentBeforeAi,
+                            icon: const Icon(Icons.undo),
+                            label: const Text('استعادة النص السابق'),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -1025,26 +1460,111 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                           style: theme.textTheme.bodyMedium,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        ..._derivedPlatforms().map(
-                          (platform) => Padding(
+                        ..._derivedPlatforms().map((platform) {
+                          final controller = _platformContentController(
+                            platform,
+                          );
+                          final limit = _platformCharacterLimit(platform);
+                          final count = controller.text.characters.length;
+                          final suggestion = _platformAiSuggestions[platform];
+                          final overLimit = limit != null && count > limit;
+                          return Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.md,
                             ),
-                            child: TextField(
-                              controller: _platformContentController(platform),
-                              minLines: 1,
-                              maxLines: 4,
-                              decoration: InputDecoration(
-                                labelText: l10n.composerPlatformOverrideLabel(
-                                  platformLabel(platform),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                TextField(
+                                  controller: controller,
+                                  minLines: 1,
+                                  maxLines: 4,
+                                  decoration: InputDecoration(
+                                    labelText: l10n
+                                        .composerPlatformOverrideLabel(
+                                          platformLabel(platform),
+                                        ),
+                                    hintText: l10n.composerPlatformOverrideHint,
+                                    border: const OutlineInputBorder(),
+                                    helperText: limit == null
+                                        ? '$count حرف • يستخدم النص الأساسي عند تركه فارغًا'
+                                        : '$count / $limit حرف',
+                                    helperStyle: TextStyle(
+                                      color: overLimit
+                                          ? theme.colorScheme.error
+                                          : null,
+                                    ),
+                                  ),
+                                  onChanged: (_) => setState(() {}),
                                 ),
-                                hintText: l10n.composerPlatformOverrideHint,
-                                border: const OutlineInputBorder(),
-                              ),
-                              onChanged: (_) => setState(() {}),
+                                Wrap(
+                                  spacing: AppSpacing.sm,
+                                  children: <Widget>[
+                                    TextButton.icon(
+                                      onPressed: _aiLoading
+                                          ? null
+                                          : () => _runAi(
+                                              AiOperation.adaptPlatforms,
+                                              targetPlatform: platform,
+                                            ),
+                                      icon: const Icon(Icons.auto_awesome),
+                                      label: Text(
+                                        'تكييف لـ${platformLabel(platform)}',
+                                      ),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: controller.text.isEmpty
+                                          ? null
+                                          : () => setState(controller.clear),
+                                      icon: const Icon(Icons.restart_alt),
+                                      label: const Text('استخدام النص الأساسي'),
+                                    ),
+                                  ],
+                                ),
+                                if (suggestion != null)
+                                  Card(
+                                    margin: const EdgeInsets.only(
+                                      top: AppSpacing.sm,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(
+                                        AppSpacing.sm,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          const Text('نسخة مقترحة للمراجعة'),
+                                          SelectableText(
+                                            suggestion.proposedText,
+                                          ),
+                                          Wrap(
+                                            spacing: AppSpacing.sm,
+                                            children: <Widget>[
+                                              TextButton(
+                                                onPressed: () =>
+                                                    _applyPlatformSuggestion(
+                                                      platform,
+                                                    ),
+                                                child: const Text('تطبيق'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => setState(
+                                                  () => _platformAiSuggestions
+                                                      .remove(platform),
+                                                ),
+                                                child: const Text('رفض'),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ),
-                        ),
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -1079,7 +1599,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                 ? _platformContentController(
                                     platform,
                                   ).text.trim()
-                                : _contentController.text.trim(),
+                                : RichContentCodec.toPublishText(
+                                    _contentController,
+                                  ),
                           ),
                         ),
                       ],
@@ -1153,9 +1675,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ),
                       _PreviewRow(
                         label: l10n.composerContentLabel,
-                        value: _contentController.text.trim().isEmpty
+                        value: _contentText.trim().isEmpty
                             ? l10n.composerNoContentYet
-                            : _contentController.text.trim(),
+                            : _contentText.trim(),
                       ),
                       _PreviewRow(
                         label: l10n.composerPreviewMediaLabel,
@@ -1381,6 +1903,114 @@ class _PreviewRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A conservative comparison view: the provider returns a complete proposal,
+/// not unreliable character positions, so this intentionally never invents
+/// per-word corrections. The user always chooses whether and where to apply.
+class _AiSuggestionReview extends StatelessWidget {
+  const _AiSuggestionReview({
+    required this.suggestion,
+    required this.onApply,
+    required this.onReplaceSelection,
+    required this.onInsertBelow,
+    required this.onUseSuggestion,
+    required this.onCopy,
+    required this.onRetry,
+    required this.onDismiss,
+  });
+
+  final AiSuggestion suggestion;
+  final VoidCallback onApply;
+  final VoidCallback onReplaceSelection;
+  final VoidCallback onInsertBelow;
+  final ValueChanged<String> onUseSuggestion;
+  final VoidCallback onCopy;
+  final VoidCallback onRetry;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final proposed = suggestion.suggestions.isNotEmpty
+        ? suggestion.suggestions.join('\n')
+        : suggestion.proposedText;
+    return Card(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'مراجعة اقتراح: ${suggestion.operation.label}',
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text('النص الأصلي', style: theme.textTheme.labelLarge),
+            SelectableText(suggestion.originalText),
+            const Divider(),
+            Text('النص المقترح', style: theme.textTheme.labelLarge),
+            SelectableText(proposed),
+            if (suggestion.suggestions.isNotEmpty) ...<Widget>[
+              const SizedBox(height: AppSpacing.sm),
+              Text('اختر اقتراحًا لتطبيقه', style: theme.textTheme.labelLarge),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: suggestion.suggestions
+                    .map(
+                      (item) => OutlinedButton(
+                        onPressed: () => onUseSuggestion(item),
+                        child: Text(item),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'يعرض هذا الإصدار مقارنة آمنة بين النصين؛ لا تُفترض مواقع تغييرات غير مؤكدة.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: <Widget>[
+                FilledButton(
+                  onPressed: onApply,
+                  child: const Text('تطبيق النتيجة'),
+                ),
+                OutlinedButton(
+                  onPressed: onReplaceSelection,
+                  child: const Text('استبدال التحديد'),
+                ),
+                OutlinedButton(
+                  onPressed: onInsertBelow,
+                  child: const Text('إدراج أسفل النص'),
+                ),
+                TextButton.icon(
+                  onPressed: onCopy,
+                  icon: const Icon(Icons.copy_outlined),
+                  label: const Text('نسخ'),
+                ),
+                TextButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('إعادة المحاولة'),
+                ),
+                TextButton(
+                  onPressed: onDismiss,
+                  child: const Text('رفض الاقتراح'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -465,6 +465,7 @@ class PostRepositoryImpl extends PostRepository {
           'platforms': post.platforms,
           'target_page_ids': post.targetPageIds,
           'platform_content': post.platformContent,
+          'rich_content': post.richContent,
           'created_at': post.createdAt?.toIso8601String(),
           'updated_at': post.updatedAt?.toIso8601String(),
           'scheduled_at': post.scheduledAt?.toIso8601String(),

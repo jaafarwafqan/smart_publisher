@@ -26,6 +26,7 @@ class BackendContractMapperV1 {
       targetPageIds: entity.targetPageIds,
       scheduledAt: entity.scheduledAt,
       platformContent: entity.platformContent,
+      richContent: entity.richContent,
     );
   }
 
@@ -35,6 +36,7 @@ class BackendContractMapperV1 {
       content: entity.body,
       targetPageIds: entity.targetPageIds,
       platformContent: entity.platformContent,
+      richContent: entity.richContent,
     );
   }
 
@@ -54,6 +56,7 @@ class BackendContractMapperV1 {
       platforms: dto.platforms,
       targetPageIds: dto.targetPageIds,
       platformContent: dto.platformContent,
+      richContent: dto.richContent,
       approvalStatus: dto.approvalStatus,
       approvalRequestedAction: dto.approvalRequestedAction,
       approvalNote: dto.approvalNote,

@@ -2753,4 +2753,111 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformAdminConfirmActionButton => 'تأكيد الإجراء';
+
+  @override
+  String get platformAdminSubscriptionSectionTitle => 'الاشتراك';
+
+  @override
+  String get platformAdminSubscriptionNoPlanLabel => 'لا توجد باقة';
+
+  @override
+  String get platformAdminSubscriptionNoExpiryLabel => 'بلا انتهاء';
+
+  @override
+  String platformAdminSubscriptionPeriodEndLabel(String date) {
+    return 'ينتهي في $date';
+  }
+
+  @override
+  String get platformAdminSubscriptionManuallyGrantedLabel => 'مُمنوح يدويًا';
+
+  @override
+  String platformAdminSubscriptionGrantedReasonLabel(String reason) {
+    return 'السبب: $reason';
+  }
+
+  @override
+  String get platformAdminGrantSubscriptionButton => 'منح اشتراك';
+
+  @override
+  String get platformAdminExtendSubscriptionButton => 'تمديد الفترة';
+
+  @override
+  String get platformAdminGrantTrialButton => 'منح فترة تجريبية';
+
+  @override
+  String get platformAdminRevertSubscriptionButton =>
+      'الإعادة إلى الباقة المجانية';
+
+  @override
+  String get platformAdminSubscriptionStatusActive => 'نشط';
+
+  @override
+  String get platformAdminSubscriptionStatusTrialing => 'تجريبي';
+
+  @override
+  String get platformAdminSubscriptionStatusExpired => 'منتهٍ';
+
+  @override
+  String get platformAdminSubscriptionStatusCanceled => 'مُلغى';
+
+  @override
+  String get platformAdminSubscriptionStatusPastDue => 'متأخر السداد';
+
+  @override
+  String get platformAdminSubscriptionStatusUnknown => 'غير معروف';
+
+  @override
+  String get platformAdminGrantSubscriptionTitle => 'منح اشتراك';
+
+  @override
+  String get platformAdminSubscriptionPlanLabel => 'الباقة';
+
+  @override
+  String get platformAdminSubscriptionMonthsLabel => 'عدد الأشهر';
+
+  @override
+  String get platformAdminSubscriptionReasonLabel => 'السبب';
+
+  @override
+  String get platformAdminSubscriptionPlanRequiredError => 'اختر باقة.';
+
+  @override
+  String get platformAdminSubscriptionMonthsInvalidError =>
+      'أدخل عدد أشهر لا يقل عن 1.';
+
+  @override
+  String get platformAdminSubscriptionReasonRequiredError =>
+      'السبب مطلوب — منح مجاني بلا سبب موثّق يُعدّ ثغرة تدقيقية.';
+
+  @override
+  String get platformAdminExtendSubscriptionTitle => 'تمديد الفترة';
+
+  @override
+  String get platformAdminSubscriptionExtendDaysLabel => 'الأيام (اختياري)';
+
+  @override
+  String get platformAdminSubscriptionExtendMonthsLabel => 'الأشهر (اختياري)';
+
+  @override
+  String get platformAdminSubscriptionExtendRequiredError =>
+      'أدخل عدد الأيام أو الأشهر على الأقل.';
+
+  @override
+  String get platformAdminGrantTrialTitle => 'منح فترة تجريبية';
+
+  @override
+  String get platformAdminSubscriptionTrialDaysLabel => 'أيام الفترة التجريبية';
+
+  @override
+  String get platformAdminSubscriptionTrialDaysInvalidError =>
+      'أدخل عدد أيام لا يقل عن 1.';
+
+  @override
+  String get platformAdminRevertSubscriptionTitle =>
+      'الإعادة إلى الباقة المجانية';
+
+  @override
+  String get platformAdminRevertSubscriptionWarning =>
+      'سيؤدي هذا فورًا إلى تطبيق حدود الباقة المجانية — أي ميزات مدفوعة قيد الاستخدام حاليًا ستتوقف على الفور.';
 }

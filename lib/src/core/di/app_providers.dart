@@ -42,6 +42,7 @@ import '../../features/auth/application/two_factor_controller.dart';
 import '../../features/auth/domain/repositories/account_repository.dart';
 import '../../features/administration/data/system_settings_repository_impl.dart';
 import '../../features/administration/domain/repositories/system_settings_repository.dart';
+import '../../features/ai/data/ai_repository.dart';
 import '../../features/notifications/data/notification_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
 import '../../features/organizations/data/organization_repository_impl.dart';
@@ -416,6 +417,12 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepositoryImpl(
     networkClient: ref.read(networkClientProvider),
   );
+});
+
+/// AI traffic still goes through the authenticated, tenant-aware API client;
+/// no model provider key or direct model call exists in the Flutter app.
+final aiRepositoryProvider = Provider<AiRepository>((ref) {
+  return AiRepository(ref.read(networkClientProvider));
 });
 
 @Riverpod(keepAlive: true)

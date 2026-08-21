@@ -104,6 +104,7 @@ class DraftStorage {
       'platforms': post.platforms,
       'target_page_ids': post.targetPageIds,
       'platform_content': post.platformContent,
+      'rich_content': post.richContent,
       'approval_status': post.approvalStatus,
       'approval_requested_action': post.approvalRequestedAction,
       'approval_note': post.approvalNote,
@@ -137,6 +138,7 @@ class DraftStorage {
         json['platform_content'] as Map<dynamic, dynamic>? ??
             const <String, String>{},
       ),
+      richContent: _richContent(json['rich_content']),
       approvalStatus: json['approval_status'] as String?,
       approvalRequestedAction: json['approval_requested_action'] as String?,
       approvalNote: json['approval_note'] as String?,
@@ -150,5 +152,15 @@ class DraftStorage {
       return null;
     }
     return DateTime.tryParse(value);
+  }
+
+  static List<Map<String, dynamic>> _richContent(Object? value) {
+    if (value is! List<dynamic>) {
+      return const <Map<String, dynamic>>[];
+    }
+    return value
+        .whereType<Map<dynamic, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList(growable: false);
   }
 }

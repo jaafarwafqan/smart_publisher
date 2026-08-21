@@ -180,6 +180,42 @@ final class LaravelEndpoints {
       LaravelApi.versioned('/posts/$postId/approve');
   static String postReject(String postId) =>
       LaravelApi.versioned('/posts/$postId/reject');
+  static String postPrePublishCheck(String postId) =>
+      LaravelApi.versioned('/posts/$postId/pre-publish-check');
+
+  static final String aiSpellCheck = LaravelApi.versioned('/ai/spell-check');
+  static final String aiRewrite = LaravelApi.versioned('/ai/rewrite');
+  static final String aiImprove = LaravelApi.versioned('/ai/improve');
+  static final String aiShorten = LaravelApi.versioned('/ai/shorten');
+  static final String aiExpand = LaravelApi.versioned('/ai/expand');
+  static final String aiSimplify = LaravelApi.versioned('/ai/simplify');
+  static final String aiOfficialNews = LaravelApi.versioned(
+    '/ai/official-news',
+  );
+  static final String aiAdvertisement = LaravelApi.versioned(
+    '/ai/advertisement',
+  );
+  static final String aiAcademicFormat = LaravelApi.versioned(
+    '/ai/academic-format',
+  );
+  static final String aiMediaFormat = LaravelApi.versioned('/ai/media-format');
+  static final String aiSuggestTitles = LaravelApi.versioned(
+    '/ai/suggest-titles',
+  );
+  static final String aiSuggestClosing = LaravelApi.versioned(
+    '/ai/suggest-closing',
+  );
+  static final String aiSuggestCallToAction = LaravelApi.versioned(
+    '/ai/suggest-call-to-action',
+  );
+  static final String aiSuggestHashtags = LaravelApi.versioned(
+    '/ai/suggest-hashtags',
+  );
+  static final String aiAddEmojis = LaravelApi.versioned('/ai/add-emojis');
+  static final String aiTranslate = LaravelApi.versioned('/ai/translate');
+  static final String aiAdaptPlatforms = LaravelApi.versioned(
+    '/ai/adapt-platforms',
+  );
 
   static final String calendar = LaravelApi.versioned('/calendar');
 
@@ -201,6 +237,15 @@ final class LaravelEndpoints {
       LaravelApi.versioned('/admin/organizations/$id/status');
   static String platformAdminOrganizationReconcilePrimaryOwner(String id) =>
       LaravelApi.versioned('/admin/organizations/$id/reconcile-primary-owner');
+  // Prepaid-billing model (2026-08-21): manual grant/extend/revert/trial —
+  // see AdminSubscriptionController on the backend.
+  static String platformAdminOrganizationSubscription(String id) =>
+      LaravelApi.versioned('/admin/organizations/$id/subscription');
+  static String platformAdminOrganizationSubscriptionExtend(String id) =>
+      LaravelApi.versioned('/admin/organizations/$id/subscription/extend');
+  static String platformAdminOrganizationSubscriptionTrial(String id) =>
+      LaravelApi.versioned('/admin/organizations/$id/subscription/trial');
+  static final String billingPlans = LaravelApi.versioned('/billing/plans');
   static final String platformAdminAuditLogs = LaravelApi.versioned(
     '/admin/audit-logs',
   );

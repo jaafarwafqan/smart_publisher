@@ -71,6 +71,7 @@ PostEntity _postFromPayload(Map<String, dynamic> payload) {
   final rawPlatformContent =
       payload['platform_content'] as Map<String, dynamic>? ??
       const <String, dynamic>{};
+  final rawRichContent = payload['rich_content'];
 
   return PostEntity(
     id: payload['id'] as String,
@@ -91,6 +92,12 @@ PostEntity _postFromPayload(Map<String, dynamic> payload) {
     platformContent: rawPlatformContent.map(
       (key, value) => MapEntry(key, value.toString()),
     ),
+    richContent: rawRichContent is List<dynamic>
+        ? rawRichContent
+              .whereType<Map<dynamic, dynamic>>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(growable: false)
+        : const <Map<String, dynamic>>[],
   );
 }
 
