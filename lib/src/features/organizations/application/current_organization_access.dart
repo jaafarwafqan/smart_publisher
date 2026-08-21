@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/app_providers.dart';
+import '../../../core/result/app_failure.dart';
 import '../domain/entities/organization_entity.dart';
 
 /// The permission vocabulary exposed by the organization membership model.
@@ -173,6 +174,26 @@ class OrganizationAccessException implements Exception {
   String toString() => message;
 }
 
+/// Distinct from [OrganizationAccessException]: this means the session
+/// itself is dead (the access token expired AND the refresh attempt also
+/// failed — see RefreshTokenInterceptor, which only lets a 401 propagate
+/// this far once refresh has already been tried and lost), not "you have no
+/// active organization" or "the request failed for some other reason".
+/// authStateProvider only checks whether a token string is stored locally,
+/// never whether the backend still honors it — so without this distinction,
+/// a truly-expired session looked identical to a live one right up until
+/// this provider's live GET /organizations call, and callers had no way to
+/// tell "show the organizations screen" apart from "send this person back
+/// to login." See RouteGuards.guardPath, the reason this exists.
+class SessionExpiredException implements Exception {
+  const SessionExpiredException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 /// The single client-side source of truth for the selected organization and
 /// its membership permissions. It is deliberately remote-backed: persisted
 /// account roles and the locally stored organization id are never treated as
@@ -184,6 +205,11 @@ final currentOrganizationAccessProvider =
           .getMyOrganizations();
 
       if (!result.isSuccess) {
+        if (result.failure is AuthenticationFailure) {
+          throw SessionExpiredException(
+            result.message ?? 'Your session has expired.',
+          );
+        }
         throw OrganizationAccessException(
           result.message ?? 'Unable to load organization access.',
         );

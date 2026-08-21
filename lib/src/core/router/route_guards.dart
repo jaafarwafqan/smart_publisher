@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/organizations/application/current_organization_access.dart';
+import '../di/app_providers.dart';
 import 'guard_state_provider.dart';
 import 'route_guard_snapshot_cache.dart';
 import 'route_names.dart';
@@ -125,6 +126,21 @@ final class RouteGuards {
       access = await snapshotCache.organizationAccess(
         () => ref.refresh(currentOrganizationAccessProvider.future),
       );
+    } on SessionExpiredException {
+      // authStateProvider only checks whether a token STRING is stored
+      // locally — never whether the backend still honors it. A live report
+      // reproduced this: an access token expires, the silent refresh
+      // attempt also fails (the refresh token is dead too), and this guard
+      // used to treat that identically to "no active organization yet",
+      // landing an unauthenticated-in-every-way visitor on the
+      // organizations screen, which then failed to load for the exact same
+      // reason — a generic-looking error where the real fix was just to
+      // log in again. Clear the dead local session and send them to login
+      // instead. logout() itself best-effort-POSTs to /auth/logout and
+      // swallows that call's own failure, so calling it on an already-dead
+      // token is safe.
+      await ref.read(authSessionControllerProvider).logout();
+      return RouteNames.loginPath;
     } on OrganizationAccessException {
       return RouteNames.organizationsPath;
     } catch (_) {
