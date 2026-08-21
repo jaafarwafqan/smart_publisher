@@ -29,6 +29,7 @@ class PlatformOrganization {
     this.primaryOwner,
     this.primaryOwnerMissing = false,
     this.lastActivityAt,
+    this.subscription,
   });
 
   final int id;
@@ -42,11 +43,16 @@ class PlatformOrganization {
   // never be conflated in the UI.
   final bool primaryOwnerMissing;
   final DateTime? lastActivityAt;
+  // Prepaid-billing model (2026-08-21) — null only when the backend didn't
+  // eager-load it for this particular response; every real organization
+  // has one (see PersonalOrganizationProvisioner).
+  final PlatformOrganizationSubscription? subscription;
 
   bool get isActive => status == 'active';
 
   factory PlatformOrganization.fromJson(Map<String, dynamic> json) {
     final owner = json['primary_owner'];
+    final subscription = json['subscription'];
     return PlatformOrganization(
       id: _intValue(json['id']),
       name: _stringValue(json['name']),
@@ -58,8 +64,85 @@ class PlatformOrganization {
           : null,
       primaryOwnerMissing: json['primary_owner_missing'] == true,
       lastActivityAt: _dateValue(json['last_activity_at']),
+      subscription: subscription is Map<String, dynamic>
+          ? PlatformOrganizationSubscription.fromJson(subscription)
+          : null,
     );
   }
+}
+
+/// Prepaid-billing model (2026-08-21) — mirrors
+/// PlatformOrganizationResource::subscriptionPayload() on the backend.
+class PlatformOrganizationSubscription {
+  const PlatformOrganizationSubscription({
+    required this.status,
+    this.planId,
+    this.planName,
+    this.currentPeriodStart,
+    this.currentPeriodEnd,
+    this.trialEndsAt,
+    this.providerSubscriptionId,
+    this.grantedByUserId,
+    this.grantedReason,
+  });
+
+  final int? planId;
+  final String? planName;
+  final String status;
+  final DateTime? currentPeriodStart;
+  final DateTime? currentPeriodEnd;
+  final DateTime? trialEndsAt;
+  // null on a manual grant — a real paid gateway/Stripe renewal always sets
+  // this to the provider's own transaction/subscription reference.
+  final String? providerSubscriptionId;
+  final int? grantedByUserId;
+  final String? grantedReason;
+
+  bool get isManuallyGranted =>
+      providerSubscriptionId == null && grantedByUserId != null;
+  bool get isUnbounded => currentPeriodEnd == null;
+
+  factory PlatformOrganizationSubscription.fromJson(
+    Map<String, dynamic> json,
+  ) => PlatformOrganizationSubscription(
+    planId: json['plan_id'] == null ? null : _intValue(json['plan_id']),
+    planName: json['plan_name'] as String?,
+    status: _stringValue(json['status'], fallback: 'active'),
+    currentPeriodStart: _dateValue(json['current_period_start']),
+    currentPeriodEnd: _dateValue(json['current_period_end']),
+    trialEndsAt: _dateValue(json['trial_ends_at']),
+    providerSubscriptionId: json['provider_subscription_id'] as String?,
+    grantedByUserId: json['granted_by_user_id'] == null
+        ? null
+        : _intValue(json['granted_by_user_id']),
+    grantedReason: json['granted_reason'] as String?,
+  );
+}
+
+/// A billable plan option, for the grant/trial dialogs' plan picker — see
+/// `GET /billing/plans` (global, not organization-scoped).
+class PlatformPlanOption {
+  const PlatformPlanOption({
+    required this.id,
+    required this.name,
+    this.priceCents,
+    this.currency,
+  });
+
+  final int id;
+  final String name;
+  final int? priceCents;
+  final String? currency;
+
+  factory PlatformPlanOption.fromJson(Map<String, dynamic> json) =>
+      PlatformPlanOption(
+        id: _intValue(json['id']),
+        name: _stringValue(json['name']),
+        priceCents: json['price_cents'] == null
+            ? null
+            : _intValue(json['price_cents']),
+        currency: json['currency'] as String?,
+      );
 }
 
 class PlatformOwner {
@@ -536,6 +619,104 @@ class PlatformAdminRepository {
     );
   }
 
+  /// Global, not organization-scoped — used by the grant/trial dialogs' plan
+  /// picker.
+  Future<List<PlatformPlanOption>> getPlans() async {
+    final response = await _get(LaravelEndpoints.billingPlans);
+    final raw = _unwrap(response.data);
+    return raw is List<dynamic>
+        ? raw
+              .whereType<Map<String, dynamic>>()
+              .map(PlatformPlanOption.fromJson)
+              .toList(growable: false)
+        : const <PlatformPlanOption>[];
+  }
+
+  /// Assigns a plan and grants `months` of paid-for period — manual
+  /// extension and a real paid-gateway renewal are the same underlying
+  /// operation (see BillingPeriodGrantService on the backend). `reason` is
+  /// mandatory and is written to platform_audit_logs with a before/after
+  /// snapshot.
+  Future<PlatformOrganizationSubscription> grantSubscription({
+    required int organizationId,
+    required int planId,
+    required int months,
+    required String reason,
+  }) async {
+    final response = await _post(
+      LaravelEndpoints.platformAdminOrganizationSubscription(
+        organizationId.toString(),
+      ),
+      data: <String, dynamic>{
+        'plan_id': planId,
+        'months': months,
+        'reason': reason,
+      },
+    );
+    return PlatformOrganizationSubscription.fromJson(
+      _map(_unwrap(response.data)),
+    );
+  }
+
+  /// Extends the CURRENT plan's period without changing which plan is
+  /// assigned. Exactly one of `days`/`months` is required by the backend;
+  /// both may be supplied together.
+  Future<PlatformOrganizationSubscription> extendSubscription({
+    required int organizationId,
+    int? days,
+    int? months,
+    required String reason,
+  }) async {
+    final response = await _post(
+      LaravelEndpoints.platformAdminOrganizationSubscriptionExtend(
+        organizationId.toString(),
+      ),
+      data: <String, dynamic>{
+        if (days case final int days) 'days': days,
+        if (months case final int months) 'months': months,
+        'reason': reason,
+      },
+    );
+    return PlatformOrganizationSubscription.fromJson(
+      _map(_unwrap(response.data)),
+    );
+  }
+
+  /// Reverts an organization to the Free plan, applying Free's limits
+  /// immediately.
+  Future<PlatformOrganizationSubscription> revertSubscriptionToFree({
+    required int organizationId,
+    required String reason,
+  }) async {
+    final response = await _delete(
+      LaravelEndpoints.platformAdminOrganizationSubscription(
+        organizationId.toString(),
+      ),
+      data: <String, dynamic>{'reason': reason},
+    );
+    return PlatformOrganizationSubscription.fromJson(
+      _map(_unwrap(response.data)),
+    );
+  }
+
+  /// Grants a trialing period on whatever plan the organization already has
+  /// — deliberately takes no plan_id.
+  Future<PlatformOrganizationSubscription> grantSubscriptionTrial({
+    required int organizationId,
+    required int days,
+    required String reason,
+  }) async {
+    final response = await _post(
+      LaravelEndpoints.platformAdminOrganizationSubscriptionTrial(
+        organizationId.toString(),
+      ),
+      data: <String, dynamic>{'days': days, 'reason': reason},
+    );
+    return PlatformOrganizationSubscription.fromJson(
+      _map(_unwrap(response.data)),
+    );
+  }
+
   Future<Response<dynamic>> _get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -563,9 +744,9 @@ class PlatformAdminRepository {
     }
   }
 
-  Future<Response<dynamic>> _delete(String path) async {
+  Future<Response<dynamic>> _delete(String path, {dynamic data}) async {
     try {
-      return await networkClient.delete(path);
+      return await networkClient.delete(path, data: data);
     } on DioException catch (error) {
       throw _exception(error);
     }

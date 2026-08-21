@@ -16,6 +16,7 @@ class PostEntity extends BaseEntity {
     this.platforms = const <String>[],
     this.targetPageIds = const <String>[],
     this.platformContent = const <String, String>{},
+    this.richContent = const <Map<String, dynamic>>[],
     this.approvalStatus,
     this.approvalRequestedAction,
     this.approvalNote,
@@ -47,6 +48,10 @@ class PostEntity extends BaseEntity {
   /// that platform.
   final Map<String, String> platformContent;
 
+  /// Quill Delta JSON used only by the rich editor. The existing [body]
+  /// stays the compatible publish payload, so old clients/posts remain safe.
+  final List<Map<String, dynamic>> richContent;
+
   /// Sprint F (role/permission remediation): null/absent means this post
   /// never entered the approval workflow — a role holding `posts.publish`
   /// (or `posts.request_approval`, once approved) scheduled/published it
@@ -75,6 +80,7 @@ class PostEntity extends BaseEntity {
     List<String>? platforms,
     List<String>? targetPageIds,
     Map<String, String>? platformContent,
+    List<Map<String, dynamic>>? richContent,
     String? approvalStatus,
     String? approvalRequestedAction,
     String? approvalNote,
@@ -96,6 +102,7 @@ class PostEntity extends BaseEntity {
       platforms: platforms ?? this.platforms,
       targetPageIds: targetPageIds ?? this.targetPageIds,
       platformContent: platformContent ?? this.platformContent,
+      richContent: richContent ?? this.richContent,
       approvalStatus: approvalStatus ?? this.approvalStatus,
       approvalRequestedAction:
           approvalRequestedAction ?? this.approvalRequestedAction,

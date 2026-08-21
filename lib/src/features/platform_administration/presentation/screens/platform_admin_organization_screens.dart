@@ -290,6 +290,42 @@ class _PlatformOrganizationDetailScreenState
     }
   }
 
+  Future<void> _grantSubscription() async {
+    final granted = await showDialog<bool>(
+      context: context,
+      builder: (_) =>
+          GrantSubscriptionDialog(organizationId: widget.organizationId),
+    );
+    if (granted == true) _reload();
+  }
+
+  Future<void> _extendSubscription() async {
+    final extended = await showDialog<bool>(
+      context: context,
+      builder: (_) =>
+          ExtendSubscriptionDialog(organizationId: widget.organizationId),
+    );
+    if (extended == true) _reload();
+  }
+
+  Future<void> _grantSubscriptionTrial() async {
+    final granted = await showDialog<bool>(
+      context: context,
+      builder: (_) =>
+          GrantSubscriptionTrialDialog(organizationId: widget.organizationId),
+    );
+    if (granted == true) _reload();
+  }
+
+  Future<void> _revertSubscription() async {
+    final reverted = await showDialog<bool>(
+      context: context,
+      builder: (_) =>
+          RevertSubscriptionDialog(organizationId: widget.organizationId),
+    );
+    if (reverted == true) _reload();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -318,6 +354,10 @@ class _PlatformOrganizationDetailScreenState
                   ? _OrganizationDetailsContent(
                       details: snapshot.data!,
                       onFixPrimaryOwner: _fixPrimaryOwner,
+                      onGrantSubscription: _grantSubscription,
+                      onExtendSubscription: _extendSubscription,
+                      onGrantSubscriptionTrial: _grantSubscriptionTrial,
+                      onRevertSubscription: _revertSubscription,
                     )
                   : const SizedBox.shrink(),
             );

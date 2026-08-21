@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:smart_publisher/src/core/di/app_providers.dart';
 import 'package:smart_publisher/src/core/events/event_bus.dart';
 import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
@@ -379,19 +380,27 @@ Finder _withinPreviewSection(Finder matching) {
   return find.descendant(of: previewCard, matching: matching);
 }
 
+quill.QuillController _richContentController(WidgetTester tester) {
+  return tester
+      .widget<quill.QuillEditor>(
+        find.byKey(const ValueKey<String>('composer-rich-editor')),
+      )
+      .controller;
+}
+
 void main() {
   testWidgets(
-    'bold markers render as real bold for Telegram and as plain text for Facebook',
+    'WYSIWYG bold renders for Telegram and never exposes Markdown in Facebook preview',
     (tester) async {
       await _pump(tester);
 
-      await tester.enterText(
-        find.widgetWithText(
-          TextField,
-          'Write your post content... '
-          '(#hashtags and @mentions highlight automatically)',
-        ),
-        'This is **big** news.',
+      final controller = _richContentController(tester);
+      controller.formatSelection(quill.Attribute.bold);
+      controller.replaceText(
+        0,
+        0,
+        'big',
+        const TextSelection.collapsed(offset: 3),
       );
       await tester.pumpAndSettle();
 
@@ -400,7 +409,7 @@ void main() {
       final facebookText = tester.widget<Text>(
         find.byKey(const ValueKey<String>('platform-preview-text-facebook')),
       );
-      expect(facebookText.data, 'This is big news.');
+      expect(facebookText.data, 'big');
 
       // Telegram's preview card is the Text.rich twin, keyed separately —
       // no structural guessing needed to find the right RichText.
@@ -420,13 +429,11 @@ void main() {
     (tester) async {
       await _pump(tester);
 
-      await tester.enterText(
-        find.widgetWithText(
-          TextField,
-          'Write your post content... '
-          '(#hashtags and @mentions highlight automatically)',
-        ),
+      _richContentController(tester).replaceText(
+        0,
+        0,
         'Shared body text.',
+        const TextSelection.collapsed(offset: 17),
       );
       await tester.enterText(
         find
@@ -447,23 +454,32 @@ void main() {
     },
   );
 
-  testWidgets('formatting toolbar wraps the selection with bold markers', (
+  testWidgets('rich editor never writes Markdown markers for bold text', (
     tester,
   ) async {
     await _pump(tester);
 
-    final contentField = find.widgetWithText(
-      TextField,
-      'Write your post content... (#hashtags and @mentions highlight automatically)',
+    final controller = _richContentController(tester);
+    controller.replaceText(
+      0,
+      0,
+      'hello',
+      const TextSelection.collapsed(offset: 5),
     );
-    await tester.enterText(contentField, 'hello');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.format_bold));
+    controller.formatSelection(quill.Attribute.bold);
     await tester.pumpAndSettle();
 
-    final textField = tester.widget<TextField>(contentField);
-    expect(textField.controller!.text, 'hello****');
+    controller.replaceText(
+      5,
+      0,
+      ' world',
+      const TextSelection.collapsed(offset: 11),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('**hello world**'), findsNothing);
   });
 
   testWidgets(

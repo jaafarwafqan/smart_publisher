@@ -4975,6 +4975,198 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تأكيد الإجراء'**
   String get platformAdminConfirmActionButton;
+
+  /// No description provided for @platformAdminSubscriptionSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاشتراك'**
+  String get platformAdminSubscriptionSectionTitle;
+
+  /// No description provided for @platformAdminSubscriptionNoPlanLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد باقة'**
+  String get platformAdminSubscriptionNoPlanLabel;
+
+  /// No description provided for @platformAdminSubscriptionNoExpiryLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'بلا انتهاء'**
+  String get platformAdminSubscriptionNoExpiryLabel;
+
+  /// No description provided for @platformAdminSubscriptionPeriodEndLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'ينتهي في {date}'**
+  String platformAdminSubscriptionPeriodEndLabel(String date);
+
+  /// No description provided for @platformAdminSubscriptionManuallyGrantedLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مُمنوح يدويًا'**
+  String get platformAdminSubscriptionManuallyGrantedLabel;
+
+  /// No description provided for @platformAdminSubscriptionGrantedReasonLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'السبب: {reason}'**
+  String platformAdminSubscriptionGrantedReasonLabel(String reason);
+
+  /// No description provided for @platformAdminGrantSubscriptionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'منح اشتراك'**
+  String get platformAdminGrantSubscriptionButton;
+
+  /// No description provided for @platformAdminExtendSubscriptionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمديد الفترة'**
+  String get platformAdminExtendSubscriptionButton;
+
+  /// No description provided for @platformAdminGrantTrialButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'منح فترة تجريبية'**
+  String get platformAdminGrantTrialButton;
+
+  /// No description provided for @platformAdminRevertSubscriptionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإعادة إلى الباقة المجانية'**
+  String get platformAdminRevertSubscriptionButton;
+
+  /// No description provided for @platformAdminSubscriptionStatusActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشط'**
+  String get platformAdminSubscriptionStatusActive;
+
+  /// No description provided for @platformAdminSubscriptionStatusTrialing.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجريبي'**
+  String get platformAdminSubscriptionStatusTrialing;
+
+  /// No description provided for @platformAdminSubscriptionStatusExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'منتهٍ'**
+  String get platformAdminSubscriptionStatusExpired;
+
+  /// No description provided for @platformAdminSubscriptionStatusCanceled.
+  ///
+  /// In ar, this message translates to:
+  /// **'مُلغى'**
+  String get platformAdminSubscriptionStatusCanceled;
+
+  /// No description provided for @platformAdminSubscriptionStatusPastDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'متأخر السداد'**
+  String get platformAdminSubscriptionStatusPastDue;
+
+  /// No description provided for @platformAdminSubscriptionStatusUnknown.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير معروف'**
+  String get platformAdminSubscriptionStatusUnknown;
+
+  /// No description provided for @platformAdminGrantSubscriptionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'منح اشتراك'**
+  String get platformAdminGrantSubscriptionTitle;
+
+  /// No description provided for @platformAdminSubscriptionPlanLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الباقة'**
+  String get platformAdminSubscriptionPlanLabel;
+
+  /// No description provided for @platformAdminSubscriptionMonthsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد الأشهر'**
+  String get platformAdminSubscriptionMonthsLabel;
+
+  /// No description provided for @platformAdminSubscriptionReasonLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'السبب'**
+  String get platformAdminSubscriptionReasonLabel;
+
+  /// No description provided for @platformAdminSubscriptionPlanRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر باقة.'**
+  String get platformAdminSubscriptionPlanRequiredError;
+
+  /// No description provided for @platformAdminSubscriptionMonthsInvalidError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل عدد أشهر لا يقل عن 1.'**
+  String get platformAdminSubscriptionMonthsInvalidError;
+
+  /// No description provided for @platformAdminSubscriptionReasonRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'السبب مطلوب — منح مجاني بلا سبب موثّق يُعدّ ثغرة تدقيقية.'**
+  String get platformAdminSubscriptionReasonRequiredError;
+
+  /// No description provided for @platformAdminExtendSubscriptionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمديد الفترة'**
+  String get platformAdminExtendSubscriptionTitle;
+
+  /// No description provided for @platformAdminSubscriptionExtendDaysLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأيام (اختياري)'**
+  String get platformAdminSubscriptionExtendDaysLabel;
+
+  /// No description provided for @platformAdminSubscriptionExtendMonthsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأشهر (اختياري)'**
+  String get platformAdminSubscriptionExtendMonthsLabel;
+
+  /// No description provided for @platformAdminSubscriptionExtendRequiredError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل عدد الأيام أو الأشهر على الأقل.'**
+  String get platformAdminSubscriptionExtendRequiredError;
+
+  /// No description provided for @platformAdminGrantTrialTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'منح فترة تجريبية'**
+  String get platformAdminGrantTrialTitle;
+
+  /// No description provided for @platformAdminSubscriptionTrialDaysLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الفترة التجريبية'**
+  String get platformAdminSubscriptionTrialDaysLabel;
+
+  /// No description provided for @platformAdminSubscriptionTrialDaysInvalidError.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل عدد أيام لا يقل عن 1.'**
+  String get platformAdminSubscriptionTrialDaysInvalidError;
+
+  /// No description provided for @platformAdminRevertSubscriptionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإعادة إلى الباقة المجانية'**
+  String get platformAdminRevertSubscriptionTitle;
+
+  /// No description provided for @platformAdminRevertSubscriptionWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيؤدي هذا فورًا إلى تطبيق حدود الباقة المجانية — أي ميزات مدفوعة قيد الاستخدام حاليًا ستتوقف على الفور.'**
+  String get platformAdminRevertSubscriptionWarning;
 }
 
 class _AppLocalizationsDelegate

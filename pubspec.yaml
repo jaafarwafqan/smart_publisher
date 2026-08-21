@@ -34,6 +34,9 @@ dependencies:
   # Charts & Data Visualization
   fl_chart: ^0.69.0
   emoji_picker_flutter: ^4.5.3
+  # Active MIT-licensed, non-WebView WYSIWYG editor. We persist its Delta in
+  # post metadata while retaining the existing plain/Telegram-safe payload.
+  flutter_quill: ^11.5.1
 
   # Native social sign-in (Android/iOS only — web/desktop keep the existing
   # browser-based OAuth flow in dashboard_screen.dart unchanged).

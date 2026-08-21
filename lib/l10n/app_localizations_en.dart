@@ -2776,4 +2776,110 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platformAdminConfirmActionButton => 'Confirm action';
+
+  @override
+  String get platformAdminSubscriptionSectionTitle => 'Subscription';
+
+  @override
+  String get platformAdminSubscriptionNoPlanLabel => 'No plan';
+
+  @override
+  String get platformAdminSubscriptionNoExpiryLabel => 'No expiry';
+
+  @override
+  String platformAdminSubscriptionPeriodEndLabel(String date) {
+    return 'Ends $date';
+  }
+
+  @override
+  String get platformAdminSubscriptionManuallyGrantedLabel =>
+      'Manually granted';
+
+  @override
+  String platformAdminSubscriptionGrantedReasonLabel(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get platformAdminGrantSubscriptionButton => 'Grant subscription';
+
+  @override
+  String get platformAdminExtendSubscriptionButton => 'Extend period';
+
+  @override
+  String get platformAdminGrantTrialButton => 'Grant trial';
+
+  @override
+  String get platformAdminRevertSubscriptionButton => 'Revert to Free';
+
+  @override
+  String get platformAdminSubscriptionStatusActive => 'Active';
+
+  @override
+  String get platformAdminSubscriptionStatusTrialing => 'Trialing';
+
+  @override
+  String get platformAdminSubscriptionStatusExpired => 'Expired';
+
+  @override
+  String get platformAdminSubscriptionStatusCanceled => 'Canceled';
+
+  @override
+  String get platformAdminSubscriptionStatusPastDue => 'Past due';
+
+  @override
+  String get platformAdminSubscriptionStatusUnknown => 'Unknown';
+
+  @override
+  String get platformAdminGrantSubscriptionTitle => 'Grant subscription';
+
+  @override
+  String get platformAdminSubscriptionPlanLabel => 'Plan';
+
+  @override
+  String get platformAdminSubscriptionMonthsLabel => 'Months';
+
+  @override
+  String get platformAdminSubscriptionReasonLabel => 'Reason';
+
+  @override
+  String get platformAdminSubscriptionPlanRequiredError => 'Choose a plan.';
+
+  @override
+  String get platformAdminSubscriptionMonthsInvalidError =>
+      'Enter a number of months of at least 1.';
+
+  @override
+  String get platformAdminSubscriptionReasonRequiredError =>
+      'A reason is required — a free grant with no documented reason is an audit gap.';
+
+  @override
+  String get platformAdminExtendSubscriptionTitle => 'Extend period';
+
+  @override
+  String get platformAdminSubscriptionExtendDaysLabel => 'Days (optional)';
+
+  @override
+  String get platformAdminSubscriptionExtendMonthsLabel => 'Months (optional)';
+
+  @override
+  String get platformAdminSubscriptionExtendRequiredError =>
+      'Enter at least one of days or months.';
+
+  @override
+  String get platformAdminGrantTrialTitle => 'Grant trial';
+
+  @override
+  String get platformAdminSubscriptionTrialDaysLabel => 'Trial days';
+
+  @override
+  String get platformAdminSubscriptionTrialDaysInvalidError =>
+      'Enter a number of days of at least 1.';
+
+  @override
+  String get platformAdminRevertSubscriptionTitle => 'Revert to Free';
+
+  @override
+  String get platformAdminRevertSubscriptionWarning =>
+      'This immediately applies the Free plan\'s limits — any paid features currently in use will stop working right away.';
 }

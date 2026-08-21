@@ -18,6 +18,7 @@ class PostRequestDtoV1 {
     this.targetPageIds = const <String>[],
     this.scheduledAt,
     this.platformContent = const <String, String>{},
+    this.richContent = const <Map<String, dynamic>>[],
   });
 
   final String title;
@@ -27,6 +28,7 @@ class PostRequestDtoV1 {
   final List<String> targetPageIds;
   final DateTime? scheduledAt;
   final Map<String, String> platformContent;
+  final List<Map<String, dynamic>> richContent;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -36,7 +38,10 @@ class PostRequestDtoV1 {
       'platforms': platforms,
       'target_page_ids': targetPageIds.map(int.parse).toList(),
       'scheduled_at': scheduledAt?.toUtc().toIso8601String(),
-      'meta': <String, dynamic>{'platform_content': platformContent},
+      'meta': <String, dynamic>{
+        'platform_content': platformContent,
+        if (richContent.isNotEmpty) 'rich_content': richContent,
+      },
     };
   }
 }
@@ -47,19 +52,24 @@ class PostUpdateRequestDtoV1 {
     required this.content,
     this.targetPageIds = const <String>[],
     this.platformContent = const <String, String>{},
+    this.richContent = const <Map<String, dynamic>>[],
   });
 
   final String title;
   final String content;
   final List<String> targetPageIds;
   final Map<String, String> platformContent;
+  final List<Map<String, dynamic>> richContent;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'title': title,
       'content': content,
       'target_page_ids': targetPageIds.map(int.parse).toList(),
-      'meta': <String, dynamic>{'platform_content': platformContent},
+      'meta': <String, dynamic>{
+        'platform_content': platformContent,
+        if (richContent.isNotEmpty) 'rich_content': richContent,
+      },
     };
   }
 }
@@ -91,6 +101,7 @@ class PostResponseDtoV1 {
     this.platforms = const <String>[],
     this.targetPageIds = const <String>[],
     this.platformContent = const <String, String>{},
+    this.richContent = const <Map<String, dynamic>>[],
     this.approvalStatus,
     this.approvalRequestedAction,
     this.approvalNote,
@@ -110,6 +121,7 @@ class PostResponseDtoV1 {
   final List<String> platforms;
   final List<String> targetPageIds;
   final Map<String, String> platformContent;
+  final List<Map<String, dynamic>> richContent;
 
   // Sprint F (role/permission remediation): powers the Approvals screen —
   // null/absent means the post never entered the approval workflow at all
@@ -131,6 +143,13 @@ class PostResponseDtoV1 {
     final rawPlatformContent = platformContentValue is Map<String, dynamic>
         ? platformContentValue
         : const <String, dynamic>{};
+    final richContentValue = meta['rich_content'];
+    final richContent = richContentValue is List<dynamic>
+        ? richContentValue
+              .whereType<Map<dynamic, dynamic>>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(growable: false)
+        : const <Map<String, dynamic>>[];
     final approvedByValue = json['approved_by'];
     final approvedByMap = approvedByValue is Map<String, dynamic>
         ? approvedByValue
@@ -153,6 +172,7 @@ class PostResponseDtoV1 {
       platformContent: rawPlatformContent.map(
         (key, value) => MapEntry(key, value.toString()),
       ),
+      richContent: richContent,
       approvalStatus: json['approval_status']?.toString(),
       approvalRequestedAction: json['approval_requested_action']?.toString(),
       approvalNote: json['approval_note']?.toString(),

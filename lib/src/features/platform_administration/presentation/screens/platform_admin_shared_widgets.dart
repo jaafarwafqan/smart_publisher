@@ -311,9 +311,17 @@ class _OrganizationDetailsContent extends StatelessWidget {
   const _OrganizationDetailsContent({
     required this.details,
     required this.onFixPrimaryOwner,
+    required this.onGrantSubscription,
+    required this.onExtendSubscription,
+    required this.onGrantSubscriptionTrial,
+    required this.onRevertSubscription,
   });
   final PlatformOrganizationDetails details;
   final VoidCallback onFixPrimaryOwner;
+  final VoidCallback onGrantSubscription;
+  final VoidCallback onExtendSubscription;
+  final VoidCallback onGrantSubscriptionTrial;
+  final VoidCallback onRevertSubscription;
 
   @override
   Widget build(BuildContext context) {
@@ -388,6 +396,14 @@ class _OrganizationDetailsContent extends StatelessWidget {
                 ),
         ),
         const SizedBox(height: AppSpacing.lg),
+        _SubscriptionSection(
+          subscription: organization.subscription,
+          onGrant: onGrantSubscription,
+          onExtend: onExtendSubscription,
+          onTrial: onGrantSubscriptionTrial,
+          onRevert: onRevertSubscription,
+        ),
+        const SizedBox(height: AppSpacing.lg),
         _DetailSection(
           title: l10n.platformAdminSocialAccountsSectionTitle,
           child: details.socialAccounts.isEmpty
@@ -436,6 +452,125 @@ class _OrganizationDetailsContent extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Prepaid-billing model (2026-08-21) — the manual side of
+/// BillingPeriodGrantService: grant/extend/trial/revert-to-free. See
+/// AdminSubscriptionController on the backend for the actual endpoints.
+class _SubscriptionSection extends StatelessWidget {
+  const _SubscriptionSection({
+    required this.subscription,
+    required this.onGrant,
+    required this.onExtend,
+    required this.onTrial,
+    required this.onRevert,
+  });
+
+  final PlatformOrganizationSubscription? subscription;
+  final VoidCallback onGrant;
+  final VoidCallback onExtend;
+  final VoidCallback onTrial;
+  final VoidCallback onRevert;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final subscription = this.subscription;
+    return _DetailSection(
+      title: l10n.platformAdminSubscriptionSectionTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: <Widget>[
+              StatusPill(
+                label:
+                    subscription?.planName ??
+                    l10n.platformAdminSubscriptionNoPlanLabel,
+              ),
+              StatusPill(
+                label: _statusLabel(subscription?.status, l10n),
+                tone: _statusTone(subscription?.status),
+              ),
+              StatusPill(
+                label: subscription?.isUnbounded ?? true
+                    ? l10n.platformAdminSubscriptionNoExpiryLabel
+                    : l10n.platformAdminSubscriptionPeriodEndLabel(
+                        _formatDate(subscription?.currentPeriodEnd, l10n),
+                      ),
+              ),
+              if (subscription?.isManuallyGranted ?? false)
+                StatusPill(
+                  label: l10n.platformAdminSubscriptionManuallyGrantedLabel,
+                  tone: PillTone.warning,
+                ),
+            ],
+          ),
+          if (subscription?.grantedReason case final String reason
+              when reason.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.platformAdminSubscriptionGrantedReasonLabel(reason),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: <Widget>[
+              FilledButton.icon(
+                onPressed: onGrant,
+                icon: const Icon(Icons.card_membership_outlined),
+                label: Text(l10n.platformAdminGrantSubscriptionButton),
+              ),
+              OutlinedButton.icon(
+                onPressed: onExtend,
+                icon: const Icon(Icons.more_time_outlined),
+                label: Text(l10n.platformAdminExtendSubscriptionButton),
+              ),
+              OutlinedButton.icon(
+                onPressed: onTrial,
+                icon: const Icon(Icons.schedule_outlined),
+                label: Text(l10n.platformAdminGrantTrialButton),
+              ),
+              TextButton.icon(
+                onPressed: onRevert,
+                icon: Icon(
+                  Icons.restart_alt_outlined,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                label: Text(
+                  l10n.platformAdminRevertSubscriptionButton,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _statusLabel(String? status, AppLocalizations l10n) {
+    return switch (status) {
+      'active' => l10n.platformAdminSubscriptionStatusActive,
+      'trialing' => l10n.platformAdminSubscriptionStatusTrialing,
+      'expired' => l10n.platformAdminSubscriptionStatusExpired,
+      'canceled' => l10n.platformAdminSubscriptionStatusCanceled,
+      'past_due' => l10n.platformAdminSubscriptionStatusPastDue,
+      _ => l10n.platformAdminSubscriptionStatusUnknown,
+    };
+  }
+
+  PillTone _statusTone(String? status) => switch (status) {
+    'active' => PillTone.success,
+    'trialing' => PillTone.neutral,
+    'expired' || 'canceled' || 'past_due' => PillTone.danger,
+    _ => PillTone.neutral,
+  };
 }
 
 class _DetailSection extends StatelessWidget {

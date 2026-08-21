@@ -950,3 +950,528 @@ Future<bool?> _confirm(
     },
   );
 }
+
+/// Prepaid-billing model (2026-08-21) — `POST /admin/organizations/{id}/subscription`:
+/// assigns a plan and grants `months` of paid-for period. `reason` is
+/// mandatory (a free grant with no documented reason is an audit gap).
+class GrantSubscriptionDialog extends ConsumerStatefulWidget {
+  const GrantSubscriptionDialog({super.key, required this.organizationId});
+
+  final int organizationId;
+
+  @override
+  ConsumerState<GrantSubscriptionDialog> createState() =>
+      _GrantSubscriptionDialogState();
+}
+
+class _GrantSubscriptionDialogState
+    extends ConsumerState<GrantSubscriptionDialog> {
+  final _months = TextEditingController(text: '1');
+  final _reason = TextEditingController();
+  int? _planId;
+  bool _submitting = false;
+  String? _error;
+  late final Future<List<PlatformPlanOption>> _plans;
+
+  @override
+  void initState() {
+    super.initState();
+    _plans = ref.read(platformAdminRepositoryProvider).getPlans();
+  }
+
+  @override
+  void dispose() {
+    _months.dispose();
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    final months = int.tryParse(_months.text.trim());
+    if (_planId == null) {
+      setState(() => _error = l10n.platformAdminSubscriptionPlanRequiredError);
+      return;
+    }
+    if (months == null || months < 1) {
+      setState(() => _error = l10n.platformAdminSubscriptionMonthsInvalidError);
+      return;
+    }
+    if (_reason.text.trim().isEmpty) {
+      setState(
+        () => _error = l10n.platformAdminSubscriptionReasonRequiredError,
+      );
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(platformAdminRepositoryProvider)
+          .grantSubscription(
+            organizationId: widget.organizationId,
+            planId: _planId!,
+            months: months,
+            reason: _reason.text.trim(),
+          );
+      if (mounted) Navigator.of(context).pop(true);
+    } on PlatformAdminException catch (error) {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = error.message;
+        });
+      }
+    } catch (error, stackTrace) {
+      AppLogger.e('Unexpected error granting subscription', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = l10n.platformAdminUnexpectedError;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.platformAdminGrantSubscriptionTitle),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            FutureBuilder<List<PlatformPlanOption>>(
+              future: _plans,
+              builder: (context, snapshot) {
+                final plans = snapshot.data ?? const <PlatformPlanOption>[];
+                return DropdownButtonFormField<int>(
+                  initialValue: _planId,
+                  decoration: InputDecoration(
+                    labelText: l10n.platformAdminSubscriptionPlanLabel,
+                  ),
+                  items: plans
+                      .map(
+                        (plan) => DropdownMenuItem<int>(
+                          value: plan.id,
+                          child: Text(plan.name),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: (value) => setState(() => _planId = value),
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _months,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionMonthsLabel,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _reason,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionReasonLabel,
+              ),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    );
+  }
+}
+
+/// `POST /admin/organizations/{id}/subscription/extend` — extends the
+/// CURRENT plan's period without changing which plan is assigned. Exactly
+/// one of days/months is required; both may be supplied together.
+class ExtendSubscriptionDialog extends ConsumerStatefulWidget {
+  const ExtendSubscriptionDialog({super.key, required this.organizationId});
+
+  final int organizationId;
+
+  @override
+  ConsumerState<ExtendSubscriptionDialog> createState() =>
+      _ExtendSubscriptionDialogState();
+}
+
+class _ExtendSubscriptionDialogState
+    extends ConsumerState<ExtendSubscriptionDialog> {
+  final _days = TextEditingController();
+  final _months = TextEditingController();
+  final _reason = TextEditingController();
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _days.dispose();
+    _months.dispose();
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    final days = int.tryParse(_days.text.trim());
+    final months = int.tryParse(_months.text.trim());
+    if ((days == null || days < 1) && (months == null || months < 1)) {
+      setState(
+        () => _error = l10n.platformAdminSubscriptionExtendRequiredError,
+      );
+      return;
+    }
+    if (_reason.text.trim().isEmpty) {
+      setState(
+        () => _error = l10n.platformAdminSubscriptionReasonRequiredError,
+      );
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(platformAdminRepositoryProvider)
+          .extendSubscription(
+            organizationId: widget.organizationId,
+            days: days,
+            months: months,
+            reason: _reason.text.trim(),
+          );
+      if (mounted) Navigator.of(context).pop(true);
+    } on PlatformAdminException catch (error) {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = error.message;
+        });
+      }
+    } catch (error, stackTrace) {
+      AppLogger.e('Unexpected error extending subscription', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = l10n.platformAdminUnexpectedError;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.platformAdminExtendSubscriptionTitle),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
+              controller: _days,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionExtendDaysLabel,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _months,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionExtendMonthsLabel,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _reason,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionReasonLabel,
+              ),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    );
+  }
+}
+
+/// `POST /admin/organizations/{id}/subscription/trial` — grants a trialing
+/// period on whatever plan is already assigned. Deliberately takes no
+/// plan_id.
+class GrantSubscriptionTrialDialog extends ConsumerStatefulWidget {
+  const GrantSubscriptionTrialDialog({super.key, required this.organizationId});
+
+  final int organizationId;
+
+  @override
+  ConsumerState<GrantSubscriptionTrialDialog> createState() =>
+      _GrantSubscriptionTrialDialogState();
+}
+
+class _GrantSubscriptionTrialDialogState
+    extends ConsumerState<GrantSubscriptionTrialDialog> {
+  final _days = TextEditingController(text: '14');
+  final _reason = TextEditingController();
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _days.dispose();
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    final days = int.tryParse(_days.text.trim());
+    if (days == null || days < 1) {
+      setState(
+        () => _error = l10n.platformAdminSubscriptionTrialDaysInvalidError,
+      );
+      return;
+    }
+    if (_reason.text.trim().isEmpty) {
+      setState(
+        () => _error = l10n.platformAdminSubscriptionReasonRequiredError,
+      );
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(platformAdminRepositoryProvider)
+          .grantSubscriptionTrial(
+            organizationId: widget.organizationId,
+            days: days,
+            reason: _reason.text.trim(),
+          );
+      if (mounted) Navigator.of(context).pop(true);
+    } on PlatformAdminException catch (error) {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = error.message;
+        });
+      }
+    } catch (error, stackTrace) {
+      AppLogger.e('Unexpected error granting a trial', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = l10n.platformAdminUnexpectedError;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.platformAdminGrantTrialTitle),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
+              controller: _days,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionTrialDaysLabel,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _reason,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionReasonLabel,
+              ),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    );
+  }
+}
+
+/// `DELETE /admin/organizations/{id}/subscription` — reverts to the Free
+/// plan, applying Free's limits immediately. reason is mandatory.
+class RevertSubscriptionDialog extends ConsumerStatefulWidget {
+  const RevertSubscriptionDialog({super.key, required this.organizationId});
+
+  final int organizationId;
+
+  @override
+  ConsumerState<RevertSubscriptionDialog> createState() =>
+      _RevertSubscriptionDialogState();
+}
+
+class _RevertSubscriptionDialogState
+    extends ConsumerState<RevertSubscriptionDialog> {
+  final _reason = TextEditingController();
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_reason.text.trim().isEmpty) {
+      setState(
+        () => _error = l10n.platformAdminSubscriptionReasonRequiredError,
+      );
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(platformAdminRepositoryProvider)
+          .revertSubscriptionToFree(
+            organizationId: widget.organizationId,
+            reason: _reason.text.trim(),
+          );
+      if (mounted) Navigator.of(context).pop(true);
+    } on PlatformAdminException catch (error) {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = error.message;
+        });
+      }
+    } catch (error, stackTrace) {
+      AppLogger.e(
+        'Unexpected error reverting subscription to Free',
+        error,
+        stackTrace,
+      );
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = l10n.platformAdminUnexpectedError;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.platformAdminRevertSubscriptionTitle),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(l10n.platformAdminRevertSubscriptionWarning),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _reason,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: l10n.platformAdminSubscriptionReasonLabel,
+              ),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          onPressed: _submitting ? null : _submit,
+          child: Text(l10n.platformAdminConfirmActionButton),
+        ),
+      ],
+    );
+  }
+}
