@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../../../../core/theme/app_spacing.dart';
 import '../../domain/rich_content_codec.dart';
 
 /// Visible, keyboard-accessible WYSIWYG editor. The built-in Quill toolbar
@@ -35,7 +36,7 @@ class ComposerRichTextEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text('أدوات التنسيق', style: theme.textTheme.labelLarge),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Directionality(
             textDirection: TextDirection.rtl,
             child: quill.QuillSimpleToolbar(
@@ -61,7 +62,7 @@ class ComposerRichTextEditor extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
@@ -70,7 +71,7 @@ class ComposerRichTextEditor extends StatelessWidget {
               label: const Text('إضافة رمز تعبيري'),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           DecoratedBox(
             decoration: BoxDecoration(
               border: Border.all(color: theme.colorScheme.outline),
@@ -86,7 +87,7 @@ class ComposerRichTextEditor extends StatelessWidget {
                   focusNode: focusNode,
                   config: quill.QuillEditorConfig(
                     placeholder: 'اكتب محتوى المنشور…',
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     minHeight: 180,
                     maxHeight: 440,
                     scrollable: true,
@@ -105,7 +106,7 @@ class ComposerRichTextEditor extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Semantics(
             liveRegion: true,
             label: 'عداد المحتوى',
