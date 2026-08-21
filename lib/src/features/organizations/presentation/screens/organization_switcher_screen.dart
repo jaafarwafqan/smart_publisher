@@ -13,6 +13,7 @@ import '../../../../shared/widgets/adaptive_content_width.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/status_pill.dart';
 import '../../../../core/router/guard_state_provider.dart';
+import '../../../../core/router/route_guard_snapshot_cache.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../auth/application/auth_session_controller.dart';
 import '../../application/current_organization_access.dart';
@@ -72,7 +73,13 @@ class _OrganizationSwitcherScreenState
 
     // Refresh the one shared organization/membership source before entering
     // a protected route. This removes stale grants from the prior tenant.
+    // RouteGuardSnapshotCache sits in front of currentOrganizationAccessProvider
+    // inside RouteGuards.guardPath and is not itself a Riverpod provider, so
+    // invalidating the provider alone leaves RouteGuards still serving the
+    // prior organization's cached decision for up to its 20s TTL — the very
+    // staleness this comment says is being removed.
     ref.invalidate(currentOrganizationAccessProvider);
+    ref.read(routeGuardSnapshotCacheProvider).invalidate();
     try {
       final refreshed = await ref.read(
         currentOrganizationAccessProvider.future,
@@ -120,6 +127,7 @@ class _OrganizationSwitcherScreenState
     ref.invalidate(currentUserRoleProvider);
     ref.invalidate(currentPlatformAdminProvider);
     ref.invalidate(currentOrganizationAccessProvider);
+    ref.read(routeGuardSnapshotCacheProvider).invalidate();
     if (!mounted) {
       return;
     }

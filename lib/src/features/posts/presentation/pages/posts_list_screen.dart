@@ -295,9 +295,7 @@ class _PostsListScreenState extends ConsumerState<PostsListScreen> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.md,
-                        ),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: _PostCard(
                           post: posts[index],
                           l10n: l10n,
@@ -518,26 +516,19 @@ class _PostCard extends StatelessWidget {
                 if (post.status == 'published' && post.publishedAt != null)
                   StatusPill(
                     label: l10n.postsListPublishedMeta(
-                      _PostsListScreenState._formatDateTime(
-                        post.publishedAt!,
-                      ),
+                      _PostsListScreenState._formatDateTime(post.publishedAt!),
                     ),
                     icon: Icons.check_circle_outline,
                   )
-                else if (post.status == 'scheduled' &&
-                    post.scheduledAt != null)
+                else if (post.status == 'scheduled' && post.scheduledAt != null)
                   StatusPill(
                     label: l10n.postsListScheduledMeta(
-                      _PostsListScreenState._formatDateTime(
-                        post.scheduledAt!,
-                      ),
+                      _PostsListScreenState._formatDateTime(post.scheduledAt!),
                     ),
                     icon: Icons.schedule,
                   ),
                 StatusPill(
-                  label: l10n.postsListMediaCountMeta(
-                    post.attachments.length,
-                  ),
+                  label: l10n.postsListMediaCountMeta(post.attachments.length),
                   icon: Icons.attach_file,
                 ),
                 StatusPill(
@@ -569,9 +560,7 @@ class _PostCard extends StatelessWidget {
                           ? const SizedBox(
                               width: AppSizes.iconSm,
                               height: AppSizes.iconSm,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.delete_outline),
                     ),

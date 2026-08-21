@@ -7,6 +7,7 @@ import '../../../../core/base/pagination.dart';
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../../../core/router/guard_state_provider.dart';
+import '../../../../core/router/route_guard_snapshot_cache.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';

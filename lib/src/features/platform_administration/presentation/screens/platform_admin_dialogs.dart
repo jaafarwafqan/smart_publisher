@@ -444,6 +444,17 @@ class _CreateUserDialogState extends ConsumerState<_CreateUserDialog> {
           _error = error.message;
         });
       }
+    } catch (error, stackTrace) {
+      // Same hardening as _CreateOrganizationDialog._submit() — see its
+      // comment. This dialog had the identical gap: any non-
+      // PlatformAdminException left _submitting stuck at true forever.
+      AppLogger.e('Unexpected error creating user', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = AppLocalizations.of(context)!.platformAdminUnexpectedError;
+        });
+      }
     }
   }
 
@@ -622,6 +633,17 @@ class _EditUserDialogState extends ConsumerState<_EditUserDialog> {
           _error = error.message;
         });
       }
+    } catch (error, stackTrace) {
+      // Same hardening as _CreateOrganizationDialog._submit() — see its
+      // comment. This dialog had the identical gap: any non-
+      // PlatformAdminException left _submitting stuck at true forever.
+      AppLogger.e('Unexpected error updating user', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = AppLocalizations.of(context)!.platformAdminUnexpectedError;
+        });
+      }
     }
   }
 
@@ -713,6 +735,17 @@ class _MembershipEditorDialogState
         setState(() {
           _submitting = false;
           _error = error.message;
+        });
+      }
+    } catch (error, stackTrace) {
+      // Same hardening as _CreateOrganizationDialog._submit() — see its
+      // comment. This dialog had the identical gap: any non-
+      // PlatformAdminException left _submitting stuck at true forever.
+      AppLogger.e('Unexpected error syncing memberships', error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _error = AppLocalizations.of(context)!.platformAdminUnexpectedError;
         });
       }
     }

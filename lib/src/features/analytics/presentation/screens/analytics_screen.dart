@@ -209,9 +209,7 @@ class AnalyticsScreen extends ConsumerWidget {
                                   bottom: AppSpacing.md,
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(
-                                    AppSpacing.lg,
-                                  ),
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -234,10 +232,9 @@ class AnalyticsScreen extends ConsumerWidget {
                                             value: '${row.metric.reach}',
                                           ),
                                           _MiniStat(
-                                            label: l10n
-                                                .analyticsMetricImpressions,
-                                            value:
-                                                '${row.metric.impressions}',
+                                            label:
+                                                l10n.analyticsMetricImpressions,
+                                            value: '${row.metric.impressions}',
                                           ),
                                           _MiniStat(
                                             label: l10n.analyticsMetricClicks,
@@ -362,11 +359,14 @@ class _MetricCard extends StatelessWidget {
                 value: value,
                 suffix: suffix,
                 fractionDigits: fractionDigits,
-                style: (featured ? textTheme.headlineMedium : textTheme.titleLarge)
-                    ?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: featured ? colorScheme.onPrimaryContainer : null,
-                    ),
+                style:
+                    (featured ? textTheme.headlineMedium : textTheme.titleLarge)
+                        ?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: featured
+                              ? colorScheme.onPrimaryContainer
+                              : null,
+                        ),
               ),
             ],
           ),

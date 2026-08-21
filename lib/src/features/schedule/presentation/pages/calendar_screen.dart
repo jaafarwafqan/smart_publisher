@@ -224,9 +224,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                   bottom: AppSpacing.md,
                                 ),
                                 child: ListTile(
-                                  leading: const Icon(
-                                    Icons.schedule_outlined,
-                                  ),
+                                  leading: const Icon(Icons.schedule_outlined),
                                   title: Text(
                                     entry.title.isEmpty
                                         ? l10n.postUntitled
