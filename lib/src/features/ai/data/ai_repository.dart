@@ -54,26 +54,6 @@ extension AiOperationEndpoint on AiOperation {
     AiOperation.translate => LaravelEndpoints.aiTranslate,
     AiOperation.adaptPlatforms => LaravelEndpoints.aiAdaptPlatforms,
   };
-
-  String get label => switch (this) {
-    AiOperation.spellCheck => 'تدقيق النص',
-    AiOperation.improve => 'تحسين الصياغة',
-    AiOperation.rewrite => 'إعادة الصياغة',
-    AiOperation.shorten => 'اختصار النص',
-    AiOperation.expand => 'توسيع النص',
-    AiOperation.simplify => 'تبسيط النص',
-    AiOperation.officialNews => 'خبر رسمي',
-    AiOperation.advertisement => 'صياغة إعلان',
-    AiOperation.academicFormat => 'صياغة أكاديمية',
-    AiOperation.mediaFormat => 'صياغة إعلامية',
-    AiOperation.suggestTitles => 'اقتراح عنوان',
-    AiOperation.suggestClosing => 'اقتراح خاتمة',
-    AiOperation.suggestCallToAction => 'اقتراح دعوة',
-    AiOperation.suggestHashtags => 'اقتراح وسوم',
-    AiOperation.addEmojis => 'إضافة رموز باعتدال',
-    AiOperation.translate => 'ترجمة',
-    AiOperation.adaptPlatforms => 'تكييف للمنصات',
-  };
 }
 
 class AiSuggestion {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:smart_publisher/l10n/app_localizations.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/rich_content_codec.dart';
@@ -24,18 +25,22 @@ class ComposerRichTextEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final plainText = RichContentCodec.toPlainText(controller);
     final words = plainText.trim().isEmpty
         ? 0
         : plainText.trim().split(RegExp(r'\s+')).length;
 
     return Semantics(
-      label: 'محرر محتوى غني',
+      label: l10n.composerRichEditorSemanticsLabel,
       textField: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('أدوات التنسيق', style: theme.textTheme.labelLarge),
+          Text(
+            l10n.composerFormattingToolsLabel,
+            style: theme.textTheme.labelLarge,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Directionality(
             textDirection: TextDirection.rtl,
@@ -68,7 +73,7 @@ class ComposerRichTextEditor extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: enabled ? () => _openEmojiPicker(context) : null,
               icon: const Icon(Icons.emoji_emotions_outlined),
-              label: const Text('إضافة رمز تعبيري'),
+              label: Text(l10n.composerAddEmojiButton),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -86,7 +91,7 @@ class ComposerRichTextEditor extends StatelessWidget {
                   controller: controller,
                   focusNode: focusNode,
                   config: quill.QuillEditorConfig(
-                    placeholder: 'اكتب محتوى المنشور…',
+                    placeholder: l10n.composerContentHint,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     minHeight: 180,
                     maxHeight: 440,
@@ -109,8 +114,10 @@ class ComposerRichTextEditor extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Semantics(
             liveRegion: true,
-            label: 'عداد المحتوى',
-            child: Text('$words كلمة • ${plainText.characters.length} حرف'),
+            label: l10n.composerContentCounterSemanticsLabel,
+            child: Text(
+              l10n.composerWordCharCount(words, plainText.characters.length),
+            ),
           ),
         ],
       ),
@@ -118,6 +125,7 @@ class ComposerRichTextEditor extends StatelessWidget {
   }
 
   Future<void> _openEmojiPicker(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     const emojis = <String>[
       '🙂',
       '✅',
@@ -141,10 +149,10 @@ class ComposerRichTextEditor extends StatelessWidget {
           children: emojis
               .map(
                 (item) => Semantics(
-                  label: 'إدراج $item',
+                  label: l10n.composerInsertEmojiLabel(item),
                   button: true,
                   child: IconButton(
-                    tooltip: 'إدراج $item',
+                    tooltip: l10n.composerInsertEmojiLabel(item),
                     iconSize: 28,
                     onPressed: () => Navigator.pop(context, item),
                     icon: Text(item),
