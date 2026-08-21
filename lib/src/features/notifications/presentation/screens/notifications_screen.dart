@@ -230,14 +230,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.md,
-                        ),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: _NotificationTile(
                           notification: notifications[index],
                           l10n: l10n,
-                          onMarkRead: () =>
-                              _markRead(notifications[index].id),
+                          onMarkRead: () => _markRead(notifications[index].id),
                         ),
                       ),
                       childCount: notifications.length,

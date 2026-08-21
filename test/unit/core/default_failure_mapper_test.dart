@@ -70,9 +70,7 @@ void main() {
         final validationFailure = failure as ValidationFailure;
         expect(validationFailure.fieldErrors, <String, List<String>>{
           'title': ['The title field is required.'],
-          'scheduled_at': [
-            'The scheduled at field must be a date after now.',
-          ],
+          'scheduled_at': ['The scheduled at field must be a date after now.'],
         });
       },
     );

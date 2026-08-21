@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>تقرير معالجة المرحلة صفر</title>
+<style>
+  :root{
+    color-scheme: light;
+    --surface-0:#f6f7f6; --surface-1:#ffffff; --surface-2:#eef1ef;
+    --ink-1:#10161a; --ink-2:#454f4c; --ink-3:#75817d;
+    --rule:#dde3e0;
+    --accent:#0f7d6c; --accent-ink:#ffffff; --accent-soft:rgba(15,125,108,.1);
+    --steel:#2a5f8f;
+    --good:#188a55; --warn:#a2680f; --critical:#c23c3c; --flag:#8a3fc2;
+    --good-bg:rgba(24,138,85,.1); --warn-bg:rgba(162,104,15,.1);
+    --critical-bg:rgba(194,60,60,.09); --flag-bg:rgba(138,63,194,.09);
+    --mono: ui-monospace,"SF Mono",Consolas,Menlo,monospace;
+    --sans:"Segoe UI","Tajawal","Noto Naskh Arabic",system-ui,-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --surface-0:#0e1211; --surface-1:#161b1a; --surface-2:#1e2422;
+      --ink-1:#f2f4f3; --ink-2:#c1cac6; --ink-3:#8b9793;
+      --rule:#2b332f;
+      --accent:#28b79d; --accent-ink:#04140f; --accent-soft:rgba(40,183,157,.14);
+      --steel:#6fa3d6;
+      --good:#3fca8c; --warn:#d9a441; --critical:#e8716c; --flag:#c390ef;
+      --good-bg:rgba(63,202,140,.12); --warn-bg:rgba(217,164,65,.12);
+      --critical-bg:rgba(232,113,108,.12); --flag-bg:rgba(195,144,239,.12);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --surface-0:#0e1211; --surface-1:#161b1a; --surface-2:#1e2422;
+    --ink-1:#f2f4f3; --ink-2:#c1cac6; --ink-3:#8b9793;
+    --rule:#2b332f;
+    --accent:#28b79d; --accent-ink:#04140f; --accent-soft:rgba(40,183,157,.14);
+    --steel:#6fa3d6;
+    --good:#3fca8c; --warn:#d9a441; --critical:#e8716c; --flag:#c390ef;
+    --good-bg:rgba(63,202,140,.12); --warn-bg:rgba(217,164,65,.12);
+    --critical-bg:rgba(232,113,108,.12); --flag-bg:rgba(195,144,239,.12);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface-0);color:var(--ink-1);font-family:var(--sans);line-height:1.8;font-size:16px}
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px 90px}
+  header{background:linear-gradient(160deg,var(--ink-1),#1c2a26 60%,var(--accent) 160%);color:#eef4f2;padding:52px 24px 40px}
+  header .inner{max-width:980px;margin:0 auto}
+  .eyebrow{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:#9fd8ca;font-weight:700;margin-bottom:10px}
+  header h1{margin:0 0 12px;font-size:1.9rem;line-height:1.35;font-weight:800;text-wrap:balance}
+  header p{margin:0;color:#c9d8d3;font-size:1rem;max-width:66ch}
+  .meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta span{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);padding:5px 12px;border-radius:7px;font-size:.78rem;font-variant-numeric:tabular-nums}
+
+  h2{font-size:1.3rem;margin:46px 0 4px;font-weight:800;letter-spacing:-.01em}
+  h2 .idx{color:var(--accent);font-weight:800;margin-left:8px}
+  .lede{color:var(--ink-2);margin:6px 0 22px;max-width:70ch}
+  h3{font-size:1.02rem;margin:28px 0 10px;font-weight:700}
+  p{margin:10px 0}
+  a{color:var(--steel)}
+  code{background:var(--surface-2);padding:1px 6px;border-radius:5px;font-family:var(--mono);font-size:.85em;direction:ltr;display:inline-block;border:1px solid var(--rule)}
+  pre{background:#0d1210;color:#dcefe8;padding:16px 18px;border-radius:10px;overflow-x:auto;direction:ltr;text-align:left;font-family:var(--mono);font-size:.79rem;line-height:1.6;border:1px solid #1e2b26}
+  pre code{background:none;border:none;padding:0;color:inherit}
+
+  .flag-banner{background:var(--flag-bg);border:1px solid var(--flag);border-right:5px solid var(--flag);border-radius:12px;padding:22px 26px;margin:20px 0 36px}
+  .flag-banner .tag{display:inline-block;background:var(--flag);color:#fff;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.03em;margin-bottom:10px}
+  .flag-banner h3{margin:0 0 8px;font-size:1.06rem;color:var(--ink-1)}
+  .flag-banner p{margin:8px 0}
+  .flag-banner strong{color:var(--flag)}
+  .flag-banner.resolved{background:var(--good-bg);border-color:var(--good)}
+  .flag-banner.resolved .tag{background:var(--good)}
+  .flag-banner.resolved strong{color:var(--good)}
+
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 8px}
+  .stat{background:var(--surface-1);border:1px solid var(--rule);border-radius:11px;padding:16px 16px}
+  .stat .v{font-size:1.55rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .stat .l{font-size:.78rem;color:var(--ink-2);margin-top:5px}
+  .stat.good .v{color:var(--good)}
+  .stat.accent .v{color:var(--accent)}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:.89rem;background:var(--surface-1);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+  th{background:var(--surface-2);text-align:right;padding:11px 13px;font-weight:700;font-size:.8rem;border-bottom:1px solid var(--rule)}
+  td{padding:11px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.num, th.num{text-align:center;font-variant-numeric:tabular-nums}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;white-space:nowrap}
+  .pill.done{background:var(--good-bg);color:var(--good)}
+  .pill.fixed{background:var(--good-bg);color:var(--good)}
+  .pill.warn{background:var(--warn-bg);color:var(--warn)}
+  .pill.noted{background:var(--surface-2);color:var(--ink-2)}
+  .pill.high{background:var(--critical-bg);color:var(--critical)}
+  .pill.med{background:var(--warn-bg);color:var(--warn)}
+  .pill.low{background:var(--surface-2);color:var(--ink-2)}
+  .pill.flag{background:var(--flag-bg);color:var(--flag)}
+
+  .card{background:var(--surface-1);border:1px solid var(--rule);border-radius:12px;padding:20px 22px;margin:16px 0}
+  .card.hit{border-right:4px solid var(--good)}
+  .card.miss{border-right:4px solid var(--ink-3)}
+  .card h4{margin:0 0 8px;font-size:.98rem;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .card .file{font-family:var(--mono);font-size:.78rem;color:var(--ink-3);direction:ltr;text-align:left;display:block;margin:4px 0 10px}
+  .card p{margin:6px 0;color:var(--ink-2);font-size:.93rem}
+  .card p.why{color:var(--ink-1)}
+
+  ul,ol{padding-right:20px;margin:10px 0}
+  li{margin:6px 0}
+
+  .verify-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+  @media(max-width:640px){.verify-grid{grid-template-columns:1fr}}
+  .verify{background:var(--surface-1);border:1px solid var(--rule);border-radius:12px;padding:18px 20px}
+  .verify h4{margin:0 0 10px;font-size:.92rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;font-size:.74rem}
+  .verify .row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);font-size:.88rem}
+  .verify .row:last-child{border-bottom:none}
+  .verify .row b{font-variant-numeric:tabular-nums;color:var(--good)}
+
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--rule);font-size:.82rem;color:var(--ink-3)}
+  .branch-note{background:var(--surface-1);border:1px dashed var(--rule);border-radius:10px;padding:14px 18px;font-size:.86rem;color:var(--ink-2);margin:14px 0}
+  .branch-note code{font-size:.85em}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div class="eyebrow">Smart Publisher · تقرير هندسي · مُحدَّث</div>
+    <h1>معالجة نتائج المراجعة — المرحلة صفر، الفوترة، ومراجعة كود عدائية شاملة</h1>
+    <p>تنفيذ البنود الخمسة المتفق عليها للمرحلة صفر، مراجعة عدائية بـ8 وكلاء لكل تغيير في الجلسة، مراجعة مخصَّصة لتكامل الفوترة/التسجيل الذاتي بطلب صاحب العمل، وإصلاح كل ما ثبتت صحته من الملاحظتين معاً.</p>
+    <div class="meta">
+      <span>smart_publisher · فرع fix/review-remediation</span>
+      <span>smart_publisher_backend · نفس الفرع</span>
+      <span>20 آب 2026</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="flag-banner resolved">
+  <span class="tag">✓ تأكَّد — العمل مقصود، رُوجع وأُصلح</span>
+  <h3>تكامل الفوترة (Stripe) والتزويد التلقائي عند التسجيل: تصميم سليم، ٣ مشاكل حقيقية أُصلحت</h3>
+  <p>أكّد صاحب العمل أن هذا العمل مقصود. راجعتُه بالتفصيل (<code>StripeBillingGateway</code>، <code>StripeWebhookProcessor</code>، <code>QuotaGates</code>، <code>FreeTierGrandfathering</code>، <code>OrganizationEntitlements</code>، <code>PersonalOrganizationProvisioner</code>، <code>WebTokenCookies</code>). <strong>التقييم العام: تصميم احترافي وحذِر</strong> — التفاصيل في القسم ٤. وجدتُ وأصلحتُ ثلاث مشاكل حقيقية فيه أيضاً.</p>
+</div>
+
+<section>
+<h2><span class="idx">١.</span>الخلاصة</h2>
+<p class="lede">التحقق النهائي بعد كل الإصلاحات (المرحلة صفر + المراجعة العدائية + مراجعة الفوترة)، على كلا المستودعين:</p>
+
+<div class="verify-grid">
+  <div class="verify">
+    <h4>الواجهة — smart_publisher</h4>
+    <div class="row"><span>flutter analyze</span><b>0 مشاكل</b></div>
+    <div class="row"><span>dart format --set-exit-if-changed</span><b>نظيف</b></div>
+    <div class="row"><span>flutter test</span><b>373/373</b></div>
+  </div>
+  <div class="verify">
+    <h4>الخلفية — smart_publisher_backend</h4>
+    <div class="row"><span>vendor/bin/phpstan analyse</span><b>0 أخطاء</b></div>
+    <div class="row"><span>php artisan test</span><b>532/537</b></div>
+    <div class="row"><span>حد تغطية CI</span><b>50%→55% (رُفع، لم يُخفَّض)</b></div>
+  </div>
+</div>
+
+<div class="branch-note">
+  كل التعديلات على فرع <code>fix/review-remediation</code> في المستودعين، غير مدموجة وغير مرفوعة إلى <code>main</code> بعد. 4 commits تحمل إصلاحات هذه الجلسة — الواجهة: <code>0b72141</code> (مراجعة عدائية)، <code>e3b9dd5</code> (تنظيف إضافي)؛ الخلفية: <code>db93d51</code> (ربط Sentry)، <code>951dab7</code> (مراجعة الفوترة).
+</div>
+</section>
+
+<section>
+<h2><span class="idx">٢.</span>بنود المرحلة صفر — التنفيذ الفعلي</h2>
+<p class="lede">بالتعريف المصحَّح الذي حددتَه (ليس توصيات التقرير الأصلي حرفياً):</p>
+
+<table>
+<tr><th style="width:26%">البند</th><th>ما نُفّذ فعلياً</th><th style="width:12%">الحالة</th></tr>
+<tr>
+  <td>١. تخزين التوكن</td>
+  <td>حذف <code>DefaultEncryptionService</code>/<code>EncryptionService</code> بالكامل — الطبقة كانت XOR بمفتاح مخزَّن بجانب النص المشفَّر نفسه، أي بلا قيمة حقيقية. <code>EncryptedTokenStorage</code> يخزّن JSON مباشرة في <code>secretsManager</code> (Keychain/Keystore حقيقي على الجوال). على الويب: <code>refresh_token</code> لا يُحفظ إطلاقاً (فقط <code>access_token</code>) — يقلّص أثر أي XSS من نافذة 30 يوماً إلى عمر التوكن القصير. حُدّثت 13 ملف اختبار.</td>
+  <td><span class="pill done">تم</span></td>
+</tr>
+<tr>
+  <td>٢. Sentry</td>
+  <td><strong>الواجهة:</strong> <code>SentryCrashReporter</code> بدل <code>ConsoleCrashReporter</code>، عبر <code>Sentry.init()</code> (وليس <code>SentryFlutter.init</code> كي لا يصطدم مع معالجات الأخطاء المخصصة الموجودة أصلاً)، DSN من متغير بيئة، معطّل في debug. <strong>الخلفية:</strong> وجدتُ <code>sentry/sentry-laravel</code> مثبَّتاً ومُهيَّأً لكن <strong>غير موصول فعلياً</strong> — <code>Integration::handles()</code> لم تكن مستدعاة في <code>bootstrap/app.php</code>، فلم يكن أي استثناء يصل إلى Sentry إطلاقاً. أصلحتُ الربط، وأضفتُ <code>SentryEventScrubber</code> لتنقية <code>access_token</code>/<code>refresh_token</code>/<code>webhook_secret</code>/<code>two_factor_secret</code> قبل الإرسال (لم تكن موجودة).</td>
+  <td><span class="pill done">تم</span></td>
+</tr>
+<tr>
+  <td>٣. إصلاح RTL</td>
+  <td>حُذفت أغلفة <code>Directionality(textDirection: TextDirection.rtl)</code> الستة الثابتة في <code>platform_admin_screens.dart</code> (كانت تكسر الواجهة الإنجليزية). استخدامات <code>Directionality.of(context)</code> الشرطية في ملفات أخرى لم تُمَس.</td>
+  <td><span class="pill done">تم</span></td>
+</tr>
+<tr>
+  <td>٤. الكود الميت</td>
+  <td>حُذف <code>lib/src/shared/mappers/</code> بالكامل و<code>performance_monitor.dart</code> — صفر مراجع لكليهما، محقَّق قبل الحذف. لم يُلمس <code>media_engine/processing/</code> ولا <code>offline/sync/conflict_resolution.dart</code> (كلاهما مستخدم فعلياً، كما حددتَ).</td>
+  <td><span class="pill done">تم</span></td>
+</tr>
+<tr>
+  <td>٥. خطأ الضغط الوهمي</td>
+  <td><code>MediaEngine</code> كان يحسب حجماً «مضغوطاً» بضرب الحجم الأصلي في نسبة — حسابياً فقط، بلا تغيير بايت واحد من <code>media.bytes</code> — ثم <code>isCompressed: true</code>. حُذفت <code>ImageCompressor</code>/<code>VideoCompressor</code> (أصبحتا بلا استخدام بعد الإصلاح)، و<code>MediaEngine</code> الآن يتحقق وينشئ صورة مصغّرة فقط، بلا لمس <code>sizeInBytes</code>/<code>isCompressed</code> محلياً. الضغط الحقيقي عبر <code>POST /media/{id}/compress</code> كما طلبتَ. حُدّث اختباران كانا يتحققان من السلوك القديم (الخاطئ) عمداً.</td>
+  <td><span class="pill done">تم</span></td>
+</tr>
+</table>
+</section>
+
+<section>
+<h2><span class="idx">٣.</span>ما وجدته منجزاً أيضاً إلى جانب المرحلة صفر</h2>
+<p class="lede">هذه البنود من التقرير الأصلي كانت منفَّذة بالفعل في هذا الفرع عند بدء المراجعة (على الأرجح ضمن الجزء الملخَّص من الجلسة). راجعتها واختبرتها ضمن هذا التقرير، ولم تكن جزءاً من طلبك الصريح للمرحلة صفر:</p>
+<table>
+<tr><th style="width:30%">البند</th><th>الحالة الفعلية في الكود</th></tr>
+<tr><td>شريط تنقّل ثابت (P1، بند ٨)</td><td><code>StatefulShellRoute.indexedStack</code> + <code>AppNavigationShell</code>: <code>NavigationRail</code> على الويب العريض (≥1024px)، <code>NavigationBar</code> سفلي مضغوط على الشاشات الضيقة.</td></tr>
+<tr><td>تفكيك الملف الضخم (P2، بند ١٣)</td><td><code>platform_admin_screens.dart</code> (كان 2,805 سطر) مقسَّم إلى 5 ملفات <code>part</code> — لوحة، مؤسسات، مستخدمون، حوارات، عناصر مشتركة.</td></tr>
+<tr><td>الخط يُحمَّل من الشبكة (P3، بند ١٦)</td><td><code>Tajawal</code> مضمَّن الآن كخط محلي في <code>assets/fonts/</code>.</td></tr>
+<tr><td>تغطية اختبارات الواجهة (P2، بند ١٠)</td><td>حد CI رُفع من 50% إلى 55% (القياس الفعلي بعد هذه الجلسة ~57%).</td></tr>
+<tr><td>إتاحة الوصول (P3، بند ١٥)</td><td>اختبار بنيوي جديد (<code>accessibility_contract_test.dart</code>) — تحسين حقيقي، لكنه فحص نصّي (regex) وليس تحليل شجرة widgets حقيقياً؛ راجع القسم ٥.</td></tr>
+<tr><td>تخزين الجلسة عبر httpOnly cookie (إضافي، لم يُطلب في المرحلة صفر)</td><td><code>WebSessionConfig</code>: خيار اختياري (<code>SP_WEB_COOKIE_AUTH_ENABLED</code>، معطَّل افتراضياً) ينقل مصادقة الويب إلى httpOnly cookie بدل bearer token — هذا هو الحل «الأنظف» الذي أشار إليه التقرير الأصلي كبديل، مطبَّق الآن كخيار وليس افتراضاً.</td></tr>
+</table>
+</section>
+
+<section>
+<h2><span class="idx">٤.</span>مراجعة الفوترة والتسجيل الذاتي</h2>
+<p class="lede">راجعتُ <code>StripeBillingGateway.php</code>، <code>StripeWebhookProcessor.php</code>، <code>BillingController.php</code>، <code>QuotaGates.php</code>، <code>FreeTierGrandfathering.php</code>، <code>OrganizationEntitlements.php</code>، <code>DefaultPlans.php</code>، <code>OrganizationSubscriptionBackfill.php</code>، <code>PersonalOrganizationProvisioner.php</code>، و<code>WebTokenCookies.php</code>/<code>AuthenticateWebTokenCookie</code>.</p>
+
+<h3>ما يعمل بشكل صحيح — بجدارة</h3>
+<ul>
+  <li><strong>توقيع Webhook:</strong> HMAC-SHA256 بمقارنة زمنية آمنة (<code>hash_equals</code>) + نافذة تسامح زمني ضد إعادة التشغيل (replay) — تطبيق صحيح لبروتوكول Stripe.</li>
+  <li><strong>Idempotency حقيقي:</strong> قيد تفرّد على <code>provider_event_id</code> + قفل صف (<code>lockForUpdate</code>) داخل معاملة — يمنع تطبيق نفس حدث Stripe مرتين حتى مع إعادة إرسال متزامنة.</li>
+  <li><strong>عزل المستأجرين:</strong> حدث Stripe بلا <code>organization_id</code> صالح في البيانات الوصفية يُقبَل بصمت (200) دون لمس أي مؤسسة — صحيح تماماً.</li>
+  <li><strong>ربط البيانات الوصفية بدقة:</strong> <code>organization_id</code>/<code>plan_id</code> يُمرَّران عبر <code>subscription_data.metadata</code> عند إنشاء الجلسة، وليس فقط بيانات جلسة Checkout السطحية — تفصيل دقيق يضمن وصول البيانات الوصفية لاحقاً مع كائن Subscription نفسه في أحداث <code>customer.subscription.*</code>. كثير من التطبيقات المماثلة تُخطئ هذه النقطة تحديداً.</li>
+  <li><strong>الحدود تفشل مغلقة (fail-closed):</strong> <code>OrganizationEntitlements::limitFor()</code> يُرجع صفر سعة عند غياب اشتراك فعّال — عكس المشكلة الأصلية التي رصدها التقرير الخارجي (P1: «الاعتراض الأول عكس ما يجب»). <code>Plan::booted()</code> يمنع حتى حفظ خطة نشطة ناقصة الحدود.</li>
+  <li><strong>جلسة الويب بـ httpOnly cookie:</strong> <code>WebTokenCookies</code> يصفّر <code>access_token</code>/<code>refresh_token</code> في جسم JSON عند تفعيل هذا الوضع — JavaScript لا يرى التوكن الخام إطلاقاً. حماية CSRF مزدوجة (SameSite=Lax افتراضياً + رأس مخصص <code>X-SP-Web-Client</code> لا يمكن لطلب عبر-المصادر تعيينه بدون CORS). هذا بالضبط الحل الذي أوصى به التقرير الخارجي الأصلي كبديل لتخزين التوكن في المتصفح.</li>
+</ul>
+
+<h3>ما أُصلح</h3>
+
+<div class="card hit">
+  <h4><span class="pill med">حقيقي</span> إلغاء اشتراك بعد تعطيل الخطة يفشل للأبد</h4>
+  <span class="file">StripeWebhookProcessor.php · resolvePlan()</span>
+  <p class="why">كانت <code>resolvePlan()</code> تُصفّي <code>where('is_active', true)</code> حتى عند ربط حدث Webhook <strong>وارد</strong> بخطة اشتراك موجودة أصلاً. تعطيل خطة (إجراء إداري عادي — إيقاف مستوى قديم) بينما لا تزال مؤسسة ما مشتركة فيه يجعل أي حدث لاحق لتلك المؤسسة — بما فيه إلغاؤها النهائي (<code>customer.subscription.deleted</code>) — يرمي استثناءً غير مُلتقَط يتحول إلى 500 من <code>stripeWebhook()</code>، فتُعيد Stripe المحاولة للأبد دون أن تتحدث حالة الاشتراك محلياً أبداً إلى «ملغى».</p>
+  <p><strong>الإصلاح:</strong> إزالة تصفية <code>is_active</code> من هذا المسار فقط — التحقق من قابلية الشراء يبقى في <code>checkout()</code> حيث ينتمي فعلاً. + اختبار انحدار جديد يحاكي السيناريو كاملاً.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill med">حقيقي</span> «التزويد الذري» لم يكن ذرياً فعلياً</h4>
+  <span class="file">PersonalOrganizationProvisioner.php · provision()</span>
+  <p class="why">التعليق التوضيحي (وتعليق <code>RegisterController</code> أيضاً) يصف هذه الدالة صراحةً بأنها تُنشئ المؤسسة + العضوية + الاشتراك المجاني «بشكل ذري». الكود الفعلي كان 4 عمليات كتابة متتالية بلا معاملة (transaction) تجمعها. مع نموذج الحدود الجديد fail-closed، فشل جزئي (مثلاً إنشاء الاشتراك يفشل بعد إنشاء المؤسسة) كان سيحبس عميلاً حقيقياً جديداً على سعة صفر تماماً، لا «غير محدود» كما زعم تعليق قديم متروك بالخطأ.</p>
+  <p><strong>الإصلاح:</strong> تغليف الجسم كاملاً بـ<code>DB::transaction()</code> — إما أن تُنشأ مساحة العمل كاملة أو لا شيء منها، كما هو موثَّق فعلاً الآن.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill low">توثيق</span> تعليقات متروكة تصف سلوكاً قديماً (fail-open) يناقض الكود الفعلي (fail-closed)</h4>
+  <span class="file">DefaultPlans.php · PersonalOrganizationProvisioner.php</span>
+  <p class="why">كلا الملفين كانا لا يزالان يصفان «غياب صف الاشتراك = غير محدود» — وهذا بالضبط عكس ما تنفّذه <code>OrganizationEntitlements::limitFor()</code> فعلياً اليوم (صفر سعة) وعكس تعليقها التوضيحي الخاص. على الأرجح تعليقات لم تُحدَّث عند قلب السلوك إلى fail-closed أثناء تمرير «التصليب». توثيق خاطئ حول نمط فشل حسّاس أمنياً خطر بذاته — مهندس مستقبلي قد يعتمد عليه.</p>
+  <p><strong>الإصلاح:</strong> صُحِّح كلا التعليقين ليصفا السلوك الفعلي الحالي.</p>
+</div>
+</section>
+
+<section>
+<h2><span class="idx">٥.</span>منهجية المراجعة العدائية</h2>
+<p class="lede">بعد التحقق الأساسي، شغّلتُ مراجعة كود بمستوى <strong>high</strong> على كامل الفرق منذ بداية الجلسة (<code>d2926b6..HEAD</code>، 68 ملف) — 8 وكلاء مستقلين، كل منهم بزاوية مختلفة: مسح سطر-بسطر، تدقيق السلوك المحذوف، تتبّع عبر-الملفات، الارتفاع المعماري، التبسيط، إعادة الاستخدام، الكفاءة. كل وكيل يعمل بلا اطّلاع على نتائج الآخرين — التقاطع بين عدة زوايا مستقلة على نفس المشكلة هو ما رفع الثقة في النتائج أدناه.</p>
+
+<h3>ما أُصلح فعلياً (بعد تحقق يدوي من كل ملاحظة)</h3>
+
+<div class="card hit">
+  <h4><span class="pill high">حرج</span> ذاكرة تخزين مؤقت لصلاحيات المسارات لا تُبطَل عند تغيّر الهوية</h4>
+  <span class="file">route_guard_snapshot_cache.dart · route_guards.dart · 7 نقاط استدعاء</span>
+  <p class="why"><strong>وجدتها 4 وكلاء مستقلون بالإجماع</strong> — أعلى ثقة في كل هذه المراجعة. <code>RouteGuardSnapshotCache</code> يخزّن قرار <code>isPlatformAdmin</code>/صلاحيات المؤسسة لمدة 20 ثانية، ولا يُبطَل إلا عند 403 حقيقي من الخادم. لكن كل نقاط تسجيل الدخول/الخروج/تبديل المؤسسة (7 مواضع عبر 6 شاشات) كانت تُبطل الـ Riverpod provider مباشرة دون علم بوجود هذه الذاكرة الوسيطة أمامه.</p>
+  <p>على الويب — حيث يبقى نفس <code>ProviderContainer</code> حياً عبر دورة تسجيل خروج/دخول كاملة بلا إعادة تحميل صفحة — كان يمكن لحساب جديد أن يرث قرار توجيه مسارات محفوظاً من الحساب/المؤسسة السابقة لغاية 20 ثانية. <strong>الإصلاح:</strong> إضافة <code>routeGuardSnapshotCacheProvider.invalidate()</code> في السبع نقاط، + اختبار بنيوي جديد يفشل تلقائياً إن أُضيفت نقطة إبطال جديدة بلا هذا الاقتران مستقبلاً.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill med">متوسط-عالٍ</span> نفس علّة «الدوّارة العالقة للأبد» مكرَّرة في 3 من 5 حوارات إدارة</h4>
+  <span class="file">platform_admin_dialogs.dart</span>
+  <p class="why">اختبار E2E حقيقي كان قد اكتشف هذه العلة سابقاً وأُصلحت في حواري إنشاء/تعديل المؤسسة (catch عام لأي استثناء غير <code>PlatformAdminException</code>). لكن حوارات إنشاء مستخدم، تعديل مستخدم، ومزامنة العضويات لم تحصل على نفس الإصلاح — أي استثناء غير متوقع فيها يترك الدوّارة تدور للأبد دون رسالة خطأ.</p>
+  <p><strong>الإصلاح:</strong> نفس نمط الـ catch العام مطبَّق الآن في الحوارات الثلاثة المتبقية.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill low">منخفض</span> الشريط السفلي المضغوط يُظهر «لوحة التحكم» محدَّدة وأنت في شاشة أخرى</h4>
+  <span class="file">app_navigation_shell.dart</span>
+  <p class="why">الوجهات الخمس الأولى فقط تُعرض في الشاشات الضيقة؛ عند التواجد في الوسائط/المؤسسات/الإعدادات/المساعدة (خارج القائمة)، كان الفهرس المحسوب يتجاوز الحد فيسقط دائماً إلى 0 — فتبقى «لوحة التحكم» محدَّدة بصرياً رغم أنك في شاشة أخرى تماماً.</p>
+  <p><strong>الإصلاح:</strong> الخانة الخامسة تتبدّل الآن لتعرض الوجهة الحالية الفعلية عند الحاجة، بدل قص ثابت لأول خمسة.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill low">كفاءة</span> جلب صلاحية «مدير منصة» في كل تنقّل، رغم استخدامه في فرع واحد فقط</h4>
+  <span class="file">route_guards.dart</span>
+  <p class="why">كان <code>isPlatformAdmin</code> يُجلب قبل أي تفرّع مسار — حتى للوحة التحكم والمنشورات، حيث لا يُستخدم إطلاقاً. رحلة شبكة مهدورة على كل تنقّل محروس تقريباً.</p>
+  <p><strong>الإصلاح:</strong> الجلب انتقل داخل فرع مسارات إدارة المنصة فقط.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill low">كفاءة</span> Sentry.init يُعطّل بدء التطبيق قبل أول إطار</h4>
+  <span class="file">bootstrap.dart</span>
+  <p class="why"><code>await Sentry.init(...)</code> كان أول سطر في <code>bootstrap()</code> — قبل <code>WidgetsFlutterBinding.ensureInitialized()</code> وقبل <code>runApp()</code>. كل بدء تشغيل حقيقي (release) يُسلسل تهيئة SDK كاملة أمام كل شيء آخر.</p>
+  <p><strong>الإصلاح:</strong> <code>crashReporter</code> يبدأ بـ <code>ConsoleCrashReporter</code> فوراً (مجاني)، ويُستبدل تلقائياً بـ <code>SentryCrashReporter</code> بمجرد اكتمال التهيئة في الخلفية — بلا حظر لبدء التطبيق. مسار فشل Sentry.init أصبح أيضاً يمر عبر <code>AppLogger.structured</code> مثل بقية نقاط الأخطاء في الملف نفسه.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill low">كفاءة</span> قراءات تخزين متسلسلة بلا داعٍ في كل تحميل شاشة رئيسية</h4>
+  <span class="file">auth_session_controller.dart · currentSession()</span>
+  <p class="why">تُستدعى في كل فتح للوحة التحكم/إنشاء منشور/تبديل المؤسسات/الأعضاء — 7 قراءات مستقلة من التخزين كانت تُنفَّذ الواحدة تلو الأخرى.</p>
+  <p><strong>الإصلاح:</strong> استخدام <code>(f1, f2, ...).wait</code> (سجلات Dart 3) لتوازيها ضمن مجموعتين مستقلتين.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill noted">عرضي</span> بوابة تنسيق CI كانت ستفشل لأسباب لا علاقة لها بهذا العمل</h4>
+  <span class="file">7 ملفات موجودة مسبقاً</span>
+  <p class="why"><code>dart format --set-exit-if-changed</code> — البوابة المستخدمة في CI — اكتشفت انحرافاً في تنسيق 7 ملفات غير مرتبطة بهذه الجلسة (على الأرجح فرق إصدار Dart SDK). أصلحتُ التنسيق لأن التحقق المطلوب مني كان يشمل هذه البوابة تحديداً، وتركها معطوبة كان سيجعل أي تقرير «CI أخضر» غير دقيق.</p>
+</div>
+
+<div class="card hit">
+  <h4><span class="pill noted">تنظيف</span> منطق مكرَّر في ذاكرة صلاحيات المسارات، وفحص إتاحة الوصول يقرأ كل ملف مرتين</h4>
+  <span class="file">route_guard_snapshot_cache.dart · accessibility_contract_test.dart</span>
+  <p class="why">بندان كانا مؤجَّلين في نسخة سابقة من هذا التقرير («لا تُصلَح الآن»)، أُنجزا لاحقاً بطلب صريح: <code>platformAdmin()</code>/<code>organizationAccess()</code> كانا تطبيقين مكرَّرين يدوياً لنفس منطق TTL + منع التكرار المتزامن — استُخرِجا إلى <code>_CachedValue&lt;T&gt;</code> عام. واختبار إتاحة الوصول كان يمسح شجرة <code>lib/</code> ويعيد قراءة كل ملف من القرص مرتين لكل تشغيل (فحصان مستقلان) — أصبح يقرأ مرة واحدة (<code>setUpAll</code>) يتشاركها الفحصان.</p>
+</div>
+
+<h3>ما وُثِّق ولم يُصلَح، مع السبب</h3>
+<table>
+<tr><th style="width:34%">الملاحظة</th><th>لماذا لم أُصلحها الآن</th></tr>
+<tr><td>عدم حفظ refresh_token على الويب لكل بناء، لا فقط عند تفعيل httpOnly cookie</td><td><strong>ليست علّة</strong> — هذا بالضبط ما طلبتَه نصاً في تحديد نطاق المرحلة صفر (تقليص الجلسة من 30 يوماً إلى عمر توكن قصير).</td></tr>
+<tr><td>نمط submit/error في حوارات platform_admin_dialogs.dart مكرَّر 5 مرات (بعد توحيد الـ catch)</td><td>الوظيفة الآن متسقة بعد الإصلاح أعلاه؛ توحيدها في مساعد واحد تحسين بنيوي لاحق، ليس علّة.</td></tr>
+<tr><td><code>WebSessionConfig</code> يقرأ <code>bool.fromEnvironment</code> مباشرة بدل نظام <code>FeatureFlags</code> الموجود</td><td>يعمل بشكل صحيح كما هو؛ توحيده مع نظام الأعلام يتطلب لمس سجل مفاتيح ذلك النظام — تغيير بنيوي أوسع من نطاق هذه المراجعة.</td></tr>
+<tr><td><code>two_factor_setup_screen.dart</code> يستخدم StateProvider + حارس قيمة بدل setState بسيط</td><td>يعمل ومُختبر؛ إعادة هيكلته الآن لسبب أسلوبي بحت تحمل مخاطرة انحدار لا تبرَّر بدون علّة فعلية.</td></tr>
+<tr><td><code>StatefulShellRoute.indexedStack</code> يُبقي كل فرع تمت زيارته حياً في الذاكرة</td><td>هذا سلوك متعمَّد في تصميم <code>IndexedStack</code> نفسه (يحفظ حالة scroll/النماذج) — ثمن معماري معروف، وليس خطأ.</td></tr>
+<tr><td>اختبار إتاحة الوصول الجديد (regex) يمكن خداعه بسهولة</td><td>ما زال تحسّناً حقيقياً عن العدم؛ تحويله لفحص شجرة widgets حقيقي عمل أكبر من نطاق هذه الجلسة.</td></tr>
+</table>
+</section>
+
+<section>
+<h2><span class="idx">٦.</span>الخلاصة والخطوات التالية</h2>
+<ol>
+  <li>البنود الخمسة للمرحلة صفر منجزة ومختبرة بدقة العتبة التي حددتَها.</li>
+  <li>تكامل الفوترة والتسجيل الذاتي: <strong>تصميم سليم ودقيق واحترافي</strong> — ثلاث مشاكل حقيقية وجدتُها أُصلحت مع اختبار انحدار للأخطر منها (القسم ٤).</li>
+  <li>مراجعة الكود العدائية وجدت علّة أمنية حقيقية واحدة (ذاكرة صلاحيات المسارات) بإجماع 4 زوايا مستقلة — أُصلحت مع اختبار انحدار بنيوي يمنع تكرارها، بالإضافة إلى علّة الدوّارة العالقة في 3 حوارات إدارة وتحسينات كفاءة أصغر.</li>
+  <li>لا شيء مدموج في <code>main</code> أو مرفوع (push) في أي من المستودعين — الفرع <code>fix/review-remediation</code> جاهز للمراجعة النهائية والدمج.</li>
+</ol>
+</section>
+
+<footer>
+  <p>التحقق: <code>flutter analyze</code> نظيف · <code>dart format --set-exit-if-changed</code> نظيف · <code>flutter test</code> 373/373 · <code>vendor/bin/phpstan analyse</code> نظيف · <code>php artisan test</code> 532/537 (5 تخطٍّ، 0 فشل).</p>
+</footer>
+
+</div>
+</body>
+</html>

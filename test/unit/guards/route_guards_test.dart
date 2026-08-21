@@ -1,14 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_publisher/src/core/di/app_providers.dart';
+import 'package:smart_publisher/src/core/events/event_bus.dart';
+import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
+    as app_events;
 import 'package:smart_publisher/src/core/router/guard_state_provider.dart';
 import 'package:smart_publisher/src/core/router/route_guards.dart';
 import 'package:smart_publisher/src/core/router/route_names.dart';
+import 'package:smart_publisher/src/core/security/secrets_manager.dart';
+import 'package:smart_publisher/src/core/security/secure_token_storage.dart';
+import 'package:smart_publisher/src/core/security/token_lifecycle_manager.dart';
 import 'package:smart_publisher/src/core/storage/in_memory_storage_service.dart';
 import 'package:smart_publisher/src/core/storage/storage_provider.dart';
+import 'package:smart_publisher/src/features/auth/application/auth_event_publisher.dart';
+import 'package:smart_publisher/src/features/auth/application/auth_session_controller.dart';
 import 'package:smart_publisher/src/features/organizations/application/current_organization_access.dart';
 import 'package:smart_publisher/src/features/organizations/domain/entities/organization_entity.dart';
 
+import '../../helpers/fake_network_client.dart';
 import '../../helpers/organization_role_fixtures.dart';
+
+// Same pattern as guard_state_provider_test.dart's _controllerWith: a real
+// AuthSessionController wired to in-memory/fake dependencies so
+// RouteGuards.guardPath's SessionExpiredException handler can genuinely call
+// logout() without touching real storage or network.
+AuthSessionController _sessionControllerWith(
+  FakeNetworkClient client,
+  InMemoryStorageService storage,
+) {
+  final tokenStorage = EncryptedTokenStorage(
+    secretsManager: InMemorySecretsManager(),
+  );
+  return AuthSessionController(
+    networkClient: client,
+    tokenLifecycleManager: TokenLifecycleManager(tokenStorage: tokenStorage),
+    storageService: storage,
+    authEventPublisher: AuthEventPublisher(
+      app_events.EventDispatcher(EventBus()),
+    ),
+  );
+}
 
 final _guardRedirectProvider = FutureProvider.family<String?, String>(
   (ref, path) => RouteGuards.guardPath(path, ref),
@@ -319,6 +350,51 @@ void main() {
           await _redirect(container, RouteNames.analyticsPath),
           RouteNames.organizationsPath,
         );
+      },
+    );
+
+    test(
+      'a fully-expired session (access token dead, silent refresh also '
+      'failed) is sent to login instead of the organizations screen',
+      () async {
+        // Regression: a live report showed the site landing straight on
+        // "Failed to load organizations" the moment it opened. Root cause:
+        // authStateProvider only checks whether a token STRING is stored
+        // locally, never whether the backend still honors it — so a fully
+        // dead session (access token expired, RefreshTokenInterceptor's
+        // silent refresh attempt also failed) looked identical to a live
+        // one right up until this exact fetch. The guard used to bounce
+        // any organization-access failure to the organizations screen,
+        // which then failed to load for the exact same reason — a generic
+        // error where the real fix was just logging in again.
+        final storage = InMemoryStorageService();
+        await storage.writeString(GuardStorageKeys.authToken, 'stale-token');
+
+        final container = ProviderContainer(
+          overrides: <Override>[
+            storageServiceProvider.overrideWithValue(storage),
+            authStateProvider.overrideWith((_) async => true),
+            currentOrganizationAccessProvider.overrideWith(
+              (_) async => throw const SessionExpiredException(
+                'Your session has expired.',
+              ),
+            ),
+            authSessionControllerProvider.overrideWithValue(
+              _sessionControllerWith(FakeNetworkClient(), storage),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        expect(
+          await _redirect(container, RouteNames.analyticsPath),
+          RouteNames.loginPath,
+        );
+        // Proves logout()'s local cleanup actually ran, not just that the
+        // guard happened to return loginPath — otherwise the next guarded
+        // navigation on this same tab would see the stale token again and
+        // repeat the exact same broken loop.
+        expect(await storage.readString(GuardStorageKeys.authToken), isNull);
       },
     );
 

@@ -58,8 +58,7 @@ class PostsListNotifier extends AsyncNotifier<PostsListState> {
     final pageData = result.data;
     final items = pageData?.items ?? const <PostEntity>[];
     final currentPage = pageData?.page ?? page;
-    final hasMorePages =
-        pageData != null && currentPage < pageData.totalPages;
+    final hasMorePages = pageData != null && currentPage < pageData.totalPages;
 
     return PostsListState(
       items: items,
@@ -71,9 +70,7 @@ class PostsListNotifier extends AsyncNotifier<PostsListState> {
   /// Pull-to-refresh: replaces the whole cached list with a fresh page 1,
   /// same as the screen's previous `_loadPosts()`.
   Future<void> refresh() async {
-    state = const AsyncValue<PostsListState>.loading().copyWithPrevious(
-      state,
-    );
+    state = const AsyncValue<PostsListState>.loading().copyWithPrevious(state);
     state = await AsyncValue.guard(() => _fetchPage(1));
   }
 

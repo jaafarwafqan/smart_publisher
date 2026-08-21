@@ -126,9 +126,36 @@ class _OrganizationSwitcherScreenState
     context.go(RouteNames.loginPath);
   }
 
+  // Defense in depth alongside RouteGuards.guardPath's own
+  // SessionExpiredException handling: this screen can already be mounted
+  // (the user left the tab open) when the session dies, and it watches
+  // this same provider directly rather than going through the guard again.
+  // Without this, it would render the same generic "failed to load" error
+  // a truly-dead session produces, instead of sending the user to log in
+  // again. logout() itself best-effort-POSTs to /auth/logout and swallows
+  // that call's own failure, so calling it on an already-dead token is
+  // safe.
+  Future<void> _handleSessionExpired() async {
+    await ref.read(authSessionControllerProvider).logout();
+    if (!mounted) {
+      return;
+    }
+    context.go(RouteNames.loginPath);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // See _handleSessionExpired's docblock for why this is needed alongside
+    // RouteGuards.guardPath's own handling of the same exception.
+    ref.listen<AsyncValue<OrganizationAccessState>>(
+      currentOrganizationAccessProvider,
+      (previous, next) {
+        if (next.error is SessionExpiredException) {
+          _handleSessionExpired();
+        }
+      },
+    );
     final access = ref.watch(currentOrganizationAccessProvider);
 
     return Scaffold(
