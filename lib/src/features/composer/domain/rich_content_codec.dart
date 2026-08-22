@@ -56,7 +56,10 @@ final class RichContentCodec {
   /// Converts only the subset the live publishing pipeline supports. Bold
   /// and italic become legacy markers for Telegram's server-side sanitizer;
   /// all other attributes remain safely represented in the stored Delta and
-  /// are rendered as clean plain text where targets do not support them.
+  /// are rendered as clean plain text where targets do not support them —
+  /// except `link`, which every platform here already renders/auto-links
+  /// from plain text, so its URL is appended in parentheses rather than
+  /// silently discarded (unless the visible text already IS that URL).
   static String toPublishText(quill.QuillController controller) {
     final output = StringBuffer();
     for (final rawOperation in controller.document.toDelta().toJson()) {
@@ -75,6 +78,10 @@ final class RichContentCodec {
       }
       if (styles['bold'] == true && segment.trim().isNotEmpty) {
         segment = '**$segment**';
+      }
+      final link = styles['link'];
+      if (link is String && link.isNotEmpty && insert.trim() != link.trim()) {
+        segment = '$segment ($link)';
       }
       output.write(segment);
     }

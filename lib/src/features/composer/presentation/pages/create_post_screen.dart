@@ -640,19 +640,20 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (report.warnings.isEmpty || !mounted) {
       return true;
     }
+    final l10n = AppLocalizations.of(context)!;
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('تنبيهات قبل النشر'),
+            title: Text(l10n.composerPrePublishWarningsTitle),
             content: Text(report.warnings.join('\n')),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('العودة للمراجعة'),
+                child: Text(l10n.composerPrePublishBackToReview),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('المتابعة رغم التنبيهات'),
+                child: Text(l10n.composerPrePublishProceedAnyway),
               ),
             ],
           ),
@@ -668,10 +669,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       await _adaptAllPlatforms();
       return;
     }
+    final l10n = AppLocalizations.of(context)!;
     final selectedText = RichContentCodec.selectedText(_contentController);
     final sourceText = selectedText.isNotEmpty ? selectedText : _contentText;
     if (sourceText.trim().isEmpty) {
-      _showFeedback('اكتب نصًا أو حدّد جزءًا منه أولًا.', isError: true);
+      _showFeedback(l10n.composerAiNoTextSelected, isError: true);
       return;
     }
 
@@ -719,16 +721,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Future<void> _adaptAllPlatforms() async {
     final platforms = _derivedPlatforms();
+    final l10n = AppLocalizations.of(context)!;
     if (platforms.isEmpty) {
-      _showFeedback(
-        'حدّد صفحة أو قناة قبل تكييف المحتوى للمنصات.',
-        isError: true,
-      );
+      _showFeedback(l10n.composerAiSelectPlatformFirst, isError: true);
       return;
     }
     final sourceText = _contentText;
     if (sourceText.trim().isEmpty) {
-      _showFeedback('اكتب محتوى المنشور أولًا.', isError: true);
+      _showFeedback(l10n.composerAiWriteContentFirst, isError: true);
       return;
     }
     setState(() => _aiLoading = true);
@@ -757,9 +757,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       _platformAiSuggestions.addAll(suggestions);
       _aiLoading = false;
     });
-    if (failed > 0) {
+    if (failed > 0 && mounted) {
       _showFeedback(
-        'تعذر تكييف بعض المنصات؛ راجع المقترحات المتاحة.',
+        AppLocalizations.of(context)!.composerAiSomePlatformsFailed,
         isError: true,
       );
     }
@@ -848,7 +848,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         false;
   }
 
-  Widget _buildAiAssistant(ThemeData theme) {
+  Widget _buildAiAssistant(ThemeData theme, AppLocalizations l10n) {
     const operations = <AiOperation>[
       AiOperation.spellCheck,
       AiOperation.improve,
@@ -879,7 +879,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               children: <Widget>[
                 const Icon(Icons.auto_awesome_outlined),
                 const SizedBox(width: AppSpacing.sm),
-                Text('المساعد الذكي', style: theme.textTheme.titleSmall),
+                Text(
+                  l10n.composerAiAssistantTitle,
+                  style: theme.textTheme.titleSmall,
+                ),
                 if (_aiLoading) ...<Widget>[
                   const SizedBox(width: AppSpacing.sm),
                   const SizedBox(
@@ -893,8 +896,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               RichContentCodec.selectedText(_contentController).isEmpty
-                  ? 'ستُعالَج كامل الكتابة. حدّد جزءًا لتعمل الأداة عليه فقط.'
-                  : 'ستُعالَج الكتابة المحددة فقط.',
+                  ? l10n.composerAiWholeTextNotice
+                  : l10n.composerAiSelectionOnlyNotice,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -905,7 +908,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               children: <Widget>[
                 DropdownButton<AiTone>(
                   value: _aiTone,
-                  hint: const Text('النبرة'),
+                  hint: Text(l10n.composerAiToneHint),
                   onChanged: _aiLoading
                       ? null
                       : (tone) => setState(() => _aiTone = tone ?? _aiTone),
@@ -913,7 +916,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       .map(
                         (tone) => DropdownMenuItem<AiTone>(
                           value: tone,
-                          child: Text(_aiToneLabel(tone)),
+                          child: Text(_aiToneLabel(tone, l10n)),
                         ),
                       )
                       .toList(growable: false),
@@ -923,14 +926,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     onPressed: _aiLoading
                         ? null
                         : () => setState(() => _translationLanguage = 'ar'),
-                    child: const Text('الترجمة إلى العربية'),
+                    child: Text(l10n.composerAiTranslateToArabic),
                   )
                 else
                   TextButton(
                     onPressed: _aiLoading
                         ? null
                         : () => setState(() => _translationLanguage = 'en'),
-                    child: const Text('الترجمة إلى الإنجليزية'),
+                    child: Text(l10n.composerAiTranslateToEnglish),
                   ),
               ],
             ),
@@ -943,7 +946,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ? null
                       : () => _openAiActionsSheet(operations),
                   icon: const Icon(Icons.auto_awesome_outlined),
-                  label: const Text('اختر عملية المساعد الذكي'),
+                  label: Text(l10n.composerAiChooseOperation),
                 ),
               )
             else
@@ -953,12 +956,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 children: operations
                     .map(
                       (operation) => Tooltip(
-                        message: operation.label,
+                        message: _aiOperationLabel(operation, l10n),
                         child: OutlinedButton(
                           onPressed: _aiLoading
                               ? null
                               : () => _runAi(operation),
-                          child: Text(operation.label),
+                          child: Text(_aiOperationLabel(operation, l10n)),
                         ),
                       ),
                     )
@@ -970,19 +973,20 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
   }
 
-  String _aiToneLabel(AiTone tone) {
+  String _aiToneLabel(AiTone tone, AppLocalizations l10n) {
     return switch (tone) {
-      AiTone.formal => 'رسمية',
-      AiTone.academic => 'أكاديمية',
-      AiTone.media => 'إعلامية',
-      AiTone.marketing => 'تسويقية',
-      AiTone.friendly => 'ودية',
-      AiTone.concise => 'مختصرة',
-      AiTone.enthusiastic => 'حماسية',
+      AiTone.formal => l10n.composerAiToneFormal,
+      AiTone.academic => l10n.composerAiToneAcademic,
+      AiTone.media => l10n.composerAiToneMedia,
+      AiTone.marketing => l10n.composerAiToneMarketing,
+      AiTone.friendly => l10n.composerAiToneFriendly,
+      AiTone.concise => l10n.composerAiToneConcise,
+      AiTone.enthusiastic => l10n.composerAiToneEnthusiastic,
     };
   }
 
   Future<void> _openAiActionsSheet(List<AiOperation> operations) async {
+    final l10n = AppLocalizations.of(context)!;
     final operation = await showModalBottomSheet<AiOperation>(
       context: context,
       showDragHandle: true,
@@ -993,7 +997,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               .map(
                 (item) => ListTile(
                   leading: const Icon(Icons.auto_awesome_outlined),
-                  title: Text(item.label),
+                  title: Text(_aiOperationLabel(item, l10n)),
                   onTap: () => Navigator.pop(context, item),
                 ),
               )
@@ -1170,7 +1174,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         onChanged: _onContentChanged,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildAiAssistant(theme),
+                      _buildAiAssistant(theme, l10n),
                       if (_aiSuggestion != null) ...<Widget>[
                         const SizedBox(height: AppSpacing.md),
                         _AiSuggestionReview(
@@ -1195,7 +1199,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                           child: TextButton.icon(
                             onPressed: _restoreContentBeforeAi,
                             icon: const Icon(Icons.undo),
-                            label: const Text('استعادة النص السابق'),
+                            label: Text(l10n.composerAiRestorePreviousText),
                           ),
                         ),
                     ],
@@ -1487,8 +1491,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                     hintText: l10n.composerPlatformOverrideHint,
                                     border: const OutlineInputBorder(),
                                     helperText: limit == null
-                                        ? '$count حرف • يستخدم النص الأساسي عند تركه فارغًا'
-                                        : '$count / $limit حرف',
+                                        ? l10n.composerPlatformCharCountNoLimit(
+                                            count,
+                                          )
+                                        : l10n.composerPlatformCharCountWithLimit(
+                                            count,
+                                            limit,
+                                          ),
                                     helperStyle: TextStyle(
                                       color: overLimit
                                           ? theme.colorScheme.error
@@ -1509,7 +1518,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                             ),
                                       icon: const Icon(Icons.auto_awesome),
                                       label: Text(
-                                        'تكييف لـ${platformLabel(platform)}',
+                                        l10n.composerAiAdaptForPlatform(
+                                          platformLabel(platform),
+                                        ),
                                       ),
                                     ),
                                     TextButton.icon(
@@ -1517,7 +1528,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           ? null
                                           : () => setState(controller.clear),
                                       icon: const Icon(Icons.restart_alt),
-                                      label: const Text('استخدام النص الأساسي'),
+                                      label: Text(
+                                        l10n.composerUseBaseTextButton,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1534,7 +1547,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: <Widget>[
-                                          const Text('نسخة مقترحة للمراجعة'),
+                                          Text(
+                                            l10n.composerSuggestedVersionForReview,
+                                          ),
                                           SelectableText(
                                             suggestion.proposedText,
                                           ),
@@ -1546,14 +1561,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                                     _applyPlatformSuggestion(
                                                       platform,
                                                     ),
-                                                child: const Text('تطبيق'),
+                                                child: Text(l10n.commonApply),
                                               ),
                                               TextButton(
                                                 onPressed: () => setState(
                                                   () => _platformAiSuggestions
                                                       .remove(platform),
                                                 ),
-                                                child: const Text('رفض'),
+                                                child: Text(l10n.commonReject),
                                               ),
                                             ],
                                           ),
@@ -1935,6 +1950,7 @@ class _AiSuggestionReview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final proposed = suggestion.suggestions.isNotEmpty
         ? suggestion.suggestions.join('\n')
         : suggestion.proposedText;
@@ -1946,18 +1962,29 @@ class _AiSuggestionReview extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'مراجعة اقتراح: ${suggestion.operation.label}',
+              l10n.composerAiSuggestionReviewTitle(
+                _aiOperationLabel(suggestion.operation, l10n),
+              ),
               style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text('النص الأصلي', style: theme.textTheme.labelLarge),
+            Text(
+              l10n.composerAiOriginalTextLabel,
+              style: theme.textTheme.labelLarge,
+            ),
             SelectableText(suggestion.originalText),
             const Divider(),
-            Text('النص المقترح', style: theme.textTheme.labelLarge),
+            Text(
+              l10n.composerAiProposedTextLabel,
+              style: theme.textTheme.labelLarge,
+            ),
             SelectableText(proposed),
             if (suggestion.suggestions.isNotEmpty) ...<Widget>[
               const SizedBox(height: AppSpacing.sm),
-              Text('اختر اقتراحًا لتطبيقه', style: theme.textTheme.labelLarge),
+              Text(
+                l10n.composerAiChooseSuggestionLabel,
+                style: theme.textTheme.labelLarge,
+              ),
               Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
@@ -1973,7 +2000,7 @@ class _AiSuggestionReview extends StatelessWidget {
             ],
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'يعرض هذا الإصدار مقارنة آمنة بين النصين؛ لا تُفترض مواقع تغييرات غير مؤكدة.',
+              l10n.composerAiSafeComparisonNotice,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -1983,29 +2010,29 @@ class _AiSuggestionReview extends StatelessWidget {
               children: <Widget>[
                 FilledButton(
                   onPressed: onApply,
-                  child: const Text('تطبيق النتيجة'),
+                  child: Text(l10n.composerAiApplyResultButton),
                 ),
                 OutlinedButton(
                   onPressed: onReplaceSelection,
-                  child: const Text('استبدال التحديد'),
+                  child: Text(l10n.composerAiReplaceSelectionButton),
                 ),
                 OutlinedButton(
                   onPressed: onInsertBelow,
-                  child: const Text('إدراج أسفل النص'),
+                  child: Text(l10n.composerAiInsertBelowButton),
                 ),
                 TextButton.icon(
                   onPressed: onCopy,
                   icon: const Icon(Icons.copy_outlined),
-                  label: const Text('نسخ'),
+                  label: Text(l10n.commonCopy),
                 ),
                 TextButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('إعادة المحاولة'),
+                  label: Text(l10n.commonRetry),
                 ),
                 TextButton(
                   onPressed: onDismiss,
-                  child: const Text('رفض الاقتراح'),
+                  child: Text(l10n.composerAiDismissSuggestionButton),
                 ),
               ],
             ),
@@ -2092,4 +2119,26 @@ class _PlatformPreviewCard extends StatelessWidget {
 
 extension<T> on Iterable<T> {
   T? get firstOrNull => isEmpty ? null : first;
+}
+
+String _aiOperationLabel(AiOperation operation, AppLocalizations l10n) {
+  return switch (operation) {
+    AiOperation.spellCheck => l10n.aiOperationSpellCheck,
+    AiOperation.improve => l10n.aiOperationImprove,
+    AiOperation.rewrite => l10n.aiOperationRewrite,
+    AiOperation.shorten => l10n.aiOperationShorten,
+    AiOperation.expand => l10n.aiOperationExpand,
+    AiOperation.simplify => l10n.aiOperationSimplify,
+    AiOperation.officialNews => l10n.aiOperationOfficialNews,
+    AiOperation.advertisement => l10n.aiOperationAdvertisement,
+    AiOperation.academicFormat => l10n.aiOperationAcademicFormat,
+    AiOperation.mediaFormat => l10n.aiOperationMediaFormat,
+    AiOperation.suggestTitles => l10n.aiOperationSuggestTitles,
+    AiOperation.suggestClosing => l10n.aiOperationSuggestClosing,
+    AiOperation.suggestCallToAction => l10n.aiOperationSuggestCallToAction,
+    AiOperation.suggestHashtags => l10n.aiOperationSuggestHashtags,
+    AiOperation.addEmojis => l10n.aiOperationAddEmojis,
+    AiOperation.translate => l10n.aiOperationTranslate,
+    AiOperation.adaptPlatforms => l10n.aiOperationAdaptPlatforms,
+  };
 }

@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:smart_publisher/src/core/di/app_providers.dart';
+import 'package:smart_publisher/src/core/network/network_client.dart';
 import 'package:smart_publisher/src/core/events/event_bus.dart';
 import 'package:smart_publisher/src/core/events/event_dispatcher.dart'
     as app_events;
@@ -318,6 +320,7 @@ Future<void> _pump(
   OrganizationAccessState? organizationAccess,
   List<AccountEntity> accounts = _connectedAccounts,
   AccountRepository? accountRepositoryOverride,
+  NetworkClient? networkClientOverride,
   PostEntity? initialDraft,
   bool selectDefaultTargets = true,
 }) async {
@@ -343,6 +346,8 @@ Future<void> _pump(
         currentOrganizationAccessProvider.overrideWith(
           (_) async => organizationAccess ?? _ownerAccess,
         ),
+        if (networkClientOverride != null)
+          networkClientProvider.overrideWithValue(networkClientOverride),
       ],
       child: MaterialApp(
         localizationsDelegates: testLocalizationsDelegates,
@@ -616,6 +621,91 @@ void main() {
           'No usable pages or channels yet. Connect an account and add/select its pages from Dashboard > Accounts.',
         ),
         findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'the AI assistant shows a review for a real proposal; dismiss, retry, apply and restore all work',
+    (tester) async {
+      var requestCount = 0;
+      await _pump(
+        tester,
+        networkClientOverride: FakeNetworkClient(
+          postHandler: (path, data) async {
+            requestCount++;
+            return Response<dynamic>(
+              requestOptions: RequestOptions(path: path),
+              statusCode: 200,
+              data: <String, dynamic>{
+                'data': <String, dynamic>{
+                  'original_text': 'raw text',
+                  'proposed_text': 'Improved text.',
+                  'suggestions': <String>[],
+                  'provider': 'test-provider',
+                },
+              },
+            );
+          },
+        ),
+      );
+
+      _richContentController(
+        tester,
+      ).replaceText(0, 0, 'raw text', const TextSelection.collapsed(offset: 8));
+      await tester.pumpAndSettle();
+
+      // The tone picker and translation-direction toggle render real,
+      // selectable options.
+      await tester.tap(
+        find.byWidgetPredicate((widget) => widget is DropdownButton).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Academic').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Translate to Arabic'));
+      await tester.pumpAndSettle();
+      expect(find.text('Translate to English'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Improve wording'));
+      await tester.pumpAndSettle();
+      expect(requestCount, 1);
+
+      expect(
+        find.text('Reviewing suggestion: Improve wording'),
+        findsOneWidget,
+      );
+      expect(find.text('Original text'), findsOneWidget);
+      expect(find.text('Proposed text'), findsOneWidget);
+      expect(find.text('Improved text.'), findsWidgets);
+
+      // Dismiss, then ask again (Retry re-issues the same request).
+      await tester.tap(find.widgetWithText(TextButton, 'Dismiss suggestion'));
+      await tester.pumpAndSettle();
+      expect(find.text('Reviewing suggestion: Improve wording'), findsNothing);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Improve wording'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Retry'));
+      await tester.pumpAndSettle();
+      expect(requestCount, 3);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Apply result'));
+      await tester.pumpAndSettle();
+
+      expect(
+        _richContentController(tester).document.toPlainText().trim(),
+        'Improved text.',
+      );
+
+      await tester.tap(
+        find.widgetWithText(TextButton, 'Restore previous text'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        _richContentController(tester).document.toPlainText().trim(),
+        'raw text',
       );
     },
   );
