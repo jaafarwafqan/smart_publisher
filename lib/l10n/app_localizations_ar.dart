@@ -71,6 +71,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonNo => 'لا';
 
   @override
+  String get commonApply => 'تطبيق';
+
+  @override
+  String get commonReject => 'رفض';
+
+  @override
+  String get commonCopy => 'نسخ';
+
+  @override
   String get loginTitle => 'تسجيل الدخول إلى الناشر الذكي';
 
   @override
@@ -1179,8 +1188,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get composerContentLabel => 'المحتوى';
 
   @override
-  String get composerContentHint =>
-      'اكتب محتوى منشورك... (الوسوم # والإشارات @ تُبرَز تلقائيًا)';
+  String get composerContentHint => 'اكتب محتوى منشورك…';
 
   @override
   String get composerMediaTitle => 'الوسائط';
@@ -2860,4 +2868,197 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get platformAdminRevertSubscriptionWarning =>
       'سيؤدي هذا فورًا إلى تطبيق حدود الباقة المجانية — أي ميزات مدفوعة قيد الاستخدام حاليًا ستتوقف على الفور.';
+
+  @override
+  String get composerRichEditorSemanticsLabel => 'محرر محتوى غني';
+
+  @override
+  String get composerFormattingToolsLabel => 'أدوات التنسيق';
+
+  @override
+  String get composerAddEmojiButton => 'إضافة رمز تعبيري';
+
+  @override
+  String get composerContentCounterSemanticsLabel => 'عداد المحتوى';
+
+  @override
+  String composerWordCharCount(int words, int characters) {
+    return '$words كلمة • $characters حرف';
+  }
+
+  @override
+  String composerInsertEmojiLabel(String emoji) {
+    return 'إدراج $emoji';
+  }
+
+  @override
+  String get composerPrePublishWarningsTitle => 'تنبيهات قبل النشر';
+
+  @override
+  String get composerPrePublishBackToReview => 'العودة للمراجعة';
+
+  @override
+  String get composerPrePublishProceedAnyway => 'المتابعة رغم التنبيهات';
+
+  @override
+  String get composerAiAssistantTitle => 'المساعد الذكي';
+
+  @override
+  String get composerAiWholeTextNotice =>
+      'ستُعالَج كامل الكتابة. حدّد جزءًا لتعمل الأداة عليه فقط.';
+
+  @override
+  String get composerAiSelectionOnlyNotice => 'ستُعالَج الكتابة المحددة فقط.';
+
+  @override
+  String get composerAiToneHint => 'النبرة';
+
+  @override
+  String get composerAiTranslateToArabic => 'الترجمة إلى العربية';
+
+  @override
+  String get composerAiTranslateToEnglish => 'الترجمة إلى الإنجليزية';
+
+  @override
+  String get composerAiChooseOperation => 'اختر عملية المساعد الذكي';
+
+  @override
+  String get composerAiRestorePreviousText => 'استعادة النص السابق';
+
+  @override
+  String get composerAiNoTextSelected => 'اكتب نصًا أو حدّد جزءًا منه أولًا.';
+
+  @override
+  String get composerAiSelectPlatformFirst =>
+      'حدّد صفحة أو قناة قبل تكييف المحتوى للمنصات.';
+
+  @override
+  String get composerAiWriteContentFirst => 'اكتب محتوى المنشور أولًا.';
+
+  @override
+  String get composerAiSomePlatformsFailed =>
+      'تعذر تكييف بعض المنصات؛ راجع المقترحات المتاحة.';
+
+  @override
+  String composerPlatformCharCountNoLimit(int count) {
+    return '$count حرف • يستخدم النص الأساسي عند تركه فارغًا';
+  }
+
+  @override
+  String composerPlatformCharCountWithLimit(int count, int limit) {
+    return '$count / $limit حرف';
+  }
+
+  @override
+  String composerAiAdaptForPlatform(String platform) {
+    return 'تكييف لـ$platform';
+  }
+
+  @override
+  String get composerUseBaseTextButton => 'استخدام النص الأساسي';
+
+  @override
+  String get composerSuggestedVersionForReview => 'نسخة مقترحة للمراجعة';
+
+  @override
+  String get composerAiToneFormal => 'رسمية';
+
+  @override
+  String get composerAiToneAcademic => 'أكاديمية';
+
+  @override
+  String get composerAiToneMedia => 'إعلامية';
+
+  @override
+  String get composerAiToneMarketing => 'تسويقية';
+
+  @override
+  String get composerAiToneFriendly => 'ودية';
+
+  @override
+  String get composerAiToneConcise => 'مختصرة';
+
+  @override
+  String get composerAiToneEnthusiastic => 'حماسية';
+
+  @override
+  String composerAiSuggestionReviewTitle(String operation) {
+    return 'مراجعة اقتراح: $operation';
+  }
+
+  @override
+  String get composerAiOriginalTextLabel => 'النص الأصلي';
+
+  @override
+  String get composerAiProposedTextLabel => 'النص المقترح';
+
+  @override
+  String get composerAiChooseSuggestionLabel => 'اختر اقتراحًا لتطبيقه';
+
+  @override
+  String get composerAiSafeComparisonNotice =>
+      'يعرض هذا الإصدار مقارنة آمنة بين النصين؛ لا تُفترض مواقع تغييرات غير مؤكدة.';
+
+  @override
+  String get composerAiApplyResultButton => 'تطبيق النتيجة';
+
+  @override
+  String get composerAiReplaceSelectionButton => 'استبدال التحديد';
+
+  @override
+  String get composerAiInsertBelowButton => 'إدراج أسفل النص';
+
+  @override
+  String get composerAiDismissSuggestionButton => 'رفض الاقتراح';
+
+  @override
+  String get aiOperationSpellCheck => 'تدقيق النص';
+
+  @override
+  String get aiOperationImprove => 'تحسين الصياغة';
+
+  @override
+  String get aiOperationRewrite => 'إعادة الصياغة';
+
+  @override
+  String get aiOperationShorten => 'اختصار النص';
+
+  @override
+  String get aiOperationExpand => 'توسيع النص';
+
+  @override
+  String get aiOperationSimplify => 'تبسيط النص';
+
+  @override
+  String get aiOperationOfficialNews => 'خبر رسمي';
+
+  @override
+  String get aiOperationAdvertisement => 'صياغة إعلان';
+
+  @override
+  String get aiOperationAcademicFormat => 'صياغة أكاديمية';
+
+  @override
+  String get aiOperationMediaFormat => 'صياغة إعلامية';
+
+  @override
+  String get aiOperationSuggestTitles => 'اقتراح عنوان';
+
+  @override
+  String get aiOperationSuggestClosing => 'اقتراح خاتمة';
+
+  @override
+  String get aiOperationSuggestCallToAction => 'اقتراح دعوة';
+
+  @override
+  String get aiOperationSuggestHashtags => 'اقتراح وسوم';
+
+  @override
+  String get aiOperationAddEmojis => 'إضافة رموز باعتدال';
+
+  @override
+  String get aiOperationTranslate => 'ترجمة';
+
+  @override
+  String get aiOperationAdaptPlatforms => 'تكييف للمنصات';
 }

@@ -48,6 +48,54 @@ void main() {
     },
   );
 
+  test(
+    'a hyperlink is preserved in the publish text, not silently dropped',
+    () {
+      final controller = RichContentCodec.controllerFromStorage(body: '');
+      addTearDown(controller.dispose);
+
+      controller.replaceText(
+        0,
+        0,
+        'اضغط هنا',
+        const TextSelection.collapsed(offset: 8),
+      );
+      controller.formatText(
+        0,
+        8,
+        quill.LinkAttribute('https://example.test/a'),
+      );
+
+      // The editor shows only the anchor text — the URL must not vanish
+      // from the actual published content, which is plain text and cannot
+      // carry a separate href the way the editor's Delta can.
+      expect(RichContentCodec.toPlainText(controller), 'اضغط هنا');
+      expect(
+        RichContentCodec.toPublishText(controller),
+        'اضغط هنا (https://example.test/a)',
+      );
+    },
+  );
+
+  test(
+    'a bare URL turned into a link is not duplicated in the publish text',
+    () {
+      final controller = RichContentCodec.controllerFromStorage(body: '');
+      addTearDown(controller.dispose);
+
+      const url = 'https://example.test/a';
+      controller.replaceText(
+        0,
+        0,
+        url,
+        const TextSelection.collapsed(offset: url.length),
+      );
+      controller.formatText(0, url.length, quill.LinkAttribute(url));
+
+      expect(RichContentCodec.toPublishText(controller), url);
+    },
+  );
+
   test('stored Delta reopens without requiring a Markdown round trip', () {
     final source = RichContentCodec.controllerFromStorage(body: 'نص');
     addTearDown(source.dispose);

@@ -218,6 +218,24 @@ abstract class AppLocalizations {
   /// **'لا'**
   String get commonNo;
 
+  /// No description provided for @commonApply.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق'**
+  String get commonApply;
+
+  /// No description provided for @commonReject.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض'**
+  String get commonReject;
+
+  /// No description provided for @commonCopy.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ'**
+  String get commonCopy;
+
   /// No description provided for @loginTitle.
   ///
   /// In ar, this message translates to:
@@ -2201,7 +2219,7 @@ abstract class AppLocalizations {
   /// No description provided for @composerContentHint.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب محتوى منشورك... (الوسوم # والإشارات @ تُبرَز تلقائيًا)'**
+  /// **'اكتب محتوى منشورك…'**
   String get composerContentHint;
 
   /// No description provided for @composerMediaTitle.
@@ -5167,6 +5185,360 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'سيؤدي هذا فورًا إلى تطبيق حدود الباقة المجانية — أي ميزات مدفوعة قيد الاستخدام حاليًا ستتوقف على الفور.'**
   String get platformAdminRevertSubscriptionWarning;
+
+  /// No description provided for @composerRichEditorSemanticsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'محرر محتوى غني'**
+  String get composerRichEditorSemanticsLabel;
+
+  /// No description provided for @composerFormattingToolsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدوات التنسيق'**
+  String get composerFormattingToolsLabel;
+
+  /// No description provided for @composerAddEmojiButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة رمز تعبيري'**
+  String get composerAddEmojiButton;
+
+  /// No description provided for @composerContentCounterSemanticsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'عداد المحتوى'**
+  String get composerContentCounterSemanticsLabel;
+
+  /// No description provided for @composerWordCharCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{words} كلمة • {characters} حرف'**
+  String composerWordCharCount(int words, int characters);
+
+  /// No description provided for @composerInsertEmojiLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدراج {emoji}'**
+  String composerInsertEmojiLabel(String emoji);
+
+  /// No description provided for @composerPrePublishWarningsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات قبل النشر'**
+  String get composerPrePublishWarningsTitle;
+
+  /// No description provided for @composerPrePublishBackToReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة للمراجعة'**
+  String get composerPrePublishBackToReview;
+
+  /// No description provided for @composerPrePublishProceedAnyway.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة رغم التنبيهات'**
+  String get composerPrePublishProceedAnyway;
+
+  /// No description provided for @composerAiAssistantTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المساعد الذكي'**
+  String get composerAiAssistantTitle;
+
+  /// No description provided for @composerAiWholeTextNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستُعالَج كامل الكتابة. حدّد جزءًا لتعمل الأداة عليه فقط.'**
+  String get composerAiWholeTextNotice;
+
+  /// No description provided for @composerAiSelectionOnlyNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'ستُعالَج الكتابة المحددة فقط.'**
+  String get composerAiSelectionOnlyNotice;
+
+  /// No description provided for @composerAiToneHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'النبرة'**
+  String get composerAiToneHint;
+
+  /// No description provided for @composerAiTranslateToArabic.
+  ///
+  /// In ar, this message translates to:
+  /// **'الترجمة إلى العربية'**
+  String get composerAiTranslateToArabic;
+
+  /// No description provided for @composerAiTranslateToEnglish.
+  ///
+  /// In ar, this message translates to:
+  /// **'الترجمة إلى الإنجليزية'**
+  String get composerAiTranslateToEnglish;
+
+  /// No description provided for @composerAiChooseOperation.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر عملية المساعد الذكي'**
+  String get composerAiChooseOperation;
+
+  /// No description provided for @composerAiRestorePreviousText.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعادة النص السابق'**
+  String get composerAiRestorePreviousText;
+
+  /// No description provided for @composerAiNoTextSelected.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب نصًا أو حدّد جزءًا منه أولًا.'**
+  String get composerAiNoTextSelected;
+
+  /// No description provided for @composerAiSelectPlatformFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدّد صفحة أو قناة قبل تكييف المحتوى للمنصات.'**
+  String get composerAiSelectPlatformFirst;
+
+  /// No description provided for @composerAiWriteContentFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب محتوى المنشور أولًا.'**
+  String get composerAiWriteContentFirst;
+
+  /// No description provided for @composerAiSomePlatformsFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تكييف بعض المنصات؛ راجع المقترحات المتاحة.'**
+  String get composerAiSomePlatformsFailed;
+
+  /// No description provided for @composerPlatformCharCountNoLimit.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} حرف • يستخدم النص الأساسي عند تركه فارغًا'**
+  String composerPlatformCharCountNoLimit(int count);
+
+  /// No description provided for @composerPlatformCharCountWithLimit.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} / {limit} حرف'**
+  String composerPlatformCharCountWithLimit(int count, int limit);
+
+  /// No description provided for @composerAiAdaptForPlatform.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكييف لـ{platform}'**
+  String composerAiAdaptForPlatform(String platform);
+
+  /// No description provided for @composerUseBaseTextButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدام النص الأساسي'**
+  String get composerUseBaseTextButton;
+
+  /// No description provided for @composerSuggestedVersionForReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخة مقترحة للمراجعة'**
+  String get composerSuggestedVersionForReview;
+
+  /// No description provided for @composerAiToneFormal.
+  ///
+  /// In ar, this message translates to:
+  /// **'رسمية'**
+  String get composerAiToneFormal;
+
+  /// No description provided for @composerAiToneAcademic.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكاديمية'**
+  String get composerAiToneAcademic;
+
+  /// No description provided for @composerAiToneMedia.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعلامية'**
+  String get composerAiToneMedia;
+
+  /// No description provided for @composerAiToneMarketing.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسويقية'**
+  String get composerAiToneMarketing;
+
+  /// No description provided for @composerAiToneFriendly.
+  ///
+  /// In ar, this message translates to:
+  /// **'ودية'**
+  String get composerAiToneFriendly;
+
+  /// No description provided for @composerAiToneConcise.
+  ///
+  /// In ar, this message translates to:
+  /// **'مختصرة'**
+  String get composerAiToneConcise;
+
+  /// No description provided for @composerAiToneEnthusiastic.
+  ///
+  /// In ar, this message translates to:
+  /// **'حماسية'**
+  String get composerAiToneEnthusiastic;
+
+  /// No description provided for @composerAiSuggestionReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة اقتراح: {operation}'**
+  String composerAiSuggestionReviewTitle(String operation);
+
+  /// No description provided for @composerAiOriginalTextLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'النص الأصلي'**
+  String get composerAiOriginalTextLabel;
+
+  /// No description provided for @composerAiProposedTextLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'النص المقترح'**
+  String get composerAiProposedTextLabel;
+
+  /// No description provided for @composerAiChooseSuggestionLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر اقتراحًا لتطبيقه'**
+  String get composerAiChooseSuggestionLabel;
+
+  /// No description provided for @composerAiSafeComparisonNotice.
+  ///
+  /// In ar, this message translates to:
+  /// **'يعرض هذا الإصدار مقارنة آمنة بين النصين؛ لا تُفترض مواقع تغييرات غير مؤكدة.'**
+  String get composerAiSafeComparisonNotice;
+
+  /// No description provided for @composerAiApplyResultButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق النتيجة'**
+  String get composerAiApplyResultButton;
+
+  /// No description provided for @composerAiReplaceSelectionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'استبدال التحديد'**
+  String get composerAiReplaceSelectionButton;
+
+  /// No description provided for @composerAiInsertBelowButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدراج أسفل النص'**
+  String get composerAiInsertBelowButton;
+
+  /// No description provided for @composerAiDismissSuggestionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفض الاقتراح'**
+  String get composerAiDismissSuggestionButton;
+
+  /// No description provided for @aiOperationSpellCheck.
+  ///
+  /// In ar, this message translates to:
+  /// **'تدقيق النص'**
+  String get aiOperationSpellCheck;
+
+  /// No description provided for @aiOperationImprove.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحسين الصياغة'**
+  String get aiOperationImprove;
+
+  /// No description provided for @aiOperationRewrite.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة الصياغة'**
+  String get aiOperationRewrite;
+
+  /// No description provided for @aiOperationShorten.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختصار النص'**
+  String get aiOperationShorten;
+
+  /// No description provided for @aiOperationExpand.
+  ///
+  /// In ar, this message translates to:
+  /// **'توسيع النص'**
+  String get aiOperationExpand;
+
+  /// No description provided for @aiOperationSimplify.
+  ///
+  /// In ar, this message translates to:
+  /// **'تبسيط النص'**
+  String get aiOperationSimplify;
+
+  /// No description provided for @aiOperationOfficialNews.
+  ///
+  /// In ar, this message translates to:
+  /// **'خبر رسمي'**
+  String get aiOperationOfficialNews;
+
+  /// No description provided for @aiOperationAdvertisement.
+  ///
+  /// In ar, this message translates to:
+  /// **'صياغة إعلان'**
+  String get aiOperationAdvertisement;
+
+  /// No description provided for @aiOperationAcademicFormat.
+  ///
+  /// In ar, this message translates to:
+  /// **'صياغة أكاديمية'**
+  String get aiOperationAcademicFormat;
+
+  /// No description provided for @aiOperationMediaFormat.
+  ///
+  /// In ar, this message translates to:
+  /// **'صياغة إعلامية'**
+  String get aiOperationMediaFormat;
+
+  /// No description provided for @aiOperationSuggestTitles.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراح عنوان'**
+  String get aiOperationSuggestTitles;
+
+  /// No description provided for @aiOperationSuggestClosing.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراح خاتمة'**
+  String get aiOperationSuggestClosing;
+
+  /// No description provided for @aiOperationSuggestCallToAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراح دعوة'**
+  String get aiOperationSuggestCallToAction;
+
+  /// No description provided for @aiOperationSuggestHashtags.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتراح وسوم'**
+  String get aiOperationSuggestHashtags;
+
+  /// No description provided for @aiOperationAddEmojis.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة رموز باعتدال'**
+  String get aiOperationAddEmojis;
+
+  /// No description provided for @aiOperationTranslate.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترجمة'**
+  String get aiOperationTranslate;
+
+  /// No description provided for @aiOperationAdaptPlatforms.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكييف للمنصات'**
+  String get aiOperationAdaptPlatforms;
 }
 
 class _AppLocalizationsDelegate

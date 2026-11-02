@@ -71,6 +71,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonNo => 'No';
 
   @override
+  String get commonApply => 'Apply';
+
+  @override
+  String get commonReject => 'Reject';
+
+  @override
+  String get commonCopy => 'Copy';
+
+  @override
   String get loginTitle => 'Smart Publisher Login';
 
   @override
@@ -1187,8 +1196,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get composerContentLabel => 'Content';
 
   @override
-  String get composerContentHint =>
-      'Write your post content... (#hashtags and @mentions highlight automatically)';
+  String get composerContentHint => 'Write your post content…';
 
   @override
   String get composerMediaTitle => 'Media';
@@ -2882,4 +2890,199 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get platformAdminRevertSubscriptionWarning =>
       'This immediately applies the Free plan\'s limits — any paid features currently in use will stop working right away.';
+
+  @override
+  String get composerRichEditorSemanticsLabel => 'Rich content editor';
+
+  @override
+  String get composerFormattingToolsLabel => 'Formatting tools';
+
+  @override
+  String get composerAddEmojiButton => 'Add emoji';
+
+  @override
+  String get composerContentCounterSemanticsLabel => 'Content counter';
+
+  @override
+  String composerWordCharCount(int words, int characters) {
+    return '$words words • $characters characters';
+  }
+
+  @override
+  String composerInsertEmojiLabel(String emoji) {
+    return 'Insert $emoji';
+  }
+
+  @override
+  String get composerPrePublishWarningsTitle => 'Pre-publish warnings';
+
+  @override
+  String get composerPrePublishBackToReview => 'Back to review';
+
+  @override
+  String get composerPrePublishProceedAnyway => 'Proceed anyway';
+
+  @override
+  String get composerAiAssistantTitle => 'Writing assistant';
+
+  @override
+  String get composerAiWholeTextNotice =>
+      'The whole text will be processed. Select part of it to work on that only.';
+
+  @override
+  String get composerAiSelectionOnlyNotice =>
+      'Only the selected text will be processed.';
+
+  @override
+  String get composerAiToneHint => 'Tone';
+
+  @override
+  String get composerAiTranslateToArabic => 'Translate to Arabic';
+
+  @override
+  String get composerAiTranslateToEnglish => 'Translate to English';
+
+  @override
+  String get composerAiChooseOperation => 'Choose a writing-assistant action';
+
+  @override
+  String get composerAiRestorePreviousText => 'Restore previous text';
+
+  @override
+  String get composerAiNoTextSelected => 'Write or select some text first.';
+
+  @override
+  String get composerAiSelectPlatformFirst =>
+      'Select a page or channel before adapting content for platforms.';
+
+  @override
+  String get composerAiWriteContentFirst => 'Write the post content first.';
+
+  @override
+  String get composerAiSomePlatformsFailed =>
+      'Some platforms could not be adapted; review the suggestions that are available.';
+
+  @override
+  String composerPlatformCharCountNoLimit(int count) {
+    return '$count characters • uses the base text when left empty';
+  }
+
+  @override
+  String composerPlatformCharCountWithLimit(int count, int limit) {
+    return '$count / $limit characters';
+  }
+
+  @override
+  String composerAiAdaptForPlatform(String platform) {
+    return 'Adapt for $platform';
+  }
+
+  @override
+  String get composerUseBaseTextButton => 'Use the base text';
+
+  @override
+  String get composerSuggestedVersionForReview =>
+      'Suggested version for review';
+
+  @override
+  String get composerAiToneFormal => 'Formal';
+
+  @override
+  String get composerAiToneAcademic => 'Academic';
+
+  @override
+  String get composerAiToneMedia => 'Media';
+
+  @override
+  String get composerAiToneMarketing => 'Marketing';
+
+  @override
+  String get composerAiToneFriendly => 'Friendly';
+
+  @override
+  String get composerAiToneConcise => 'Concise';
+
+  @override
+  String get composerAiToneEnthusiastic => 'Enthusiastic';
+
+  @override
+  String composerAiSuggestionReviewTitle(String operation) {
+    return 'Reviewing suggestion: $operation';
+  }
+
+  @override
+  String get composerAiOriginalTextLabel => 'Original text';
+
+  @override
+  String get composerAiProposedTextLabel => 'Proposed text';
+
+  @override
+  String get composerAiChooseSuggestionLabel => 'Choose a suggestion to apply';
+
+  @override
+  String get composerAiSafeComparisonNotice =>
+      'This view shows a safe side-by-side comparison of both texts; it never assumes the location of unconfirmed changes.';
+
+  @override
+  String get composerAiApplyResultButton => 'Apply result';
+
+  @override
+  String get composerAiReplaceSelectionButton => 'Replace selection';
+
+  @override
+  String get composerAiInsertBelowButton => 'Insert below';
+
+  @override
+  String get composerAiDismissSuggestionButton => 'Dismiss suggestion';
+
+  @override
+  String get aiOperationSpellCheck => 'Spell check';
+
+  @override
+  String get aiOperationImprove => 'Improve wording';
+
+  @override
+  String get aiOperationRewrite => 'Rewrite';
+
+  @override
+  String get aiOperationShorten => 'Shorten';
+
+  @override
+  String get aiOperationExpand => 'Expand';
+
+  @override
+  String get aiOperationSimplify => 'Simplify';
+
+  @override
+  String get aiOperationOfficialNews => 'Official news';
+
+  @override
+  String get aiOperationAdvertisement => 'Advertisement copy';
+
+  @override
+  String get aiOperationAcademicFormat => 'Academic style';
+
+  @override
+  String get aiOperationMediaFormat => 'Media style';
+
+  @override
+  String get aiOperationSuggestTitles => 'Suggest a title';
+
+  @override
+  String get aiOperationSuggestClosing => 'Suggest a closing';
+
+  @override
+  String get aiOperationSuggestCallToAction => 'Suggest a call to action';
+
+  @override
+  String get aiOperationSuggestHashtags => 'Suggest hashtags';
+
+  @override
+  String get aiOperationAddEmojis => 'Add emojis (in moderation)';
+
+  @override
+  String get aiOperationTranslate => 'Translate';
+
+  @override
+  String get aiOperationAdaptPlatforms => 'Adapt for platforms';
 }
